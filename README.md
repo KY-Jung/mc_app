@@ -14,3 +14,30 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+---
+
+```agsl
++ 로그
+import 'package:flutter/foundation.dart';
+if (kDebugMode) print('# initState START');
+```
+```agsl
++ 앱 이름 변경
+ios/runner/info.plist
+<plist>
+    <dict>
+        <key>CFBundleName</key>
+         <string> 변경
+
+android/app/src/main/AndroidManifest.xml
+<application
+    android:lable 항목 수정
+```
+---
+
+---
+
+---
+
+---

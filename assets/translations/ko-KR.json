@@ -1,0 +1,25 @@
+{
+  "OK": "확인",
+  "CANCEL": "취소",
+  "MAKE": "만들기",
+  "LIST": "목록",
+  "BALANCE": "현황",
+  "PUBLIC": "공개",
+  "ERROR": "에러",
+
+
+  "hello": "안녕",
+  "name": "이름",
+  "clear": "청소",
+  "english": "English",
+  "korean": "한국어",
+  "chandongi": "천동이",
+  "myNameIs": "내 이름은 {}",
+  "namedArgs": "namedArgs {name}",
+  "argsWithNamedArgs": "args: {}, {}, Named Args {name}",
+  "mode":{
+    "mode1":"{}과 함께한다.",
+    "mode2":"{}와 이별한다.",
+    "mode3":"{}를 응원한다."
+  }
+}
