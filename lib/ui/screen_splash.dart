@@ -31,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    log('# initState START');
+    log('# SplashScreen initState START');
 
     super.initState();
 
@@ -40,12 +40,12 @@ class _SplashScreenState extends State<SplashScreen> {
       checkInit();
     });
 
-    log('# initState END');
+    log('# SplashScreen initState END');
   }
 
   @override
   Widget build(BuildContext context) {
-    log('# build START');
+    log('# SplashScreen build START');
 
     return Scaffold(
       appBar: null,
@@ -60,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   // 미리 체크할 것
   void checkInit() async {
-    log('# checkInit START');
+    log('# SplashScreen checkInit START');
 
     Timer(const Duration(milliseconds: 0), () {
       checkInitKey().then((isInit) {
@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
         }
         checkCnt++;
       }).catchError((e) {
-        log(e);
+        log(e.toString());
         PopupUtil.popupAlertOk(context, 'ERROR'.tr(), e);
       });
     });
@@ -79,23 +79,23 @@ class _SplashScreenState extends State<SplashScreen> {
         if (initMsg == null) {
           checkCnt++;
         } else {
-          Timer(const Duration(milliseconds: 1000), () {
+          Timer(const Duration(milliseconds: 1000), () {    // 최소 splash 화면을 보여 주는 시간
             PopupUtil.popupAlertOk(context, '', initMsg
             ).then((ret) {
               log('popupAlertOk: $ret');
-              if (ret == AppConstant.ok) {}   // example
+              if (ret == AppConstant.OK) {}   // example
 
               checkCnt++;
             });
           });
         }
       }).catchError((e) {
-        log(e);
+        log(e.toString());
         PopupUtil.popupAlertOk(context, 'ERROR'.tr(), e);
       });
     });
 
-    Timer(const Duration(milliseconds: 3000), () {
+    Timer(const Duration(milliseconds: 1000), () {    // 최소 splash 화면을 보여 주는 시간
       Timer.periodic(const Duration(milliseconds: 100), (timer) {
         //log('Timer.periodic');
         if (checkCnt >= checkCntAll) {
@@ -104,6 +104,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
           Navigator.of(context).pushReplacementNamed('/index');
           //Navigator.pushNamedAndRemoveUntil(context, '/index', (route) => false);
+          log('go /index');
         }
       });
     });
@@ -113,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   ////////////////////////////////////////////////////////////////////////////////
   Future<bool> checkInitKey() async {
-    log('# checkInitKey START');
+    log('# SplashScreen checkInitKey START');
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isInit = prefs.getBool('is_init') ?? false;
@@ -122,16 +123,17 @@ class _SplashScreenState extends State<SplashScreen> {
     return isInit;
   }
   void makeInitKey() async {
-    log('# makeInitKey START');
+    log('# SplashScreen makeInitKey START');
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('is_init', true);
   }
   // network msg
   Future<String?> checkInitMsg() async {
-    log('# checkInitMsg START');
+    log('# SplashScreen checkInitMsg START');
 
-    //return null;
-    return 'msg return';
+    // 메세지를 보여주고 싶을때 아래 2개를 번갈아 사용
+    return null;
+    //return 'msg return';
   }
   ////////////////////////////////////////////////////////////////////////////////
 

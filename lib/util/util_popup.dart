@@ -1,6 +1,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class PopupUtil {
 
@@ -15,7 +16,7 @@ class PopupUtil {
             content: Text(msg),
             actions: [
               ElevatedButton(
-                  onPressed: () => Navigator.pop(context, 'OK'),
+                  onPressed: () => Navigator.pop(context, 'OK'),    // pop : 뒤로가기
                   child: Text('OK'.tr())),
             ],
           ),
@@ -40,6 +41,18 @@ class PopupUtil {
                 child: Text('CANCEL'.tr())),
           ],
         ),
+    );
+  }
+
+  static Future<dynamic> popupToast(msg) {
+    return Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 6,
+      backgroundColor: Colors.grey,
+      textColor: Colors.white,
+      fontSize: 16.0,
     );
   }
 

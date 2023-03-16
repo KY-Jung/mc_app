@@ -1,6 +1,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:mc/ui/screen_imageview.dart';
 import 'package:mc/ui/screen_index.dart';
 import 'package:mc/ui/screen_splash.dart';
 
@@ -48,8 +49,10 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/index': (context) => const IndexScreen(),
+        '/imageview': (context) => const ImageViewScreen(),
       },
       initialRoute: '/',
+      debugShowCheckedModeBanner: false,    // debug 라벨 없애기
 
       ////////////////////////////////////////////////////////////////////////////////
       // EasyLocalization
