@@ -3,7 +3,10 @@ class McUser {
   late String email;
   late String signKey;
 
-  McUser({required this.email, required this.signKey,});
+  McUser({
+    required this.email,
+    required this.signKey,
+  });
 
   Map<String, dynamic> toMap() {
     return {
@@ -21,5 +24,4 @@ class McUser {
   String toString() {
     return 'User{email: $email, signKey: $signKey}';
   }
-
 }

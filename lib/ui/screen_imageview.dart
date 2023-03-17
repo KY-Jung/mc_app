@@ -1,8 +1,6 @@
-
-import 'dart:developer';
+import 'dart:developer' as dev;
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ImageViewScreen extends StatefulWidget {
@@ -13,33 +11,29 @@ class ImageViewScreen extends StatefulWidget {
 }
 
 class _ImageViewScreen extends State<ImageViewScreen> {
-
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    log('# ImageViewScreen initState START');
-
+    dev.log('# ImageViewScreen initState START');
     super.initState();
 
-    log('# ImageViewScreen initState END');
+    dev.log('# ImageViewScreen initState END');
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text('IMAGE_VIEW'.tr()),
       ),
       body: Center(child: Text('IMAGE_VIEW'.tr())),
       floatingActionButton: FloatingActionButton(
-        child: const Text('close', style: TextStyle(fontSize:24)),
+        child: const Text('close', style: TextStyle(fontSize: 24)),
         onPressed: () {
           Navigator.pop(context);
         },
       ),
-
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
 }

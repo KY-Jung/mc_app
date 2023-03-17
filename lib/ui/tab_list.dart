@@ -1,5 +1,4 @@
-
-import 'dart:developer';
+import 'dart:developer' as dev;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -7,13 +6,27 @@ import 'package:mc/provider/provider_mcImage.dart';
 import 'package:mc/ui/screen_imageview.dart';
 import 'package:provider/provider.dart';
 
-class ListTab extends StatelessWidget {
+class ListTab extends StatefulWidget {
   const ListTab({super.key});
 
+  @override
+  _ListTab createState() => _ListTab();
+}
+
+class _ListTab extends State<ListTab> {
+  ////////////////////////////////////////////////////////////////////////////////
+  @override
+  void initState() {
+    dev.log('# ListTab initState START');
+    super.initState();
+
+    dev.log('# ListTab initState END');
+  }
 
   @override
   Widget build(BuildContext context) {
-    //return Center(child: Text('LIST'.tr()));
+    dev.log('# ListTab build START');
+
     McImageProvider mcImageProvider = Provider.of<McImageProvider>(context);
 
     return Scaffold(
@@ -39,7 +52,7 @@ class ListTab extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: const Text('Image view', style: TextStyle(fontSize:24)),
+        child: const Text('Image view', style: TextStyle(fontSize: 24)),
         onPressed: () {
           Navigator.push(
             context,
@@ -48,6 +61,6 @@ class ListTab extends StatelessWidget {
         },
       ),
     );
-
   }
+////////////////////////////////////////////////////////////////////////////////
 }

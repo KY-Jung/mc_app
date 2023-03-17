@@ -1,5 +1,4 @@
-
-import 'dart:developer';
+import 'dart:developer' as dev;
 
 import 'package:mc/model/mcuser.dart';
 import 'package:path/path.dart';
@@ -8,18 +7,17 @@ import 'package:sqflite/sqflite.dart';
 import '../config/constant_app.dart';
 
 class McUserSqlite {
-
   late Database database;
   bool isInit = false;
 
   Future initDb() async {
-    log('# McUserSqlite initDb START');
+    dev.log('# McUserSqlite initDb START');
 
     if (isInit) {
-      log('initDb return');
+      dev.log('initDb return');
       return;
     }
-    log('initDb openDatabase');
+    dev.log('initDb openDatabase');
 
     ////////////////////////////////////////////////////////////////////////////////
     /*
@@ -57,7 +55,7 @@ class McUserSqlite {
     database = await openDatabase(
       join(await getDatabasesPath(), 'mc_db.db'),
       onCreate: (db, version) async {
-        log('initDb onCreate');
+        dev.log('initDb onCreate');
         await db.execute(
           'CREATE TABLE IF NOT EXISTS mc_user (email TEXT NOT NULL, signKey TEXT)',
         );
@@ -66,7 +64,7 @@ class McUserSqlite {
         return;
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        log('initDb onUpgrade');
+        dev.log('initDb onUpgrade');
         await db.execute(
           'DROP TABLE IF EXISTS mc_user',
         );
@@ -82,20 +80,21 @@ class McUserSqlite {
   }
 
   Future<List<McUser>?> getUser() async {
-    log('# McUserSqlite getUser START');
+    dev.log('# McUserSqlite getUser START');
 
-    List<Map<String, dynamic>> maps = await database.query('mc_user', columns: ['email', 'signKey']);
+    List<Map<String, dynamic>> maps =
+        await database.query('mc_user', columns: ['email', 'signKey']);
     if (maps.isEmpty) {
-      log('getUser empty');
+      dev.log('getUser empty');
       return null;
     } else if (maps.length > 1) {
-      log('### FATAL getUser: $maps, and delete all');
+      dev.log('### FATAL getUser: $maps, and delete all');
       await database.delete(
         'mc_user',
       );
       return null;
     } else {
-      log('getUser: $maps');
+      dev.log('getUser: $maps');
       return List.generate(maps.length, (i) {
         return McUser(
           email: maps[i]['email'],
@@ -106,8 +105,8 @@ class McUserSqlite {
   }
 
   Future<int> setUser(user) async {
-    log('# McUserSqlite setUser START');
-    log('setUser: $user');
+    dev.log('# McUserSqlite setUser START');
+    dev.log('setUser: $user');
 
     return await database.insert(
       'mc_user',
@@ -115,5 +114,4 @@ class McUserSqlite {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-
 }

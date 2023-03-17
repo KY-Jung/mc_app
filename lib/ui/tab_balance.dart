@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -5,13 +6,26 @@ import 'package:provider/provider.dart';
 
 import '../provider/provider_mcImage.dart';
 
-class BalanceTab extends StatelessWidget {
+class BalanceTab extends StatefulWidget {
   const BalanceTab({super.key});
 
+  @override
+  _BalanceTab createState() => _BalanceTab();
+}
+
+class _BalanceTab extends State<BalanceTab> {
+  ////////////////////////////////////////////////////////////////////////////////
+  @override
+  void initState() {
+    dev.log('# BalanceTab initState START');
+    super.initState();
+
+    dev.log('# BalanceTab initState END');
+  }
 
   @override
   Widget build(BuildContext context) {
-    //return Center(child: Text('BALANCE'.tr()));
+    dev.log('# BalanceTab build START');
 
     McImageProvider mcImageProvider = Provider.of<McImageProvider>(context);
 
@@ -38,6 +52,6 @@ class BalanceTab extends StatelessWidget {
         ),
       ),
     );
-
   }
+////////////////////////////////////////////////////////////////////////////////
 }

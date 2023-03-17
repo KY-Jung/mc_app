@@ -1,6 +1,5 @@
-
 import 'dart:async';
-import 'dart:developer';
+import 'dart:developer' as dev;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -22,16 +21,16 @@ class SplashScreen extends StatefulWidget {
 /// 일단 3초는 splash 화면 표시하고, 이후 0.1 초 마다 검사
 /// 만약 메세지를 표시해야 한다면 1초 이후에 표시
 class _SplashScreenState extends State<SplashScreen> {
-
   ////////////////////////////////////////////////////////////////////////////////
   int checkCnt = 0;
   int checkCntAll = 2;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    log('# SplashScreen initState START');
+    dev.log('# SplashScreen initState START');
 
     super.initState();
 
@@ -40,12 +39,12 @@ class _SplashScreenState extends State<SplashScreen> {
       checkInit();
     });
 
-    log('# SplashScreen initState END');
+    dev.log('# SplashScreen initState END');
   }
 
   @override
   Widget build(BuildContext context) {
-    log('# SplashScreen build START');
+    dev.log('# SplashScreen build START');
 
     return Scaffold(
       appBar: null,
@@ -55,12 +54,13 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   // 미리 체크할 것
   void checkInit() async {
-    log('# SplashScreen checkInit START');
+    dev.log('# SplashScreen checkInit START');
 
     Timer(const Duration(milliseconds: 0), () {
       checkInitKey().then((isInit) {
@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
         }
         checkCnt++;
       }).catchError((e) {
-        log(e.toString());
+        dev.log(e.toString());
         PopupUtil.popupAlertOk(context, 'ERROR'.tr(), e);
       });
     });
@@ -79,62 +79,68 @@ class _SplashScreenState extends State<SplashScreen> {
         if (initMsg == null) {
           checkCnt++;
         } else {
-          Timer(const Duration(milliseconds: 1000), () {    // 최소 splash 화면을 보여 주는 시간
-            PopupUtil.popupAlertOk(context, '', initMsg
-            ).then((ret) {
-              log('popupAlertOk: $ret');
-              if (ret == AppConstant.OK) {}   // example
+          Timer(const Duration(milliseconds: 1000), () {
+            // 최소 splash 화면을 보여 주는 시간
+            PopupUtil.popupAlertOk(context, '', initMsg).then((ret) {
+              dev.log('popupAlertOk: $ret');
+
+              // example
+              if (ret == null) {} // 팝업 바깥 영역을 클릭한 경우
+              if (ret == AppConstant.OK) {}
 
               checkCnt++;
             });
           });
         }
       }).catchError((e) {
-        log(e.toString());
+        dev.log(e.toString());
         PopupUtil.popupAlertOk(context, 'ERROR'.tr(), e);
       });
     });
 
-    Timer(const Duration(milliseconds: 1000), () {    // 최소 splash 화면을 보여 주는 시간
+    Timer(const Duration(milliseconds: 1000), () {
+      // 최소 splash 화면을 보여 주는 시간
       Timer.periodic(const Duration(milliseconds: 100), (timer) {
         //log('Timer.periodic');
         if (checkCnt >= checkCntAll) {
           timer.cancel();
-          log('Timer cancel');
+          dev.log('Timer cancel');
 
           Navigator.of(context).pushReplacementNamed('/index');
           //Navigator.pushNamedAndRemoveUntil(context, '/index', (route) => false);
-          log('go /index');
+          dev.log('go /index');
         }
       });
     });
-    log('# checkInit END');
+    dev.log('# checkInit END');
   }
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   Future<bool> checkInitKey() async {
-    log('# SplashScreen checkInitKey START');
+    dev.log('# SplashScreen checkInitKey START');
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isInit = prefs.getBool('is_init') ?? false;
-    log('is_init: $isInit');
+    dev.log('is_init: $isInit');
 
     return isInit;
   }
+
   void makeInitKey() async {
-    log('# SplashScreen makeInitKey START');
+    dev.log('# SplashScreen makeInitKey START');
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('is_init', true);
   }
+
   // network msg
   Future<String?> checkInitMsg() async {
-    log('# SplashScreen checkInitMsg START');
+    dev.log('# SplashScreen checkInitMsg START');
 
     // 메세지를 보여주고 싶을때 아래 2개를 번갈아 사용
     return null;
     //return 'msg return';
   }
-  ////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////
 }
