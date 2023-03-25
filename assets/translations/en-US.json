@@ -7,6 +7,10 @@
   "PUBLIC": "Public",
   "ERROR": "Error",
   "APP_SLOGAN": "I Will",
+  "MAKE_NEW": "Make new one",
+  "GALLERY": "Gallery",
+  "CAMERA": "Camera",
+
   "IMAGE_VIEW": "Image view",
 
   "hello": "hello",

@@ -12,7 +12,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreen();
 }
 
 /// 초기화면으로 이동하기 전에 splash 화면 표시
@@ -20,7 +20,7 @@ class SplashScreen extends StatefulWidget {
 /// 2가지가 모두 만족하면 초기화면으로 이동
 /// 일단 3초는 splash 화면 표시하고, 이후 0.1 초 마다 검사
 /// 만약 메세지를 표시해야 한다면 1초 이후에 표시
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreen extends State<SplashScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   int checkCnt = 0;
   int checkCntAll = 2;
@@ -48,6 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     return Scaffold(
       appBar: null,
+      backgroundColor: Colors.black87,
       body: Center(
         //child: Text('Splash screen'),
         child: Image.asset('assets/images/logo_transparent.png'),
@@ -101,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(milliseconds: 1000), () {
       // 최소 splash 화면을 보여 주는 시간
       Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        //log('Timer.periodic');
+        //dev.log('Timer.periodic');
         if (checkCnt >= checkCntAll) {
           timer.cancel();
           dev.log('Timer cancel');
@@ -138,9 +139,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<String?> checkInitMsg() async {
     dev.log('# SplashScreen checkInitMsg START');
 
+    // ######################################################################## //
     // 메세지를 보여주고 싶을때 아래 2개를 번갈아 사용
     return null;
     //return 'msg return';
+    // ######################################################################## //
   }
 ////////////////////////////////////////////////////////////////////////////////
 }

@@ -32,20 +32,20 @@ class McUserSqlite {
     } else {
       osWeb = AppConstant.WEB;
     }
-    log('OS/WEB: $osWeb');
+    dev.log('OS/WEB: $osWeb');
 
     if (osWeb == AppConstant.WEB) {
-      log('initDb $osWeb START');
+      dev.log('initDb $osWeb START');
 
       var factory = databaseFactoryFfiWeb;
-      log('initDb $osWeb START2');
+      dev.log('initDb $osWeb START2');
       database = await factory.openDatabase('mc_db.db');    // <- 이 코드에서 return 됨
-      log('initDb $osWeb START3');
+      dev.log('initDb $osWeb START3');
       //await database.execute('DROP TABLE IF EXISTS mc_user');
       await database.execute(
           'CREATE TABLE IF NOT EXISTS mc_user (email TEXT NOT NULL, signKey TEXT)');
 
-      log('initDb $osWeb END');
+      dev.log('initDb $osWeb END');
       isInit = true;
       return;
     }

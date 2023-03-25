@@ -7,6 +7,10 @@
   "PUBLIC": "공개",
   "ERROR": "에러",
   "APP_SLOGAN": "I Will",
+  "MAKE_NEW": "새로 만들기",
+  "GALLERY": "사진 가져오기",
+  "CAMERA": "카메라",
+
   "IMAGE_VIEW": "이미지 보기",
 
   "hello": "안녕",

@@ -51,8 +51,12 @@ class MyApp extends StatelessWidget {
         '/imageview': (context) => const ImageViewScreen(),
       },
       initialRoute: '/',
-      debugShowCheckedModeBanner: false,
-      // debug 라벨 없애기
+      debugShowCheckedModeBanner: false,    // debug 라벨 없애기
+
+      theme: ThemeData(
+        primarySwatch: Colors.grey,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
 
       ////////////////////////////////////////////////////////////////////////////////
       // EasyLocalization

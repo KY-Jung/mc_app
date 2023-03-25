@@ -8,7 +8,7 @@ class PublicTab extends StatefulWidget {
   const PublicTab({super.key});
 
   @override
-  _PublicTab createState() => _PublicTab();
+  State<PublicTab> createState() => _PublicTab();
 }
 
 class _PublicTab extends State<PublicTab> {
@@ -30,6 +30,7 @@ class _PublicTab extends State<PublicTab> {
       floatingActionButton: FloatingActionButton(
         child: const Text('+', style: TextStyle(fontSize: 24)),
         onPressed: () async {
+          _showBottomSheet();
           ////////////////////////////////////////////////////////////////////////////////
           //test1();
           //test2();
@@ -38,6 +39,47 @@ class _PublicTab extends State<PublicTab> {
       ),
     );
     ////////////////////////////////////////////////////////////////////////////////
+  }
+
+  _showBottomSheet() {
+    return showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
+      ),
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              onPressed: () {},
+              child: const Text('사진찍기'),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            const Divider(
+              thickness: 3,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            ElevatedButton(
+              onPressed: () {},
+              child: const Text('라이브러리에서 불러오기'),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+          ],
+        );
+      },
+    );
   }
 
 /*

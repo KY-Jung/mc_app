@@ -13,7 +13,7 @@ class IndexScreen extends StatefulWidget {
   const IndexScreen({super.key});
 
   @override
-  _IndexScreen createState() => _IndexScreen();
+  State<IndexScreen> createState() => _IndexScreen();
 }
 
 class _IndexScreen extends State<IndexScreen> {
@@ -22,8 +22,8 @@ class _IndexScreen extends State<IndexScreen> {
   final List<Widget> _listTab = [
     const MakeTab(),
     const ListTab(),
-    const BalanceTab(),
     const PublicTab(),
+    const BalanceTab(),
   ];
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ class _IndexScreen extends State<IndexScreen> {
           appBar: AppBar(
             title: Text('APP_SLOGAN'.tr()),
             centerTitle: true,
-            backgroundColor: Colors.black,
+            //backgroundColor: Colors.black,
             leading: IconButton(
               icon: Icon(Icons.menu),
               onPressed: () {
@@ -69,10 +69,10 @@ class _IndexScreen extends State<IndexScreen> {
             child: _listTab.elementAt(_selectedIndex),
           ),
           bottomNavigationBar: BottomNavigationBar(
-            backgroundColor: Colors.black,
+            //backgroundColor: Colors.black,
+            //selectedItemColor: Colors.white,
+            //unselectedItemColor: Colors.white60,
             type: BottomNavigationBarType.fixed,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.white60,
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.home),
@@ -83,12 +83,12 @@ class _IndexScreen extends State<IndexScreen> {
                 label: 'LIST'.tr(),
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.settings),
-                label: 'BALANCE'.tr(),
-              ),
-              BottomNavigationBarItem(
                 icon: const Icon(Icons.person),
                 label: 'PUBLIC'.tr(),
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.settings),
+                label: 'BALANCE'.tr(),
               ),
             ],
             currentIndex: _selectedIndex,
