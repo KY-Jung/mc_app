@@ -11,6 +11,20 @@
   "GALLERY": "Gallery",
   "CAMERA": "Camera",
 
+  "PARENT": "Big image",
+  "BABY":  "Smalll image",
+  "CAPTION": "Caption",
+  "SOUND":  "Sound",
+  "LINK": "Link",
+
+  "INFO": "Info",
+  "INIT_MAKE": "Do you want to completely reset the screen you are working on?",
+
+  "FRAME": "Frame",
+  "SIZE": "Size",
+  "SIGN": "Sign",
+
+
   "IMAGE_VIEW": "Image view",
 
   "hello": "hello",

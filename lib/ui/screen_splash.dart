@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/config_app.dart';
 import '../config/constant_app.dart';
 import '../util/util_popup.dart';
 
@@ -80,8 +81,8 @@ class _SplashScreen extends State<SplashScreen> {
         if (initMsg == null) {
           checkCnt++;
         } else {
-          Timer(const Duration(milliseconds: 1000), () {
-            // 최소 splash 화면을 보여 주는 시간
+          // 최소 splash 화면을 보여 주는 시간
+          Timer(const Duration(milliseconds: AppConfig.SPLASH_MSEC_WAIT), () {
             PopupUtil.popupAlertOk(context, '', initMsg).then((ret) {
               dev.log('popupAlertOk: $ret');
 
@@ -99,8 +100,8 @@ class _SplashScreen extends State<SplashScreen> {
       });
     });
 
-    Timer(const Duration(milliseconds: 1000), () {
-      // 최소 splash 화면을 보여 주는 시간
+    // 최소 splash 화면을 보여 주는 시간
+    Timer(const Duration(milliseconds: AppConfig.SPLASH_MSEC_WAIT), () {
       Timer.periodic(const Duration(milliseconds: 100), (timer) {
         //dev.log('Timer.periodic');
         if (checkCnt >= checkCntAll) {

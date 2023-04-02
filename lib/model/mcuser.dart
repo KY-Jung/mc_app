@@ -24,4 +24,5 @@ class McUser {
   String toString() {
     return 'User{email: $email, signKey: $signKey}';
   }
+
 }

@@ -1,19 +1,26 @@
 
-import 'package:flutter/widgets.dart';
+import 'dart:ui' as ui;
 
 class ParentInfo {
-  static Image? image;
 
-  static var width = 0;
-  static var height = 0;
+  static late double wScreen;
+  static late double hScreen;
+
+  static String path = '';
+  //static late ui.Image image;
+
+  static int wImage = 0;
+  static int hImage = 0;
+
+  static double inScale = 0;
+
+  static double xBlank = 0;
+  static double yBlank = 0;
+
+  static double xStart = 0;
+  static double yStart = 0;
 
   static double scale = 0;
-
-  static double x = 0;
-  static double y = 0;
-
-  static var xBlank = 0;
-  static var yBlank = 0;
 
 
 }

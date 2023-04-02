@@ -34,9 +34,11 @@ android/app/src/main/AndroidManifest.xml
 <application
     android:lable 항목 수정
 ```
----
-
----
+```agsl
++ FAB 문제점
+ExpandableFab 위치를 우하단에서 옮기지 못함
+sign 을 고려하여 우중간이면 좋겠음 
+```
 
 ---
 

@@ -37,13 +37,13 @@ class _ListTab extends State<ListTab> {
             Text('LIST'.tr()),
             Text('McImageId is ${mcImageProvider.getImageId()}'),
             ElevatedButton(
-              child: Text("plus 2"),
+              child: Text('plus 2'),
               onPressed: () {
                 mcImageProvider.setImageId('${mcImageProvider.getImageId()} 2');
               },
             ),
             ElevatedButton(
-              child: Text("plus 3"),
+              child: Text('plus 3'),
               onPressed: () {
                 mcImageProvider.setImageId('${mcImageProvider.getImageId()} 3');
               },
@@ -62,5 +62,6 @@ class _ListTab extends State<ListTab> {
       ),
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
 }

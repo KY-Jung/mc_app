@@ -4,8 +4,6 @@ import 'package:mc/model/mcuser.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../config/constant_app.dart';
-
 class McUserSqlite {
   late Database database;
   bool isInit = false;
@@ -79,6 +77,7 @@ class McUserSqlite {
     );
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
   Future<List<McUser>?> getUser() async {
     dev.log('# McUserSqlite getUser START');
 
@@ -103,7 +102,6 @@ class McUserSqlite {
       });
     }
   }
-
   Future<int> setUser(user) async {
     dev.log('# McUserSqlite setUser START');
     dev.log('setUser: $user');
@@ -114,4 +112,6 @@ class McUserSqlite {
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+  ////////////////////////////////////////////////////////////////////////////////
+
 }

@@ -11,6 +11,21 @@
   "GALLERY": "사진 가져오기",
   "CAMERA": "카메라",
 
+  "PARENT": "배경이미지",
+  "BABY":  "작은이미지",
+  "CAPTION": "문구",
+  "SOUND":  "소리",
+  "LINK": "링크",
+
+  "INFO": "알림",
+  "INIT_MAKE": "작업중인 화면을 완전히 초기화하시겠습니까?",
+
+  "FRAME": "틀",
+  "SIZE": "크기",
+  "SIGN": "서명",
+
+
+
   "IMAGE_VIEW": "이미지 보기",
 
   "hello": "안녕",

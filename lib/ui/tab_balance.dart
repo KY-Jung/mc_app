@@ -37,13 +37,13 @@ class _BalanceTab extends State<BalanceTab> {
             Text('BALANCE'.tr()),
             Text('McImageId is ${mcImageProvider.getImageId()}'),
             ElevatedButton(
-              child: Text("plus 가"),
+              child: Text('plus 가'),
               onPressed: () {
                 mcImageProvider.setImageId('${mcImageProvider.getImageId()} 가');
               },
             ),
             ElevatedButton(
-              child: Text("plus 나"),
+              child: Text('plus 나'),
               onPressed: () {
                 mcImageProvider.setImageId('${mcImageProvider.getImageId()} 나');
               },
@@ -53,5 +53,6 @@ class _BalanceTab extends State<BalanceTab> {
       ),
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
 }

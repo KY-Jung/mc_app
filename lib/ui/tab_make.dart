@@ -7,6 +7,7 @@ import 'package:mc/ui/screen_make.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:provider/provider.dart';
 
+import '../dto/info_parent.dart';
 import '../model/mcuser.dart';
 
 import '../provider/provider_mcImage.dart';
@@ -20,6 +21,7 @@ class MakeTab extends StatefulWidget {
 
 class _MakeTab extends State<MakeTab> {
 
+  // initState 에서 build 후에 임시로 이동하기 위해 사용
   final MakeScreen _makeScreen = const MakeScreen();
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +31,7 @@ class _MakeTab extends State<MakeTab> {
     super.initState();
 
     // ######################################################################## //
-    // 자동 이동
+    // TODO : 임시 사용, 초기 화면 지정
     WidgetsBinding.instance.addPostFrameCallback((_) => Navigator.push(context, MaterialPageRoute(builder: (context) => _makeScreen), ));
     // ######################################################################## //
 
