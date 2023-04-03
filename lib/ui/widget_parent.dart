@@ -5,18 +5,26 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../dto/info_parent.dart';
+
 enum MakeParentEnum { FRAME, SIZE, SIGN }
 
 class ParentWidget extends StatefulWidget {
-  const ParentWidget({super.key});
+
+  final void Function() callbackParentSizeInitScreen;
+
+  //const ParentWidget({super.key});
+  const ParentWidget({required this.callbackParentSizeInitScreen, super.key});
 
   @override
   State<ParentWidget> createState() => _ParentWidget();
 }
 
 class _ParentWidget extends State<ParentWidget> {
+
   ////////////////////////////////////////////////////////////////////////////////
   List<bool> toggleSelectList = [true, false, false];
+
   MakeParentEnum makeParentEnum = MakeParentEnum.FRAME;
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +43,7 @@ class _ParentWidget extends State<ParentWidget> {
     _loadPreferences();
     ////////////////////////////////////////////////////////////////////////////////
 
+    /*
     // ######################################################################## //
     // TODO : 임시 사용, 초기 화면 지정
     makeParentEnum = MakeParentEnum.SIZE;
@@ -45,10 +54,21 @@ class _ParentWidget extends State<ParentWidget> {
           'MakeParentEnum', EnumToString.convertToString(makeParentEnum));
     });
     // ######################################################################## //
+    */
 
     dev.log('# ParentWidget initState END');
   }
+  @override
+  void dispose() {
+    dev.log('# ParentWidget dispose START');
+    super.dispose();
 
+    // 마지막 상태 저장
+    // 맨 나중에 호출되어서 아래코드 효과없음
+    //ParentInfo.isSize = false;
+    // 아래 코드는 에러 유발
+    //widget.callbackParentSizeInitScreen();
+  }
   @override
   Widget build(BuildContext context) {
     dev.log('# ParentWidget build START');
@@ -168,7 +188,6 @@ class _ParentWidget extends State<ParentWidget> {
     dev.log('# ParentWidget _checkPreferences START');
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
     var retPrefs = prefs.getString('MakeParentEnum');
     if (retPrefs == null) {
       // 처음인 경우
@@ -187,24 +206,44 @@ class _ParentWidget extends State<ParentWidget> {
       }
     }
     dev.log('makeParentEnum: $makeParentEnum');
-  }
 
+    // TODO : impl
+    switch (makeParentEnum) {
+      case MakeParentEnum.FRAME:
+        break;
+      case MakeParentEnum.SIZE:
+        dev.log('case MakeParentEnum.SIZE');
+        break;
+      case MakeParentEnum.SIGN:
+        break;
+    }
+
+    widget.callbackParentSizeInitScreen();
+
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
   void _toggleButtonsSelect(idx) {
+    dev.log('# ParentWidget _toggleButtonsSelect START');
     toggleSelectList = [false, false, false];
     switch (idx) {
       case 0:
+        //if (makeParentEnum == MakeParentEnum.FRAME)  return;
         makeParentEnum = MakeParentEnum.FRAME;
         toggleSelectList[0] = true;
+        ParentInfo.isSize = false;
         break;
       case 1:
+        //if (makeParentEnum == MakeParentEnum.SIZE)  return;
         makeParentEnum = MakeParentEnum.SIZE;
         toggleSelectList[1] = true;
+        ParentInfo.isSize = true;
         break;
       case 2:
+        //if (makeParentEnum == MakeParentEnum.SIGN)  return;
         makeParentEnum = MakeParentEnum.SIGN;
         toggleSelectList[2] = true;
+        ParentInfo.isSize = false;
         break;
     }
     SharedPreferences.getInstance().then((prefs) {
@@ -217,11 +256,16 @@ class _ParentWidget extends State<ParentWidget> {
       case MakeParentEnum.FRAME:
         break;
       case MakeParentEnum.SIZE:
+        dev.log('case MakeParentEnum.SIZE');
         break;
       case MakeParentEnum.SIGN:
         break;
     }
 
+    widget.callbackParentSizeInitScreen();
+
     setState(() {});
   }
+
+
 }
