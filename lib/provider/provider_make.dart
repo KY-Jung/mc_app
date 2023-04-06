@@ -6,7 +6,32 @@ import '../dto/info_link.dart';
 import '../dto/info_parent.dart';
 import '../dto/info_sound.dart';
 
-class MakeImageProvider with ChangeNotifier {
+class MakeProvider with ChangeNotifier {
+  ////////////////////////////////////////////////////////////////////////////////
+  /// 설정 : ParentWidget 에서 버튼 누를때, loadPreferences 할때
+  /// 해제 : ParentWidget 에서 버튼 누를때,
+  ///       MakeScreen 에서 fab 를 눌러서 교체될때 (일일이 찾아서 처리해야 함)
+  ///       ParentWidget 에서 dispose 할때는 에러 발생해서 안됨
+  bool _parentSize = false;
+
+  /// MakeScreen 에서 onTapDown 할때
+  /// 해제 : onTapUp 할때
+  bool _parentResize = false;
+
+  bool get parentSize => _parentSize;
+
+  void setParentSize(bool value) {
+    _parentSize = value;
+    notifyListeners();
+  }
+
+  bool get parentResize => _parentResize;
+
+  void setParentResize(bool value) {
+    _parentResize = value;
+    notifyListeners();
+  }
+  ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   ParentInfo? _parentInfo;
@@ -14,34 +39,40 @@ class MakeImageProvider with ChangeNotifier {
   CaptionInfo? _captionInfo;
   SoundInfo? _soundInfo;
   LinkInfo? _linkInfo;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   ParentInfo? get parentInfo => _parentInfo;
+
   set parentInfo(ParentInfo? value) {
     _parentInfo = value;
     notifyListeners();
   }
 
   BabyInfo? get babyInfo => _babyInfo;
+
   set babyInfo(BabyInfo? value) {
     _babyInfo = value;
     notifyListeners();
   }
 
   CaptionInfo? get captionInfo => _captionInfo;
+
   set captionInfo(CaptionInfo? value) {
     _captionInfo = value;
     notifyListeners();
   }
 
   SoundInfo? get soundInfo => _soundInfo;
+
   set soundInfo(SoundInfo? value) {
     _soundInfo = value;
     notifyListeners();
   }
 
   LinkInfo? get linkInfo => _linkInfo;
+
   set linkInfo(LinkInfo? value) {
     _linkInfo = value;
     notifyListeners();
@@ -49,8 +80,8 @@ class MakeImageProvider with ChangeNotifier {
 
   @override
   String toString() {
-    return 'MakeImageProvider{_parentInfo: $_parentInfo, _babyInfo: $_babyInfo, _captionInfo: $_captionInfo, _soundInfo: $_soundInfo, _linkInfo: $_linkInfo}';
+    return 'MakeProvider{_parentInfo: $_parentInfo, _babyInfo: $_babyInfo, _captionInfo: $_captionInfo, _soundInfo: $_soundInfo, _linkInfo: $_linkInfo}';
   }
-  ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
 }

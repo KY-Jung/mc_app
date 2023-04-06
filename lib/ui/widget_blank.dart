@@ -6,10 +6,10 @@ class BlankWidget extends StatefulWidget {
   const BlankWidget({super.key});
 
   @override
-  State<BlankWidget> createState() => _BlankWidget();
+  State<BlankWidget> createState() => BlankWidgetState();
 }
 
-class _BlankWidget extends State<BlankWidget> {
+class BlankWidgetState extends State<BlankWidget> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override

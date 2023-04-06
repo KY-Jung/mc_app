@@ -6,10 +6,10 @@ class BabyWidget extends StatefulWidget {
   const BabyWidget({super.key});
 
   @override
-  State<BabyWidget> createState() => _BabyWidget();
+  State<BabyWidget> createState() => BabyWidgetState();
 }
 
-class _BabyWidget extends State<BabyWidget> {
+class BabyWidgetState extends State<BabyWidget> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override

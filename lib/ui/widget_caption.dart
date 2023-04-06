@@ -6,10 +6,10 @@ class CaptionWidget extends StatefulWidget {
   const CaptionWidget({super.key});
 
   @override
-  State<CaptionWidget> createState() => _CaptionWidget();
+  State<CaptionWidget> createState() => CaptionWidgetState();
 }
 
-class _CaptionWidget extends State<CaptionWidget> {
+class CaptionWidgetState extends State<CaptionWidget> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override

@@ -6,10 +6,10 @@ class SoundWidget extends StatefulWidget {
   const SoundWidget({super.key});
 
   @override
-  State<SoundWidget> createState() => _SoundWidget();
+  State<SoundWidget> createState() => SoundWidgetState();
 }
 
-class _SoundWidget extends State<SoundWidget> {
+class SoundWidgetState extends State<SoundWidget> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override

@@ -1,26 +1,25 @@
 import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mc/provider/provider_make.dart';
 import 'package:mc/ui/widget_baby.dart';
 import 'package:mc/ui/widget_blank.dart';
 import 'package:mc/ui/widget_caption.dart';
 import 'package:mc/ui/widget_link.dart';
 import 'package:mc/ui/widget_parent.dart';
 import 'package:mc/ui/widget_sound.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 import '../config/config_app.dart';
 import '../config/constant_app.dart';
 import '../dto/info_parent.dart';
-import '../util/util_image.dart';
+import '../util/util_info.dart';
 import '../util/util_popup.dart';
 
 enum MakeEnum {
@@ -31,23 +30,36 @@ enum MakeEnum {
   SOUND,
   LINK,
 }
+
 enum MakeBringEnum {
   GALLERY,
   CAMERA,
 }
-enum MakeParentSizeEnum {
+
+enum MakeParentSizePointEnum {
   NONE,
-  EDIT,
+  LEFTTOP,
+  RIGHTTOP,
+  LEFTBOTTOM,
+  RIGHTBOTTOM,
+  LEFTTOPH,
+  LEFTTOPV,
+  RIGHTTOPH,
+  RIGHTTOPV,
+  LEFTBOTTOMH,
+  LEFTBOTTOMV,
+  RIGHTBOTTOMH,
+  RIGHTBOTTOMV,
 }
 
 class MakeScreen extends StatefulWidget {
   const MakeScreen({super.key});
 
   @override
-  State<MakeScreen> createState() => _MakeScreen();
+  State<MakeScreen> createState() => MakeScreenState();
 }
 
-class _MakeScreen extends State<MakeScreen> {
+class MakeScreenState extends State<MakeScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   // variable
 
@@ -56,26 +68,25 @@ class _MakeScreen extends State<MakeScreen> {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////////
   // object
 
-  //Matrix4 matrix4 = Matrix4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
   final TransformationController _transformationController =
       TransformationController(
           Matrix4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
 
-  late TapDownDetails _tapDownDetails;
-  late ScaleUpdateDetails _scaleUpdateDetails;
+  late TapDownDetails _tapDownDetails; // onDoubleTap 에서 사용
 
   /// build 이후에 InteractiveViewer 화면 크기를 구할때 사용
-  final GlobalKey _globalKey = GlobalKey();
+  final GlobalKey _screenGlobalKey = GlobalKey();
 
-  /// float 를 toggle 할때 사용
-  late GlobalObjectKey<ExpandableFabState> _floatKey;
+  /// fab 을 toggle 할때 사용
+  late final GlobalObjectKey<ExpandableFabState> _fabGlobalKey =
+      GlobalObjectKey<ExpandableFabState>(context);
 
+  // provider 방식으로 교체
+  //ParentWidget _parentWidget = ParentWidget(callbackParentSizeInitScreen: _callbackParentSizeInitScreen);
+  //final GlobalKey<ParentWidgetState> _globalKeyParentWidget = GlobalKey();
+  //late ParentWidget _parentWidget;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -85,23 +96,24 @@ class _MakeScreen extends State<MakeScreen> {
     super.initState();
 
     ////////////////////////////////////////////////////////////////////////////////
-    // for FAB
-    _floatKey = GlobalObjectKey<ExpandableFabState>(context);
+    //_parentWidget = ParentWidget(key: _globalKeyParentWidget, callbackParentSizeInitScreen: _callbackParentSizeInitScreen);
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
+    // 초기화
     if (ParentInfo.path != '') {
-      dev.log('recall _setParentInfo');
-      _setParentInfo(ParentInfo.path).then((_) => {});
       _makeEnum = MakeEnum.PARENT;
 
-      // TODO : 나머지도 다시 초기화
+      dev.log('initState recall _setParentInfo');
+      InfoUtil.setParentInfo(ParentInfo.path).then((_) => {});
+
+      // TODO : 나머지도 있다면 초기화
     }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     /// build 이후 실행
-    /// InteractiveViewer 실제 크기 구하기
+    /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
     WidgetsBinding.instance.addPostFrameCallback((_) => _afterBuild(context));
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,7 +131,12 @@ class _MakeScreen extends State<MakeScreen> {
   @override
   Widget build(BuildContext context) {
     dev.log('# MakeScreen build START');
-    dev.log('makeType: $_makeEnum');
+
+    dev.log('build _makeEnum: $_makeEnum');
+    dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
+
+    MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
+    dev.log('parentSize: ${makeProvider.parentSize}, parentResize: ${makeProvider.parentResize}');
 
     return Scaffold(
       appBar: AppBar(
@@ -130,7 +147,6 @@ class _MakeScreen extends State<MakeScreen> {
           Container(
             alignment: Alignment.center,
             margin: const EdgeInsets.all(10),
-            //padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -158,14 +174,19 @@ class _MakeScreen extends State<MakeScreen> {
                   if (_makeEnum != MakeEnum.BLANK)
                     GestureDetector(
                       onTapDown: _onTapDown,
+                      onTapUp: _onTapUp,
                       onDoubleTap: _onDoubleTap,
                       //onPanUpdate: _onPanUpdate,    // onInteractionUpdate 과 중복 문제 발생
                       //onPanEnd: _onPanEnd,
                       child: InteractiveViewer(
-                        // for build 이후에 _initScreen 에서 InteractiveViewer 의 사이즈 구하기
-                        key: _globalKey,
-                        maxScale: AppConfig.MAKE_SCREEN_MAX,
-                        minScale: AppConfig.MAKE_SCREEN_MIN,
+                        // build 이후 InteractiveViewer 의 사이즈 구하기
+                        key: _screenGlobalKey,
+                        maxScale: (context.read<MakeProvider>().parentSize)
+                            ? 1.0
+                            : AppConfig.MAKE_SCREEN_MAX,
+                        minScale: (context.read<MakeProvider>().parentSize)
+                            ? 1.0
+                            : AppConfig.MAKE_SCREEN_MIN,
                         transformationController: _transformationController,
                         panEnabled: true,
                         scaleEnabled: true,
@@ -187,14 +208,15 @@ class _MakeScreen extends State<MakeScreen> {
                       child: RepaintBoundary(
                         child: CustomPaint(
                           // size 안 정해도 동작함
-                          //painter: MakePainter(),
-                          painter: (ParentInfo.isSize) ? MakeParentSizePainter() : MakePainter(),
+                          painter: (context.watch<MakeProvider>().parentSize)
+                              ? MakeParentSizePainter()
+                              : MakePainter(),
                         ),
                       ),
                     ),
                   if (_makeEnum == MakeEnum.BLANK)
                     Row(
-                      key: _globalKey,
+                      key: _screenGlobalKey,
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
                         ElevatedButton.icon(
@@ -205,7 +227,6 @@ class _MakeScreen extends State<MakeScreen> {
                             label: Text('CAMERA'.tr()),
                             style: TextButton.styleFrom(
                                 backgroundColor: Colors.white),
-                            //onPressed: _bringPressed(BringTypeEnum.CAMERA),
                             onPressed: () {
                               _bringParentPressed(MakeBringEnum.CAMERA);
                             }),
@@ -222,82 +243,86 @@ class _MakeScreen extends State<MakeScreen> {
                             }),
                       ],
                     ),
-                  //if (_makeEnum == MakeEnum.BLANK)
-                  ExpandableFab(
-                      key: _floatKey,
-                      //duration: const Duration(seconds: 1),
-                      distance: 60.0,
-                      type: ExpandableFabType.up,
-                      fanAngle: 90,
-                      child: const Icon(Icons.library_add),
-                      collapsedFabSize: ExpandableFabSize.small,
-                      //foregroundColor: Colors.amber,
-                      //backgroundColor: Colors.green,
-                      closeButtonStyle: const ExpandableFabCloseButtonStyle(
-                        child: Icon(Icons.close),
-                        //foregroundColor: Colors.deepOrangeAccent,
-                        //backgroundColor: Colors.lightGreen,
+                  if (_makeEnum != MakeEnum.BLANK)
+                    Padding(
+                      padding:
+                          EdgeInsets.all((AppBar().preferredSize.height * 0.8)),
+                      child: ExpandableFab(
+                        key: _fabGlobalKey,
+                        duration: const Duration(milliseconds: 300),
+                        distance: 60.0,
+                        type: ExpandableFabType.up,
+                        fanAngle: 90,
+                        child: const Icon(Icons.library_add),
+                        collapsedFabSize: ExpandableFabSize.small,
+                        //foregroundColor: Colors.amber,
+                        //backgroundColor: Colors.green,
+                        closeButtonStyle: const ExpandableFabCloseButtonStyle(
+                          child: Icon(Icons.close),
+                          foregroundColor: Colors.black,
+                          backgroundColor: Colors.black26,
+                        ),
+                        onOpen: () => HapticFeedback.vibrate(),
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(
+                              Icons.open_in_browser,
+                              color: Colors.white60,
+                            ),
+                            label: Text('LINK'.tr()),
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.pinkAccent),
+                            onPressed: _fabLink,
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(
+                              Icons.volume_up_rounded,
+                              color: Colors.white60,
+                            ),
+                            label: Text('SOUND'.tr()),
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.lightGreen),
+                            onPressed: _fabSound,
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(
+                              Icons.edit,
+                              color: Colors.white60,
+                            ),
+                            label: Text('CAPTION'.tr()),
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.amberAccent),
+                            onPressed: _fabCaption,
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(
+                              Icons.photo_album,
+                              color: Colors.white60,
+                            ),
+                            label: Text('BABY'.tr()),
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.orange),
+                            onPressed: _fabBaby,
+                          ),
+                          ElevatedButton.icon(
+                            icon: const Icon(
+                              Icons.aspect_ratio,
+                              color: Colors.white60,
+                            ),
+                            label: Text("PARENT".tr()),
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.blueAccent),
+                            onPressed: _fabParent,
+                          ),
+                        ],
                       ),
-                      onOpen: () => HapticFeedback.vibrate(),
-                      children: [
-                        ElevatedButton.icon(
-                          icon: const Icon(
-                            Icons.open_in_browser,
-                            color: Colors.white60,
-                          ),
-                          label: Text('LINK'.tr()),
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.pinkAccent),
-                          onPressed: _fabLink,
-                        ),
-                        ElevatedButton.icon(
-                          icon: const Icon(
-                            Icons.volume_up_rounded,
-                            color: Colors.white60,
-                          ),
-                          label: Text('SOUND'.tr()),
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.lightGreen),
-                          onPressed: _fabSound,
-                        ),
-                        ElevatedButton.icon(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Colors.white60,
-                          ),
-                          label: Text('CAPTION'.tr()),
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.amberAccent),
-                          onPressed: _fabCaption,
-                        ),
-                        ElevatedButton.icon(
-                          icon: const Icon(
-                            Icons.photo_album,
-                            color: Colors.white60,
-                          ),
-                          label: Text('BABY'.tr()),
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.orange),
-                          onPressed: _fabBaby,
-                        ),
-                        ElevatedButton.icon(
-                          icon: const Icon(
-                            Icons.aspect_ratio,
-                            color: Colors.white60,
-                          ),
-                          label: Text("PARENT".tr()),
-                          style: TextButton.styleFrom(
-                              backgroundColor: Colors.blueAccent),
-                          onPressed: _fabParent,
-                        ),
-                      ],
                     ),
                 ],
               ),
             ),
             SizedBox(
               height: AppBar().preferredSize.height * 1.6,
-              child: _chooseFb(_makeEnum),
+              child: _chooseFunctionBar(_makeEnum),
             ),
           ],
         ),
@@ -311,14 +336,12 @@ class _MakeScreen extends State<MakeScreen> {
 
   /// build 이후에 실행
   void _afterBuild(context) {
-    dev.log('# MakeScreen _initScreen START');
-
-    dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
+    dev.log('# MakeScreen _afterBuild START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    /// InteractiveViewer 실제 크기 구하기
+    /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
     RenderBox renderBox =
-        _globalKey.currentContext!.findRenderObject() as RenderBox;
+        _screenGlobalKey.currentContext!.findRenderObject() as RenderBox;
     Size screenSize = renderBox.size;
     dev.log('InteractiveViewer size: $screenSize');
     var wScreen = screenSize.width;
@@ -329,12 +352,13 @@ class _MakeScreen extends State<MakeScreen> {
     ////////////////////////////////////////////////////////////////////////////////
   }
 
-  Widget _chooseFb(type) {
+  Widget _chooseFunctionBar(type) {
     switch (type) {
       case MakeEnum.BLANK:
         return const BlankWidget();
       case MakeEnum.PARENT:
-        return ParentWidget(callbackParentSizeInitScreen: _callbackParentSizeInitScreen);
+        //return ParentWidget(callbackParentSizeInitScreen: _callbackParentSizeInitScreen);
+        return const ParentWidget();
       case MakeEnum.BABY:
         return const BabyWidget();
       case MakeEnum.CAPTION:
@@ -354,7 +378,7 @@ class _MakeScreen extends State<MakeScreen> {
   // Event Start //
   ////////////////////////////////////////////////////////////////////////////////
   void _bringParentPressed(MakeBringEnum type) async {
-    dev.log('# MakeScreen _bringPressed START');
+    dev.log('# MakeScreen _bringParentPressed START');
 
     XFile? xFile;
     if (type == MakeBringEnum.CAMERA) {
@@ -367,47 +391,27 @@ class _MakeScreen extends State<MakeScreen> {
 
     // TODO : 모래시계 필요
 
-    await _setParentInfo(xFile.path);
+    await InfoUtil.setParentInfo(xFile.path);
+
+    // TODO : 나머지도 있다면 재조정
 
     setState(() {
       _makeEnum = MakeEnum.PARENT;
     });
-    dev.log('# MakeScreen _bringPressed END');
+    dev.log('# MakeScreen _bringParentPressed END');
   }
 
   /// 변경되는 값 : xStart, yStart, xyOffset
   void _onInteractionUpdate(ScaleUpdateDetails scaleUpdateDetails) async {
-    _scaleUpdateDetails = scaleUpdateDetails;
-
     ////////////////////////////////////////////////////////////////////////////////
     // for debug
     Matrix4 matrix4 = _transformationController.value;
+    double scale = matrix4.entry(0, 0);
     double xStart = matrix4.entry(0, 3);
     double yStart = matrix4.entry(1, 3);
-    Offset xyOffset = _scaleUpdateDetails.localFocalPoint;
+    Offset xyOffset = scaleUpdateDetails.localFocalPoint;
     dev.log(
-        '_onInteractionUpdate xyOffset: $xyOffset, xStart: $xStart, yStart: $yStart');
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // return 하는 경우
-    if (_makeEnum == MakeEnum.PARENT) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      var retPrefs = prefs.getString('MakeParentEnum');
-      if (retPrefs == null) {
-        // 처음인 경우
-      } else {
-        var retEnum = EnumToString.fromString(MakeParentEnum.values, retPrefs);
-        if (retEnum == null) {
-          // 에러 상황 (enum 에 없는 값이 저장된 경우)
-        } else {
-          if (retEnum == MakeParentEnum.SIZE) {
-            dev.log('MakeParentEnum.SIZE return');
-            return;
-          }
-        }
-      }
-    }
+        '_onInteractionUpdate scale: $scale, xyOffset: $xyOffset, xStart: $xStart, yStart: $yStart');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -424,45 +428,105 @@ class _MakeScreen extends State<MakeScreen> {
       _transformationController.value.setEntry(1, 3, 0);
     }
     ////////////////////////////////////////////////////////////////////////////////
+
+    // TODO : 확대된 경우 blank 처리하기
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // resize 상태 라면
+    if (context.read<MakeProvider>().parentResize) {
+
+      // blank 검사
+      if (!InfoUtil.checkBlankArea(xyOffset, ParentInfo.makeParentSizePointEnum)) {
+        dev.log('\n\n\n### checkBlankArea return\n\n\n');
+        return;
+      }
+
+      // bracket 간에 침범할 수 없는 영역을 순식간에 넘어갔는지 검사
+      if (!InfoUtil.checkBracketCrossArea(xyOffset, ParentInfo.makeParentSizePointEnum)) {
+        dev.log('\n\n\n### checkBracketCrossArea return\n\n\n');
+        return;
+      }
+
+      /*
+      // 백업
+      Offset xyOffsetOld = ParentInfo.xyOffset;
+      // bracket area 설정
+      InfoUtil.updateBracketArea(xyOffset, ParentInfo.makeParentSizePointEnum);
+
+      // shrink 허용치를 벗어나면 return
+      double minArea = (ParentInfo.wScreen - ParentInfo.xBlank) *
+          (ParentInfo.hScreen - ParentInfo.yBlank) *
+          AppConfig.SIZE_SHRINK_MIN;
+      double updateArea =
+          (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) *
+              (ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy);
+      dev.log('ParentInfo.wScreen: ${ParentInfo.wScreen} ,ParentInfo.xBlank: ${ParentInfo.xBlank}');
+      dev.log('(ParentInfo.wScreen - ParentInfo.xBlank): ${(ParentInfo.wScreen - ParentInfo.xBlank)}');
+      dev.log('ParentInfo.hScreen: ${ParentInfo.hScreen} ,ParentInfo.yBlank: ${ParentInfo.yBlank}');
+      dev.log('(ParentInfo.hScreen - ParentInfo.yBlank): ${(ParentInfo.hScreen - ParentInfo.yBlank)}');
+      dev.log('AppConfig.SIZE_SHRINK_MIN: ${AppConfig.SIZE_SHRINK_MIN}');
+      dev.log('minArea: ${minArea}');
+      dev.log('ParentInfo.rightTopOffset.dx: ${ParentInfo.rightTopOffset.dx} ,ParentInfo.leftTopOffset.dx: ${ParentInfo.leftTopOffset.dx}');
+      dev.log('(ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx): ${(ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx)}');
+      dev.log('ParentInfo.rightBottomOffset.dy: ${ParentInfo.rightBottomOffset.dy} ,ParentInfo.rightTopOffset.dy: ${ParentInfo.rightTopOffset.dy}');
+      dev.log('(ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy): ${(ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy)}');
+      dev.log('minArea: $minArea ,updateArea: $updateArea');
+      if (minArea >= updateArea) {
+        // 백업한 것으로 복구
+        InfoUtil.updateBracketArea(xyOffsetOld, ParentInfo.makeParentSizePointEnum);
+        dev.log(
+            'parentResize exceed ${AppConfig.SIZE_SHRINK_MIN * 100}%: $xyOffset');
+        return;
+      }
+       */
+      // shrink 허용치 검사
+      Rect bracketRect = InfoUtil.calcRect(xyOffset, ParentInfo.makeParentSizePointEnum);
+      dev.log('bracketRect: $bracketRect');
+      double minArea = (ParentInfo.wScreen - ParentInfo.xBlank) *
+          (ParentInfo.hScreen - ParentInfo.yBlank) *
+          AppConfig.SIZE_SHRINK_MIN;
+      if (minArea >= (bracketRect.width * bracketRect.height)) {
+        dev.log(
+            'parentResize exceed ${AppConfig.SIZE_SHRINK_MIN * 100}%: $xyOffset');
+        return;
+      }
+
+      // sticky
+
+
+      ////////////////////////////////////////////////////////////////////////////////
+      ParentInfo.xStart = xStart;
+      ParentInfo.yStart = yStart;
+      ParentInfo.xyOffset = xyOffset; // for test
+      ////////////////////////////////////////////////////////////////////////////////
+
+      // ParentInfo 의 Offset 수정 --> paint 에서 사용
+      InfoUtil.updateBracketArea(xyOffset, ParentInfo.makeParentSizePointEnum);
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
+    setState(() {
+    });
   }
 
   /// 변경되는 값 : xyOffset
   /// 보정되는 값 : _transformationController.value 의 xStart, yStart
-  void _onTapDown(TapDownDetails details) async {
+  void _onTapDown(TapDownDetails tapDownDetails) async {
     // local x/y from image, global x/y from phone screen
     //dev.log('_onTapDown localPosition: ${details.localPosition}');
     dev.log(
         '_onTapDown _transformationController.value: ${_transformationController.value}');
 
-    _tapDownDetails = details;
+    // onDoubleTap 에서 사용
+    _tapDownDetails = tapDownDetails;
 
     ////////////////////////////////////////////////////////////////////////////////
-    var floatKeyState = _floatKey.currentState;
+    // toggle 일 경우 return
+    var floatKeyState = _fabGlobalKey.currentState;
     if (floatKeyState != null) {
       if (floatKeyState.isOpen) {
         floatKeyState.toggle();
         return;
-      }
-    }
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // return 하는 경우
-    if (_makeEnum == MakeEnum.PARENT) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      var retPrefs = prefs.getString('MakeParentEnum');
-      if (retPrefs == null) {
-        // 처음인 경우
-      } else {
-        var retEnum = EnumToString.fromString(MakeParentEnum.values, retPrefs);
-        if (retEnum == null) {
-          // 에러 상황 (enum 에 없는 값이 저장된 경우)
-        } else {
-          if (retEnum == MakeParentEnum.SIZE) {
-            dev.log('MakeParentEnum.SIZE return');
-            return;
-          }
-        }
       }
     }
     ////////////////////////////////////////////////////////////////////////////////
@@ -493,6 +557,52 @@ class _MakeScreen extends State<MakeScreen> {
     }
     ////////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // size 상태인 경우 bracket 이 선택되었는지 검사
+    if (context.read<MakeProvider>().parentSize) {
+      dev.log(
+          'parentSize leftTopOffset: ${ParentInfo.leftTopOffset}, rightTopOffset: ${ParentInfo.rightTopOffset}, '
+          'leftBottomOffset: ${ParentInfo.leftBottomOffset}, rightBottomOffset: ${ParentInfo.rightBottomOffset}');
+
+      ParentInfo.xyOffset = xyOffset; // for test
+      MakeParentSizePointEnum makeParentSizeEnum =
+          InfoUtil.findBracketArea(xyOffset);
+      dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
+      if (makeParentSizeEnum != MakeParentSizePointEnum.NONE) {
+        ParentInfo.makeParentSizePointEnum = makeParentSizeEnum;
+        context.read<MakeProvider>().setParentResize(true);
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+  }
+
+  void _onTapUp(TapUpDetails tapUpDetails) async {
+    //dev.log('_onTapUp TapUpDetails: ${tapUpDetails.localPosition}');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // resize 해제 결정
+    if (context.read<MakeProvider>().parentResize) {
+      bool leftTop = (ParentInfo.leftTopOffset.dx == ParentInfo.xBlank &&
+          ParentInfo.leftTopOffset.dy == ParentInfo.yBlank);
+      bool rightTop = (ParentInfo.rightTopOffset.dx ==
+              ParentInfo.wScreen - ParentInfo.xBlank &&
+          ParentInfo.rightTopOffset.dy == ParentInfo.yBlank);
+      bool leftBottom = (ParentInfo.leftBottomOffset.dx == ParentInfo.xBlank &&
+          ParentInfo.leftBottomOffset.dy ==
+              ParentInfo.hScreen - ParentInfo.yBlank);
+      bool rightBottom = (ParentInfo.rightBottomOffset.dx ==
+              ParentInfo.wScreen - ParentInfo.xBlank &&
+          ParentInfo.rightBottomOffset.dy ==
+              ParentInfo.hScreen - ParentInfo.yBlank);
+
+      if (leftTop && rightTop && leftBottom && rightBottom) {
+        dev.log('_onTapUp resize stop');
+        context.read<MakeProvider>().setParentResize(false);
+      } else {
+        dev.log('_onTapUp resize continue');
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////
   }
 
   /// 변경되는 값 : scale, xStart, yStart, xyOffset
@@ -512,23 +622,10 @@ class _MakeScreen extends State<MakeScreen> {
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    // Size 인 경우
-    if (_makeEnum == MakeEnum.PARENT) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      var retPrefs = prefs.getString('MakeParentEnum');
-      if (retPrefs == null) {
-        // 처음인 경우
-      } else {
-        var retEnum = EnumToString.fromString(MakeParentEnum.values, retPrefs);
-        if (retEnum == null) {
-          // 에러 상황 (enum 에 없는 값이 저장된 경우)
-        } else {
-          if (retEnum == MakeParentEnum.SIZE) {
-            dev.log('MakeParentEnum.SIZE return');
-            return;
-          }
-        }
-      }
+    // return 하는 경우
+    if (context.read<MakeProvider>().parentSize) {
+      dev.log('_onDoubleTap parentSize return');
+      return;
     }
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -555,15 +652,13 @@ class _MakeScreen extends State<MakeScreen> {
     }
     ////////////////////////////////////////////////////////////////////////////////
 
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   void _onTabDelete() {
     dev.log('_onTabDelete');
 
-    // TODO
+    // TODO : 한개씩 지우기
   }
 
   void _onLongPressDelete() {
@@ -574,9 +669,13 @@ class _MakeScreen extends State<MakeScreen> {
       dev.log('popupAlertOkCancel: $ret');
 
       // example
-      if (ret == null) {} // 팝업 바깥 영역을 클릭한 경우
+      if (ret == null) {
+        // 팝업 바깥 영역을 클릭한 경우
+        return;
+      }
       if (ret == AppConstant.OK) {
         // TODO : 모두 초기화하는 함수를 별도로 작성하고 호출
+
         ParentInfo.path = '';
         setState(() {
           _makeEnum = MakeEnum.BLANK;
@@ -588,12 +687,12 @@ class _MakeScreen extends State<MakeScreen> {
   void _fabParent() {
     dev.log('_fabParent');
 
-    var floatKeyState = _floatKey.currentState;
-    if (floatKeyState != null) {
-      floatKeyState.toggle();
-    }
+    _fabGlobalKey.currentState?.toggle();
 
-    ParentInfo.isSize = false;
+    // TODO : Parent 가져오기 실행
+    // 이미 Parent 상태여도 가져오기 실행
+    // 취소하면 FB 는 이전 것으로 유지
+
     setState(() {
       _makeEnum = MakeEnum.PARENT;
     });
@@ -602,113 +701,84 @@ class _MakeScreen extends State<MakeScreen> {
   void _fabBaby() {
     dev.log('_fabBaby');
 
-    var floatKeyState = _floatKey.currentState;
-    if (floatKeyState != null) {
-      floatKeyState.toggle();
-    }
+    _fabGlobalKey.currentState?.toggle();
 
-    ParentInfo.isSize = false;
+    // TODO : Baby 가져오기 실행
+    // 이미 Baby 상태여도 가져오기 실행
+    // 취소하면 FB 는 이전 것으로 유지
+
     setState(() {
       _makeEnum = MakeEnum.BABY;
+      context.read<MakeProvider>().setParentSize(false);
+      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
   void _fabCaption() {
     dev.log('_fabCaption');
 
-    var floatKeyState = _floatKey.currentState;
-    if (floatKeyState != null) {
-      floatKeyState.toggle();
-    }
+    _fabGlobalKey.currentState?.toggle();
 
-    ParentInfo.isSize = false;
+    // TODO : caption 추가, 키보드 올리기
+    // FB 는 Caption 으로 변경
+
     setState(() {
       _makeEnum = MakeEnum.CAPTION;
+      context.read<MakeProvider>().setParentSize(false);
+      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
   void _fabSound() {
     dev.log('_fabSound');
 
-    var floatKeyState = _floatKey.currentState;
-    if (floatKeyState != null) {
-      floatKeyState.toggle();
-    }
+    _fabGlobalKey.currentState?.toggle();
 
-    ParentInfo.isSize = false;
+    // TODO : Function bar 만 이동
+
     setState(() {
       _makeEnum = MakeEnum.SOUND;
+      context.read<MakeProvider>().setParentSize(false);
+      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
   void _fabLink() {
     dev.log('_fabLink');
 
-    var floatKeyState = _floatKey.currentState;
-    if (floatKeyState != null) {
-      floatKeyState.toggle();
-    }
+    _fabGlobalKey.currentState?.toggle();
 
-    ParentInfo.isSize = false;
+    // TODO : Function bar 만 이동
+
     setState(() {
       _makeEnum = MakeEnum.LINK;
+      context.read<MakeProvider>().setParentSize(false);
+      context.read<MakeProvider>().setParentResize(false);
     });
   }
-  ////////////////////////////////////////////////////////////////////////////////
-  // Event END //
-  ////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
-  Future _setParentInfo(path) async {
-    ParentInfo.path = path;
+////////////////////////////////////////////////////////////////////////////////
+// Event END //
+////////////////////////////////////////////////////////////////////////////////
 
-    ////////////////////////////////////////////////////////////////////////////////
-    ui.Image uiImage = await ImageUtil.loadUiImage(path);
-
-    /// Parent 이미지 크기
-    ParentInfo.wImage = uiImage.width;
-    ParentInfo.hImage = uiImage.height;
-    dev.log('image w: ${uiImage.width}, h: ${uiImage.height}');
-
-    /// Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
-    var inScale = ImageUtil.calcFitRatioIn(
-        ParentInfo.wScreen, ParentInfo.hScreen, uiImage.width, uiImage.height);
-    ParentInfo.inScale = inScale;
-    dev.log('inScale: $inScale');
-
-    // blank
-    var wReal = uiImage.width * inScale;
-    var hReal = uiImage.height * inScale;
-    if ((ParentInfo.wScreen - wReal) > (ParentInfo.hScreen - hReal)) {
-      ParentInfo.xBlank = (ParentInfo.wScreen - wReal) / 2;
-      ParentInfo.yBlank = 0;
-    } else {
-      ParentInfo.yBlank = (ParentInfo.hScreen - hReal) / 2;
-      ParentInfo.xBlank = 0;
-    }
-    dev.log('xBlank: ${ParentInfo.xBlank}, yBlank: ${ParentInfo.yBlank}');
-
-    dev.log('ParentInfo: $ParentInfo');
-    ////////////////////////////////////////////////////////////////////////////////
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-
+/*
   ////////////////////////////////////////////////////////////////////////////////
   // callback START //
   ////////////////////////////////////////////////////////////////////////////////
-  void _callbackParentSizeInitScreen() {
-    dev.log('_initSaveParentScreen');
+  void _callbackParentSizeInitScreen(bool isSize) {
+    dev.log('# MakeScreen _callbackParentSizeInitScreen');
+
+    this.isSize = isSize;
 
     // restore
     _transformationController.value = Matrix4.identity();
 
-    setState(() {
-    });
+    setState(() {});
   }
-  ////////////////////////////////////////////////////////////////////////////////
-  // callback END //
-  ////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////
+// callback END //
+////////////////////////////////////////////////////////////////////////////////
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -732,6 +802,11 @@ class MakePainter extends CustomPainter {
   double yStart = 0;
 
   double scale = 0;
+
+  late Offset leftTopOffset;
+  late Offset rightTopOffset;
+  late Offset leftBottomOffset;
+  late Offset rightBottomOffset;
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -785,6 +860,11 @@ class MakePainter extends CustomPainter {
     yStart = ParentInfo.yStart;
 
     scale = ParentInfo.scale;
+
+    leftTopOffset = ParentInfo.leftTopOffset;
+    rightTopOffset = ParentInfo.rightTopOffset;
+    leftBottomOffset = ParentInfo.leftBottomOffset;
+    rightBottomOffset = ParentInfo.rightBottomOffset;
   }
 ////////////////////////////////////////////////////////////////////////////////
 }
@@ -807,6 +887,11 @@ class MakeParentSizePainter extends CustomPainter {
 
   double scale = 0;
 
+  late Offset leftTopOffset;
+  late Offset rightTopOffset;
+  late Offset leftBottomOffset;
+  late Offset rightBottomOffset;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
@@ -820,7 +905,7 @@ class MakeParentSizePainter extends CustomPainter {
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    double bracketWidth = 8;
+    double bracketWidth = AppConfig.SIZE_BRACKET_WIDTH;
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -832,17 +917,21 @@ class MakeParentSizePainter extends CustomPainter {
     Offset startOffset = Offset(xBlank, yBlank);
     Offset endOffset = Offset(ParentInfo.wScreen - xBlank, yBlank);
     for (int i = 0, j = 9; i < j; i++) {
-      dev.log('xxx: ${startOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1}');
-      startOffset = Offset(startOffset.dx, startOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1);
-      endOffset = Offset(endOffset.dx, endOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1);
+      startOffset = Offset(startOffset.dx,
+          startOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1);
+      endOffset = Offset(endOffset.dx,
+          endOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1);
       canvas.drawLine(startOffset, endOffset, paintGrid);
     }
     startOffset = Offset(xBlank, yBlank);
     endOffset = Offset(xBlank, ParentInfo.hScreen - yBlank);
     for (int i = 0, j = 9; i < j; i++) {
-      dev.log('YYY: ${startOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1}');
-      startOffset = Offset(startOffset.dx + ParentInfo.wImage * ParentInfo.inScale * 0.1, startOffset.dy);
-      endOffset = Offset(endOffset.dx + ParentInfo.wImage * ParentInfo.inScale * 0.1, endOffset.dy);
+      startOffset = Offset(
+          startOffset.dx + ParentInfo.wImage * ParentInfo.inScale * 0.1,
+          startOffset.dy);
+      endOffset = Offset(
+          endOffset.dx + ParentInfo.wImage * ParentInfo.inScale * 0.1,
+          endOffset.dy);
       canvas.drawLine(startOffset, endOffset, paintGrid);
     }
 
@@ -851,37 +940,109 @@ class MakeParentSizePainter extends CustomPainter {
       ..color = Colors.white60
       ..strokeCap = StrokeCap.round
       ..strokeWidth = bracketWidth;
-    Offset leftTop = Offset(xBlank + bracketWidth / 2, yBlank + bracketWidth / 2);
-    Offset leftTopW = Offset(leftTop.dx + ParentInfo.wScreen / 4, leftTop.dy);
-    Offset leftTopH = Offset(leftTop.dx, leftTop.dy + ParentInfo.wScreen / 4);
-    canvas.drawLine(leftTop, leftTopW, paintBracket);
+    // 최소치 검사
+    double minArea = (ParentInfo.wScreen - ParentInfo.xBlank) *
+        (ParentInfo.hScreen - ParentInfo.yBlank) *
+        AppConfig.SIZE_SHRINK_MIN;
+    double updateArea =
+        (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) *
+            (ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy);
+    if (minArea >= updateArea * 0.9) {    // 정확히 하면 catch 안됨
+      paintBracket.color = Colors.yellowAccent;
+    }
+
+    Offset leftTop =
+        //Offset(xBlank + bracketWidth / 2, yBlank + bracketWidth / 2);
+        Offset(leftTopOffset.dx + bracketWidth / 2, leftTopOffset.dy  + bracketWidth / 2);
+    Offset leftTopH = Offset(leftTop.dx + ParentInfo.wScreen / 6, leftTop.dy);
+    Offset leftTopV = Offset(leftTop.dx, leftTop.dy + ParentInfo.wScreen / 6);
     canvas.drawLine(leftTop, leftTopH, paintBracket);
+    canvas.drawLine(leftTop, leftTopV, paintBracket);
 
-    Offset rightTop = Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2, yBlank + bracketWidth / 2);
-    Offset rightTopW = Offset(rightTop.dx - ParentInfo.wScreen / 4, rightTop.dy);
-    Offset rightTopH = Offset(rightTop.dx, rightTop.dy + ParentInfo.wScreen / 4);
-    canvas.drawLine(rightTop, rightTopW, paintBracket);
+    Offset rightTop =
+        //Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2, yBlank + bracketWidth / 2);
+        Offset(rightTopOffset.dx - bracketWidth / 2, rightTopOffset.dy + bracketWidth / 2);
+    Offset rightTopH =
+        Offset(rightTop.dx - ParentInfo.wScreen / 6, rightTop.dy);
+    Offset rightTopV =
+        Offset(rightTop.dx, rightTop.dy + ParentInfo.wScreen / 6);
     canvas.drawLine(rightTop, rightTopH, paintBracket);
+    canvas.drawLine(rightTop, rightTopV, paintBracket);
 
-    Offset leftBottom = Offset(xBlank + bracketWidth / 2, ParentInfo.hScreen - yBlank - bracketWidth / 2);
-    Offset leftBottomW = Offset(leftBottom.dx + ParentInfo.wScreen / 4, leftBottom.dy);
-    Offset leftBottomH = Offset(leftBottom.dx, leftBottom.dy - ParentInfo.wScreen / 4);
-    canvas.drawLine(leftBottom, leftBottomW, paintBracket);
+    Offset leftBottom =
+        //Offset(xBlank + bracketWidth / 2, ParentInfo.hScreen - yBlank - bracketWidth / 2);
+        Offset(leftBottomOffset.dx + bracketWidth / 2, leftBottomOffset.dy - bracketWidth / 2);
+    Offset leftBottomH =
+        Offset(leftBottom.dx + ParentInfo.wScreen / 6, leftBottom.dy);
+    Offset leftBottomV =
+        Offset(leftBottom.dx, leftBottom.dy - ParentInfo.wScreen / 6);
     canvas.drawLine(leftBottom, leftBottomH, paintBracket);
+    canvas.drawLine(leftBottom, leftBottomV, paintBracket);
 
-    Offset rightBottom = Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2, ParentInfo.hScreen - yBlank - bracketWidth / 2);
-    Offset rightBottomW = Offset(rightBottom.dx - ParentInfo.wScreen / 4, rightBottom.dy);
-    Offset rightBottomH = Offset(rightBottom.dx, rightBottom.dy - ParentInfo.wScreen / 4);
-    canvas.drawLine(rightBottom, rightBottomW, paintBracket);
+    Offset rightBottom =
+        //Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2, ParentInfo.hScreen - yBlank - bracketWidth / 2);
+        Offset(rightBottomOffset.dx - bracketWidth / 2, rightBottomOffset.dy - bracketWidth / 2);
+    Offset rightBottomH =
+        Offset(rightBottom.dx - ParentInfo.wScreen / 6, rightBottom.dy);
+    Offset rightBottomV =
+        Offset(rightBottom.dx, rightBottom.dy - ParentInfo.wScreen / 6);
     canvas.drawLine(rightBottom, rightBottomH, paintBracket);
+    canvas.drawLine(rightBottom, rightBottomV, paintBracket);
+    
+    
+    
+    /*
+    // bracket
+    Paint paintBracket = Paint()
+      ..color = Colors.white60
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = bracketWidth;
+    Offset leftTop =
+        Offset(xBlank + bracketWidth / 2, yBlank + bracketWidth / 2);
+    Offset leftTopH = Offset(leftTop.dx + ParentInfo.wScreen / 4, leftTop.dy);
+    Offset leftTopV = Offset(leftTop.dx, leftTop.dy + ParentInfo.wScreen / 4);
+    canvas.drawLine(leftTop, leftTopH, paintBracket);
+    canvas.drawLine(leftTop, leftTopV, paintBracket);
+
+    Offset rightTop = Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2,
+        yBlank + bracketWidth / 2);
+    Offset rightTopH =
+        Offset(rightTop.dx - ParentInfo.wScreen / 4, rightTop.dy);
+    Offset rightTopV =
+        Offset(rightTop.dx, rightTop.dy + ParentInfo.wScreen / 4);
+    canvas.drawLine(rightTop, rightTopH, paintBracket);
+    canvas.drawLine(rightTop, rightTopV, paintBracket);
+
+    Offset leftBottom = Offset(xBlank + bracketWidth / 2,
+        ParentInfo.hScreen - yBlank - bracketWidth / 2);
+    Offset leftBottomH =
+        Offset(leftBottom.dx + ParentInfo.wScreen / 4, leftBottom.dy);
+    Offset leftBottomV =
+        Offset(leftBottom.dx, leftBottom.dy - ParentInfo.wScreen / 4);
+    canvas.drawLine(leftBottom, leftBottomH, paintBracket);
+    canvas.drawLine(leftBottom, leftBottomV, paintBracket);
+
+    Offset rightBottom = Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2,
+        ParentInfo.hScreen - yBlank - bracketWidth / 2);
+    Offset rightBottomH =
+        Offset(rightBottom.dx - ParentInfo.wScreen / 4, rightBottom.dy);
+    Offset rightBottomV =
+        Offset(rightBottom.dx, rightBottom.dy - ParentInfo.wScreen / 4);
+    canvas.drawLine(rightBottom, rightBottomH, paintBracket);
+    canvas.drawLine(rightBottom, rightBottomV, paintBracket);
+    */
     ////////////////////////////////////////////////////////////////////////////////
 
-
+    /*
     ////////////////////////////////////////////////////////////////////////////////
-
-
+    // for test
+    Paint testPaint = Paint()
+      ..color = Colors.red
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 4;
+    InfoUtil.findBracketCorner(Offset(-10000, -10000), canvas: canvas, paint: testPaint);
     ////////////////////////////////////////////////////////////////////////////////
-
+    */
   }
 
   /// 그려야할 정보를 모두 검사해서 틀린 것이 있으면 다시 그리기
@@ -890,8 +1051,8 @@ class MakeParentSizePainter extends CustomPainter {
     // TODO : impl
     // 다시 그려야할 정보 검사
 
-    return false;
-    //return true;
+    //return false;
+    return true;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -911,11 +1072,14 @@ class MakeParentSizePainter extends CustomPainter {
     yStart = ParentInfo.yStart;
 
     scale = ParentInfo.scale;
+
+    leftTopOffset = ParentInfo.leftTopOffset;
+    rightTopOffset = ParentInfo.rightTopOffset;
+    leftBottomOffset = ParentInfo.leftBottomOffset;
+    rightBottomOffset = ParentInfo.rightBottomOffset;
   }
 ////////////////////////////////////////////////////////////////////////////////
 }
-
-
 
 /*
 void _onInteractionStart(ScaleStartDetails scaleStartDetails) {

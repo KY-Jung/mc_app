@@ -6,10 +6,10 @@ class LinkWidget extends StatefulWidget {
   const LinkWidget({super.key});
 
   @override
-  State<LinkWidget> createState() => _LinkWidget();
+  State<LinkWidget> createState() => LinkWidgetState();
 }
 
-class _LinkWidget extends State<LinkWidget> {
+class LinkWidgetState extends State<LinkWidget> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override

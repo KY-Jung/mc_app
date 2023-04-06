@@ -13,7 +13,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreen();
+  State<SplashScreen> createState() => SplashScreenState();
 }
 
 /// 초기화면으로 이동하기 전에 splash 화면 표시
@@ -21,7 +21,7 @@ class SplashScreen extends StatefulWidget {
 /// 2가지가 모두 만족하면 초기화면으로 이동
 /// 일단 3초는 splash 화면 표시하고, 이후 0.1 초 마다 검사
 /// 만약 메세지를 표시해야 한다면 1초 이후에 표시
-class _SplashScreen extends State<SplashScreen> {
+class SplashScreenState extends State<SplashScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   int checkCnt = 0;
   int checkCntAll = 2;

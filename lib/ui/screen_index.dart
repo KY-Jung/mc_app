@@ -9,22 +9,26 @@ import 'package:mc/ui/tab_make.dart';
 import 'package:mc/ui/tab_public.dart';
 import 'package:provider/provider.dart';
 
+import '../provider/provider_make.dart';
+
 class IndexScreen extends StatefulWidget {
   const IndexScreen({super.key});
 
   @override
-  State<IndexScreen> createState() => _IndexScreen();
+  State<IndexScreen> createState() => IndexScreenState();
 }
 
-class _IndexScreen extends State<IndexScreen> {
+class IndexScreenState extends State<IndexScreen> {
   int _selectedIndex = 0;
 
+  /*
   final List<Widget> _listTab = [
     const MakeTab(),
     const ListTab(),
     const PublicTab(),
     const BalanceTab(),
   ];
+  */
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
@@ -66,7 +70,13 @@ class _IndexScreen extends State<IndexScreen> {
             ],
           ),
           body: Center(
-            child: _listTab.elementAt(_selectedIndex),
+            //child: _listTab.elementAt(_selectedIndex),
+            child: [
+              const MakeTab(),
+              const ListTab(),
+              const PublicTab(),
+              const BalanceTab(),
+            ].elementAt(_selectedIndex),
           ),
           bottomNavigationBar: BottomNavigationBar(
             //backgroundColor: Colors.black,

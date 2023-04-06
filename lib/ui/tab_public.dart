@@ -8,10 +8,10 @@ class PublicTab extends StatefulWidget {
   const PublicTab({super.key});
 
   @override
-  State<PublicTab> createState() => _PublicTab();
+  State<PublicTab> createState() => PublicTabState();
 }
 
-class _PublicTab extends State<PublicTab> {
+class PublicTabState extends State<PublicTab> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override

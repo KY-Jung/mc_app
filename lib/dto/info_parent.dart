@@ -1,9 +1,12 @@
 
-import 'dart:ui' as ui;
+import 'dart:ui';
+
+import '../ui/screen_make.dart';
 
 class ParentInfo {
 
   static String path = '';
+  static String resizePath = '';
   //static late ui.Image image;
 
   static late double wScreen;
@@ -22,15 +25,16 @@ class ParentInfo {
 
   static double scale = 0;
 
-  // for resize
-  static bool isSize = false;
-  static double xLeftTop = 0;
-  static double yLeftTop = 0;
-  static double xRightTop = 0;
-  static double yRightTop = 0;
-  static double xLeftBottom = 0;
-  static double yLeftBottom = 0;
-  static double xRightBottom = 0;
-  static double yRightBottom = 0;
+  static late Offset xyOffset;    // for test
+  static late Offset leftTopOffset;
+  static late Offset rightTopOffset;
+  static late Offset leftBottomOffset;
+  static late Offset rightBottomOffset;
 
+  // 선택된 bracket 12개 중 하나
+  static late MakeParentSizePointEnum makeParentSizePointEnum;
+
+  static void initAll() {
+
+  }
 }

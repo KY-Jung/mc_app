@@ -10,19 +10,19 @@ import 'package:provider/provider.dart';
 import '../dto/info_parent.dart';
 import '../model/mcuser.dart';
 
+import '../provider/provider_make.dart';
 import '../provider/provider_mcImage.dart';
 
 class MakeTab extends StatefulWidget {
   const MakeTab({super.key});
 
   @override
-  State<MakeTab> createState() => _MakeTab();
+  State<MakeTab> createState() => MakeTabState();
 }
 
-class _MakeTab extends State<MakeTab> {
-
+class MakeTabState extends State<MakeTab> {
   // initState 에서 build 후에 임시로 이동하기 위해 사용
-  final MakeScreen _makeScreen = const MakeScreen();
+  //final MakeScreen _makeScreen = const MakeScreen();
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
@@ -30,10 +30,15 @@ class _MakeTab extends State<MakeTab> {
     dev.log('# MakeTab initState START');
     super.initState();
 
+    /*
     // ######################################################################## //
     // TODO : 임시 사용, 초기 화면 지정
-    WidgetsBinding.instance.addPostFrameCallback((_) => Navigator.push(context, MaterialPageRoute(builder: (context) => _makeScreen), ));
+    WidgetsBinding.instance.addPostFrameCallback((_) => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => _makeScreen),
+        ));
     // ######################################################################## //
+    */
 
     dev.log('# MakeTab initState END');
   }
@@ -47,27 +52,35 @@ class _MakeTab extends State<MakeTab> {
     return Scaffold(
       backgroundColor: Colors.black87,
       body: Center(
-          child:  Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text('MAKE'.tr()),
-              Text('McImageId is ${mcImageProvider.getImageId()}'),
-              ElevatedButton(
-                child: Text("MAKE_NEW".tr()),
-                onPressed: () {
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text('MAKE'.tr()),
+            Text('McImageId is ${mcImageProvider.getImageId()}'),
+            ElevatedButton(
+              child: Text("MAKE_NEW".tr()),
+              onPressed: () {
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => _makeScreen),
-                  );
+                ////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////
+                // make 화면에서 필요한 초기화
+                MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
+                makeProvider.setParentSize(false);
+                makeProvider.setParentResize(false);
+                ////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////
 
-                },
-              ),
-            ],
-          ),
-
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MakeScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
-
       floatingActionButton: FloatingActionButton(
         child: const Text('+', style: TextStyle(fontSize: 24)),
         onPressed: () async {

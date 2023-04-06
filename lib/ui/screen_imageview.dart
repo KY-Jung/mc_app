@@ -7,10 +7,10 @@ class ImageViewScreen extends StatefulWidget {
   const ImageViewScreen({super.key});
 
   @override
-  State<ImageViewScreen> createState() => _ImageViewScreen();
+  State<ImageViewScreen> createState() => ImageViewScreenState();
 }
 
-class _ImageViewScreen extends State<ImageViewScreen> {
+class ImageViewScreenState extends State<ImageViewScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
