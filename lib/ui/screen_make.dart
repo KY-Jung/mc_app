@@ -135,8 +135,9 @@ class MakeScreenState extends State<MakeScreen> {
     dev.log('build _makeEnum: $_makeEnum');
     dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
 
-    MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
-    dev.log('parentSize: ${makeProvider.parentSize}, parentResize: ${makeProvider.parentResize}');
+    MakeProvider makeProvider =
+        Provider.of<MakeProvider>(context, listen: false);
+    dev.log('parentSize: ${makeProvider.parentSize}');
 
     return Scaffold(
       appBar: AppBar(
@@ -433,66 +434,52 @@ class MakeScreenState extends State<MakeScreen> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // resize 상태 라면
-    if (context.read<MakeProvider>().parentResize) {
+    if (context.read<MakeProvider>().parentSize) {
+      // _onTapDown 이 호출되지 않은 경우
+      if (ParentInfo.makeParentSizePointEnum == MakeParentSizePointEnum.NONE) {
+        return;
+      }
 
       // blank 검사
-      if (!InfoUtil.checkBlankArea(xyOffset, ParentInfo.makeParentSizePointEnum)) {
-        dev.log('\n\n\n### checkBlankArea return\n\n\n');
+      if (!InfoUtil.checkBlankArea(
+          xyOffset, ParentInfo.makeParentSizePointEnum)) {
+        dev.log('\n\n### checkBlankArea return\n\n');
         return;
       }
 
       // bracket 간에 침범할 수 없는 영역을 순식간에 넘어갔는지 검사
-      if (!InfoUtil.checkBracketCrossArea(xyOffset, ParentInfo.makeParentSizePointEnum)) {
-        dev.log('\n\n\n### checkBracketCrossArea return\n\n\n');
+      if (!InfoUtil.checkBracketCrossArea(
+          xyOffset, ParentInfo.makeParentSizePointEnum)) {
+        dev.log('\n\n### checkBracketCrossArea return\n\n');
         return;
       }
 
-      /*
-      // 백업
-      Offset xyOffsetOld = ParentInfo.xyOffset;
-      // bracket area 설정
-      InfoUtil.updateBracketArea(xyOffset, ParentInfo.makeParentSizePointEnum);
-
-      // shrink 허용치를 벗어나면 return
-      double minArea = (ParentInfo.wScreen - ParentInfo.xBlank) *
-          (ParentInfo.hScreen - ParentInfo.yBlank) *
-          AppConfig.SIZE_SHRINK_MIN;
-      double updateArea =
-          (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) *
-              (ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy);
-      dev.log('ParentInfo.wScreen: ${ParentInfo.wScreen} ,ParentInfo.xBlank: ${ParentInfo.xBlank}');
-      dev.log('(ParentInfo.wScreen - ParentInfo.xBlank): ${(ParentInfo.wScreen - ParentInfo.xBlank)}');
-      dev.log('ParentInfo.hScreen: ${ParentInfo.hScreen} ,ParentInfo.yBlank: ${ParentInfo.yBlank}');
-      dev.log('(ParentInfo.hScreen - ParentInfo.yBlank): ${(ParentInfo.hScreen - ParentInfo.yBlank)}');
-      dev.log('AppConfig.SIZE_SHRINK_MIN: ${AppConfig.SIZE_SHRINK_MIN}');
-      dev.log('minArea: ${minArea}');
-      dev.log('ParentInfo.rightTopOffset.dx: ${ParentInfo.rightTopOffset.dx} ,ParentInfo.leftTopOffset.dx: ${ParentInfo.leftTopOffset.dx}');
-      dev.log('(ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx): ${(ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx)}');
-      dev.log('ParentInfo.rightBottomOffset.dy: ${ParentInfo.rightBottomOffset.dy} ,ParentInfo.rightTopOffset.dy: ${ParentInfo.rightTopOffset.dy}');
-      dev.log('(ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy): ${(ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy)}');
-      dev.log('minArea: $minArea ,updateArea: $updateArea');
-      if (minArea >= updateArea) {
-        // 백업한 것으로 복구
-        InfoUtil.updateBracketArea(xyOffsetOld, ParentInfo.makeParentSizePointEnum);
-        dev.log(
-            'parentResize exceed ${AppConfig.SIZE_SHRINK_MIN * 100}%: $xyOffset');
-        return;
-      }
-       */
       // shrink 허용치 검사
-      Rect bracketRect = InfoUtil.calcRect(xyOffset, ParentInfo.makeParentSizePointEnum);
+      Rect bracketRect =
+          InfoUtil.calcRect(xyOffset, ParentInfo.makeParentSizePointEnum);
       dev.log('bracketRect: $bracketRect');
       double minArea = (ParentInfo.wScreen - ParentInfo.xBlank) *
           (ParentInfo.hScreen - ParentInfo.yBlank) *
           AppConfig.SIZE_SHRINK_MIN;
       if (minArea >= (bracketRect.width * bracketRect.height)) {
         dev.log(
-            'parentResize exceed ${AppConfig.SIZE_SHRINK_MIN * 100}%: $xyOffset');
+            'parentSize exceed ${AppConfig.SIZE_SHRINK_MIN * 100}%: $xyOffset');
         return;
       }
 
       // sticky
-
+      dev.log('org xyOffset: $xyOffset');
+      xyOffset = InfoUtil.stickyOffset(
+          xyOffset,
+          ParentInfo.wScreen,
+          ParentInfo.xBlank,
+          ParentInfo.hScreen,
+          ParentInfo.yBlank,
+          AppConfig.SIZE_GRID_RATIO,
+          AppConfig.SIZE_GRID_RATIO,
+          AppConfig.SIZE_STICKY_RATIO,
+          ParentInfo.makeParentSizePointEnum);
+      dev.log('new xyOffset: $xyOffset');
 
       ////////////////////////////////////////////////////////////////////////////////
       ParentInfo.xStart = xStart;
@@ -505,8 +492,7 @@ class MakeScreenState extends State<MakeScreen> {
     }
     ////////////////////////////////////////////////////////////////////////////////
 
-    setState(() {
-    });
+    setState(() {});
   }
 
   /// 변경되는 값 : xyOffset
@@ -540,6 +526,10 @@ class MakeScreenState extends State<MakeScreen> {
     Offset xyOffset = _tapDownDetails.localPosition;
     dev.log(
         '_onTapDown scale: $scale, xyOffset: $xyOffset, xStart: $xStart, yStart: $yStart');
+    dev.log('_onTapDown wView: ${ParentInfo.wScreen - ParentInfo.xBlank}, '
+        'wScreen: ${ParentInfo.wScreen}, xBlank: ${ParentInfo.xBlank}, '
+        'hView: ${ParentInfo.hScreen - ParentInfo.yBlank}, '
+        'hScreen: ${ParentInfo.hScreen}, yBlank: ${ParentInfo.yBlank}');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -570,39 +560,14 @@ class MakeScreenState extends State<MakeScreen> {
       dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
       if (makeParentSizeEnum != MakeParentSizePointEnum.NONE) {
         ParentInfo.makeParentSizePointEnum = makeParentSizeEnum;
-        context.read<MakeProvider>().setParentResize(true);
       }
     }
     ////////////////////////////////////////////////////////////////////////////////
   }
 
+  // drag 이후에는 호출안됨
   void _onTapUp(TapUpDetails tapUpDetails) async {
     //dev.log('_onTapUp TapUpDetails: ${tapUpDetails.localPosition}');
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // resize 해제 결정
-    if (context.read<MakeProvider>().parentResize) {
-      bool leftTop = (ParentInfo.leftTopOffset.dx == ParentInfo.xBlank &&
-          ParentInfo.leftTopOffset.dy == ParentInfo.yBlank);
-      bool rightTop = (ParentInfo.rightTopOffset.dx ==
-              ParentInfo.wScreen - ParentInfo.xBlank &&
-          ParentInfo.rightTopOffset.dy == ParentInfo.yBlank);
-      bool leftBottom = (ParentInfo.leftBottomOffset.dx == ParentInfo.xBlank &&
-          ParentInfo.leftBottomOffset.dy ==
-              ParentInfo.hScreen - ParentInfo.yBlank);
-      bool rightBottom = (ParentInfo.rightBottomOffset.dx ==
-              ParentInfo.wScreen - ParentInfo.xBlank &&
-          ParentInfo.rightBottomOffset.dy ==
-              ParentInfo.hScreen - ParentInfo.yBlank);
-
-      if (leftTop && rightTop && leftBottom && rightBottom) {
-        dev.log('_onTapUp resize stop');
-        context.read<MakeProvider>().setParentResize(false);
-      } else {
-        dev.log('_onTapUp resize continue');
-      }
-    }
-    ////////////////////////////////////////////////////////////////////////////////
   }
 
   /// 변경되는 값 : scale, xStart, yStart, xyOffset
@@ -710,7 +675,6 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.BABY;
       context.read<MakeProvider>().setParentSize(false);
-      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
@@ -725,7 +689,6 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.CAPTION;
       context.read<MakeProvider>().setParentSize(false);
-      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
@@ -739,7 +702,6 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.SOUND;
       context.read<MakeProvider>().setParentSize(false);
-      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
@@ -753,7 +715,6 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.LINK;
       context.read<MakeProvider>().setParentSize(false);
-      context.read<MakeProvider>().setParentResize(false);
     });
   }
 
@@ -775,9 +736,9 @@ class MakeScreenState extends State<MakeScreen> {
 
     setState(() {});
   }
-////////////////////////////////////////////////////////////////////////////////
-// callback END //
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+  // callback END //
+  ////////////////////////////////////////////////////////////////////////////////
 */
 }
 
@@ -910,33 +871,49 @@ class MakeParentSizePainter extends CustomPainter {
 
     ////////////////////////////////////////////////////////////////////////////////
     // grid
-    Paint paintGrid = Paint()
+    Paint gridPaint = Paint()
       ..color = Colors.white30
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1;
     Offset startOffset = Offset(xBlank, yBlank);
     Offset endOffset = Offset(ParentInfo.wScreen - xBlank, yBlank);
     for (int i = 0, j = 9; i < j; i++) {
-      startOffset = Offset(startOffset.dx,
-          startOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1);
-      endOffset = Offset(endOffset.dx,
-          endOffset.dy + ParentInfo.hImage * ParentInfo.inScale * 0.1);
-      canvas.drawLine(startOffset, endOffset, paintGrid);
+      startOffset = Offset(
+          startOffset.dx,
+          startOffset.dy +
+              ParentInfo.hImage *
+                  ParentInfo.inScale *
+                  AppConfig.SIZE_GRID_RATIO);
+      endOffset = Offset(
+          endOffset.dx,
+          endOffset.dy +
+              ParentInfo.hImage *
+                  ParentInfo.inScale *
+                  AppConfig.SIZE_GRID_RATIO);
+      canvas.drawLine(startOffset, endOffset, gridPaint);
     }
     startOffset = Offset(xBlank, yBlank);
     endOffset = Offset(xBlank, ParentInfo.hScreen - yBlank);
     for (int i = 0, j = 9; i < j; i++) {
       startOffset = Offset(
-          startOffset.dx + ParentInfo.wImage * ParentInfo.inScale * 0.1,
+          startOffset.dx +
+              ParentInfo.wImage *
+                  ParentInfo.inScale *
+                  AppConfig.SIZE_GRID_RATIO,
           startOffset.dy);
       endOffset = Offset(
-          endOffset.dx + ParentInfo.wImage * ParentInfo.inScale * 0.1,
+          endOffset.dx +
+              ParentInfo.wImage *
+                  ParentInfo.inScale *
+                  AppConfig.SIZE_GRID_RATIO,
           endOffset.dy);
-      canvas.drawLine(startOffset, endOffset, paintGrid);
+      canvas.drawLine(startOffset, endOffset, gridPaint);
     }
+    ////////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////////
     // bracket
-    Paint paintBracket = Paint()
+    Paint bracketPaint = Paint()
       ..color = Colors.white60
       ..strokeCap = StrokeCap.round
       ..strokeWidth = bracketWidth;
@@ -947,90 +924,72 @@ class MakeParentSizePainter extends CustomPainter {
     double updateArea =
         (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) *
             (ParentInfo.rightBottomOffset.dy - ParentInfo.rightTopOffset.dy);
-    if (minArea >= updateArea * 0.9) {    // 정확히 하면 catch 안됨
-      paintBracket.color = Colors.yellowAccent;
+    if (minArea >= updateArea * 0.9) {
+      // 정확히 하면 catch 안됨
+      bracketPaint.color = Colors.yellowAccent;
     }
-
     Offset leftTop =
         //Offset(xBlank + bracketWidth / 2, yBlank + bracketWidth / 2);
-        Offset(leftTopOffset.dx + bracketWidth / 2, leftTopOffset.dy  + bracketWidth / 2);
+        Offset(leftTopOffset.dx + bracketWidth / 2,
+            leftTopOffset.dy + bracketWidth / 2);
     Offset leftTopH = Offset(leftTop.dx + ParentInfo.wScreen / 6, leftTop.dy);
     Offset leftTopV = Offset(leftTop.dx, leftTop.dy + ParentInfo.wScreen / 6);
-    canvas.drawLine(leftTop, leftTopH, paintBracket);
-    canvas.drawLine(leftTop, leftTopV, paintBracket);
+    canvas.drawLine(leftTop, leftTopH, bracketPaint);
+    canvas.drawLine(leftTop, leftTopV, bracketPaint);
 
     Offset rightTop =
         //Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2, yBlank + bracketWidth / 2);
-        Offset(rightTopOffset.dx - bracketWidth / 2, rightTopOffset.dy + bracketWidth / 2);
+        Offset(rightTopOffset.dx - bracketWidth / 2,
+            rightTopOffset.dy + bracketWidth / 2);
     Offset rightTopH =
         Offset(rightTop.dx - ParentInfo.wScreen / 6, rightTop.dy);
     Offset rightTopV =
         Offset(rightTop.dx, rightTop.dy + ParentInfo.wScreen / 6);
-    canvas.drawLine(rightTop, rightTopH, paintBracket);
-    canvas.drawLine(rightTop, rightTopV, paintBracket);
+    canvas.drawLine(rightTop, rightTopH, bracketPaint);
+    canvas.drawLine(rightTop, rightTopV, bracketPaint);
 
     Offset leftBottom =
         //Offset(xBlank + bracketWidth / 2, ParentInfo.hScreen - yBlank - bracketWidth / 2);
-        Offset(leftBottomOffset.dx + bracketWidth / 2, leftBottomOffset.dy - bracketWidth / 2);
+        Offset(leftBottomOffset.dx + bracketWidth / 2,
+            leftBottomOffset.dy - bracketWidth / 2);
     Offset leftBottomH =
         Offset(leftBottom.dx + ParentInfo.wScreen / 6, leftBottom.dy);
     Offset leftBottomV =
         Offset(leftBottom.dx, leftBottom.dy - ParentInfo.wScreen / 6);
-    canvas.drawLine(leftBottom, leftBottomH, paintBracket);
-    canvas.drawLine(leftBottom, leftBottomV, paintBracket);
+    canvas.drawLine(leftBottom, leftBottomH, bracketPaint);
+    canvas.drawLine(leftBottom, leftBottomV, bracketPaint);
 
     Offset rightBottom =
         //Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2, ParentInfo.hScreen - yBlank - bracketWidth / 2);
-        Offset(rightBottomOffset.dx - bracketWidth / 2, rightBottomOffset.dy - bracketWidth / 2);
+        Offset(rightBottomOffset.dx - bracketWidth / 2,
+            rightBottomOffset.dy - bracketWidth / 2);
     Offset rightBottomH =
         Offset(rightBottom.dx - ParentInfo.wScreen / 6, rightBottom.dy);
     Offset rightBottomV =
         Offset(rightBottom.dx, rightBottom.dy - ParentInfo.wScreen / 6);
-    canvas.drawLine(rightBottom, rightBottomH, paintBracket);
-    canvas.drawLine(rightBottom, rightBottomV, paintBracket);
-    
-    
-    
-    /*
-    // bracket
-    Paint paintBracket = Paint()
-      ..color = Colors.white60
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = bracketWidth;
-    Offset leftTop =
-        Offset(xBlank + bracketWidth / 2, yBlank + bracketWidth / 2);
-    Offset leftTopH = Offset(leftTop.dx + ParentInfo.wScreen / 4, leftTop.dy);
-    Offset leftTopV = Offset(leftTop.dx, leftTop.dy + ParentInfo.wScreen / 4);
-    canvas.drawLine(leftTop, leftTopH, paintBracket);
-    canvas.drawLine(leftTop, leftTopV, paintBracket);
+    canvas.drawLine(rightBottom, rightBottomH, bracketPaint);
+    canvas.drawLine(rightBottom, rightBottomV, bracketPaint);
+    ////////////////////////////////////////////////////////////////////////////////
 
-    Offset rightTop = Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2,
-        yBlank + bracketWidth / 2);
-    Offset rightTopH =
-        Offset(rightTop.dx - ParentInfo.wScreen / 4, rightTop.dy);
-    Offset rightTopV =
-        Offset(rightTop.dx, rightTop.dy + ParentInfo.wScreen / 4);
-    canvas.drawLine(rightTop, rightTopH, paintBracket);
-    canvas.drawLine(rightTop, rightTopV, paintBracket);
-
-    Offset leftBottom = Offset(xBlank + bracketWidth / 2,
-        ParentInfo.hScreen - yBlank - bracketWidth / 2);
-    Offset leftBottomH =
-        Offset(leftBottom.dx + ParentInfo.wScreen / 4, leftBottom.dy);
-    Offset leftBottomV =
-        Offset(leftBottom.dx, leftBottom.dy - ParentInfo.wScreen / 4);
-    canvas.drawLine(leftBottom, leftBottomH, paintBracket);
-    canvas.drawLine(leftBottom, leftBottomV, paintBracket);
-
-    Offset rightBottom = Offset(ParentInfo.wScreen - xBlank - bracketWidth / 2,
-        ParentInfo.hScreen - yBlank - bracketWidth / 2);
-    Offset rightBottomH =
-        Offset(rightBottom.dx - ParentInfo.wScreen / 4, rightBottom.dy);
-    Offset rightBottomV =
-        Offset(rightBottom.dx, rightBottom.dy - ParentInfo.wScreen / 4);
-    canvas.drawLine(rightBottom, rightBottomH, paintBracket);
-    canvas.drawLine(rightBottom, rightBottomV, paintBracket);
-    */
+    ////////////////////////////////////////////////////////////////////////////////
+    // unselected
+    Paint unselectedPaint = Paint()
+      ..color = Colors.black54
+      //..color = Colors.yellow
+      ..strokeWidth = 1;
+    Rect leftRect = Offset(xBlank, yBlank) &
+        Size(leftTopOffset.dx - xBlank, hScreen - yBlank * 2);
+    canvas.drawRect(leftRect, unselectedPaint);
+    Rect rightRect = Offset(rightTopOffset.dx, yBlank) &
+        Size(wScreen - xBlank * 2 - rightTopOffset.dx, hScreen - yBlank * 2);
+    canvas.drawRect(rightRect, unselectedPaint);
+    Rect topRect = Offset(leftTopOffset.dx, yBlank) &
+        Size(rightTopOffset.dx - leftTopOffset.dx, leftTopOffset.dy - yBlank);
+    canvas.drawRect(topRect, unselectedPaint);
+    Rect bottomRect = Offset(leftBottomOffset.dx, leftBottomOffset.dy) &
+        Size(rightBottomOffset.dx - leftBottomOffset.dx,
+            hScreen - yBlank - rightBottomOffset.dy);
+    canvas.drawRect(bottomRect, unselectedPaint);
     ////////////////////////////////////////////////////////////////////////////////
 
     /*
@@ -1080,58 +1039,3 @@ class MakeParentSizePainter extends CustomPainter {
   }
 ////////////////////////////////////////////////////////////////////////////////
 }
-
-/*
-void _onInteractionStart(ScaleStartDetails scaleStartDetails) {
-  dev.log('_onInteractionStart focalPoint: ${scaleStartDetails.focalPoint}'
-      ', localFocalPoint: ${scaleStartDetails.localFocalPoint}');
-}
-
-/// 성능에 문제가 되지 않으면 update 에서 모두 처리
-void _onInteractionEnd(ScaleEndDetails scaleEndDetails) {
-  dev.log('_onInteractionEnd velocity: ${scaleEndDetails.velocity}');
-  dev.log(
-      ' _transformationController.value: ${_transformationController.value}');
-  dev.log('_onInteractionEnd focalPoint: ${_scaleUpdateDetails.focalPoint}'
-      ', localFocalPoint: ${_scaleUpdateDetails.localFocalPoint}'
-      ', focalPointDelta: ${_scaleUpdateDetails.focalPointDelta}'
-      ', scale: ${_scaleUpdateDetails.scale}'
-      ', horizontalScale: ${_scaleUpdateDetails.horizontalScale}'
-      ', verticalScale: ${_scaleUpdateDetails.verticalScale}'
-      ', rotation: ${_scaleUpdateDetails.rotation}');
-
-  // for debug
-  Matrix4 matrix4 = _transformationController.value;
-  double xStart = matrix4.entry(0, 3);
-  double yStart = matrix4.entry(1, 3);
-  Offset xyOffset = _scaleUpdateDetails.localFocalPoint;
-  dev.log(
-      '_onInteractionUpdate xyOffset: $xyOffset, xStart: $xStart, yStart: $yStart');
-
-  // exponent 수정 (why?)
-  String xStartStr = xStart.toString();
-  String yStartStr = yStart.toString();
-  dev.log('xStartStr: $xStartStr, yStartStr: $yStartStr');
-  if (xStartStr.contains('e')) {
-    xStart = 0;
-    _transformationController.value.setEntry(0, 3, 0);
-  }
-  if (yStartStr.contains('e')) {
-    yStart = 0;
-    _transformationController.value.setEntry(1, 3, 0);
-  }
-}
-
-
-  void _onPanUpdate(DragUpdateDetails _dragUpdateDetails) {
-    dev.log('_onPanUpdate');
-
-    dev.log('_dragUpdateDetails: $_dragUpdateDetails');
-  }
-
-  void _onPanEnd(DragEndDetails _dragEndDetails) {
-    dev.log('_onPanEnd');
-
-    dev.log('_dragEndDetails: $_dragEndDetails');
-  }
-*/

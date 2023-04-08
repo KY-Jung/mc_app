@@ -10,10 +10,10 @@ class BalanceTab extends StatefulWidget {
   const BalanceTab({super.key});
 
   @override
-  State<BalanceTab> createState() => _BalanceTab();
+  State<BalanceTab> createState() => BalanceTabState();
 }
 
-class _BalanceTab extends State<BalanceTab> {
+class BalanceTabState extends State<BalanceTab> {
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {

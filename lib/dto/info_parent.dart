@@ -1,4 +1,4 @@
-
+import 'dart:developer' as dev;
 import 'dart:ui';
 
 import '../ui/screen_make.dart';
@@ -32,9 +32,18 @@ class ParentInfo {
   static late Offset rightBottomOffset;
 
   // 선택된 bracket 12개 중 하나
-  static late MakeParentSizePointEnum makeParentSizePointEnum;
+  static MakeParentSizePointEnum makeParentSizePointEnum = MakeParentSizePointEnum.NONE;
 
   static void initAll() {
 
+  }
+
+  static void printParent() {
+    dev.log('path: $path, wScreen: $wScreen, hScreen: $hScreen, '
+        'wImage: $wImage, hImage: $hImage, '
+        'xBlank: $xBlank, yBlank: $yBlank, xStart: $xStart, yStart: $yStart, '
+        'xyOffset: $xyOffset, leftTopOffset: $leftTopOffset, rightTopOffset: $rightTopOffset, '
+        'leftBottomOffset: $leftBottomOffset, rightBottomOffset: $rightBottomOffset, '
+        'inScale: $inScale');
   }
 }

@@ -45,6 +45,9 @@ dependencies:
   vibration: ^1.7.6
   flutter_expandable_fab: ^1.7.1
   enum_to_string: ^2.0.1
+  jpeg_encode: ^1.0.1
+  path_provider: ^2.0.14
+  permission_handler: ^10.2.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -67,6 +70,9 @@ dev_dependencies:
   logging: ^1.1.1
   image_picker: ^0.8.7
   enum_to_string: ^2.0.1
+  jpeg_encode: ^1.0.1
+  path_provider: ^2.0.14
+  permission_handler: ^10.2.0
 
 
   # The "flutter_lints" package below contains a set of recommended lints to

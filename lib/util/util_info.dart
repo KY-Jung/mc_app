@@ -99,9 +99,9 @@ class InfoUtil {
     }
 
     Size barSizeH =
-    Size(ParentInfo.wScreen / 4, AppConfig.SIZE_BRACKET_BAR_TOUCH);
+        Size(ParentInfo.wScreen / 4, AppConfig.SIZE_BRACKET_BAR_TOUCH);
     Size barSizeV =
-    Size(AppConfig.SIZE_BRACKET_BAR_TOUCH, ParentInfo.wScreen / 4);
+        Size(AppConfig.SIZE_BRACKET_BAR_TOUCH, ParentInfo.wScreen / 4);
     Offset barOffset = Offset(
         (leftTopOffset.dx + AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8),
         (leftTopOffset.dy - AppConfig.SIZE_BRACKET_BAR_TOUCH * 0.2));
@@ -120,7 +120,8 @@ class InfoUtil {
     }
 
     barOffset = Offset(
-        (rightTopOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
+        (rightTopOffset.dx -
+            AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
             barSizeH.width),
         (rightTopOffset.dy - AppConfig.SIZE_BRACKET_BAR_TOUCH * 0.2));
     barRectHv = barOffset & barSizeH;
@@ -147,7 +148,8 @@ class InfoUtil {
     }
     barOffset = Offset(
         (leftBottomOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.2),
-        (leftBottomOffset.dy - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
+        (leftBottomOffset.dy -
+            AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
             barSizeH.width));
     barRectHv = barOffset & barSizeV;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
@@ -156,7 +158,8 @@ class InfoUtil {
     }
 
     barOffset = Offset(
-        (rightBottomOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
+        (rightBottomOffset.dx -
+            AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
             barSizeH.width),
         (rightBottomOffset.dy - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8));
     barRectHv = barOffset & barSizeH;
@@ -166,7 +169,8 @@ class InfoUtil {
     }
     barOffset = Offset(
         (rightBottomOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8),
-        (rightBottomOffset.dy - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
+        (rightBottomOffset.dy -
+            AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8 -
             barSizeH.width));
     barRectHv = barOffset & barSizeV;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
@@ -177,7 +181,8 @@ class InfoUtil {
     return MakeParentSizePointEnum.NONE;
   }
 
-  static Rect calcRect(Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+  static Rect calcRect(
+      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
     double x = 0.0;
     double y = 0.0;
     double width = 0.0;
@@ -242,67 +247,85 @@ class InfoUtil {
     return rect;
   }
 
-  static void updateBracketArea(Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+  static void updateBracketArea(
+      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
     switch (makeParentSizePointEnum) {
       case MakeParentSizePointEnum.LEFTTOP:
         ParentInfo.leftTopOffset = Offset(xyOffset.dx, xyOffset.dy);
-        ParentInfo.rightTopOffset = Offset(ParentInfo.rightTopOffset.dx, xyOffset.dy);
-        ParentInfo.leftBottomOffset = Offset(xyOffset.dx, ParentInfo.leftBottomOffset.dy);
+        ParentInfo.rightTopOffset =
+            Offset(ParentInfo.rightTopOffset.dx, xyOffset.dy);
+        ParentInfo.leftBottomOffset =
+            Offset(xyOffset.dx, ParentInfo.leftBottomOffset.dy);
         //ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx, ParentInfo.rightBottomOffset.dy);
         break;
       case MakeParentSizePointEnum.RIGHTTOP:
-        ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, xyOffset.dy);
+        ParentInfo.leftTopOffset =
+            Offset(ParentInfo.leftTopOffset.dx, xyOffset.dy);
         ParentInfo.rightTopOffset = Offset(xyOffset.dx, xyOffset.dy);
         //ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx, ParentInfo.leftBottomOffset.dy);
-        ParentInfo.rightBottomOffset = Offset(xyOffset.dx, ParentInfo.rightBottomOffset.dy);
+        ParentInfo.rightBottomOffset =
+            Offset(xyOffset.dx, ParentInfo.rightBottomOffset.dy);
         break;
       case MakeParentSizePointEnum.LEFTBOTTOM:
-        ParentInfo.leftTopOffset = Offset(xyOffset.dx, ParentInfo.leftTopOffset.dy);
+        ParentInfo.leftTopOffset =
+            Offset(xyOffset.dx, ParentInfo.leftTopOffset.dy);
         //ParentInfo.rightTopOffset = Offset(ParentInfo.rightTopOffset.dx, ParentInfo.rightTopOffset.dy);
         ParentInfo.leftBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
-        ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
+        ParentInfo.rightBottomOffset =
+            Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
         break;
       case MakeParentSizePointEnum.RIGHTBOTTOM:
         //ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, ParentInfo.leftTopOffset.dy);
-        ParentInfo.rightTopOffset = Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
-        ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
+        ParentInfo.rightTopOffset =
+            Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
+        ParentInfo.leftBottomOffset =
+            Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
         ParentInfo.rightBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
         break;
 
       case MakeParentSizePointEnum.LEFTTOPH:
       case MakeParentSizePointEnum.RIGHTTOPH:
-        ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, xyOffset.dy);
-        ParentInfo.rightTopOffset = Offset(ParentInfo.rightTopOffset.dx, xyOffset.dy);
+        ParentInfo.leftTopOffset =
+            Offset(ParentInfo.leftTopOffset.dx, xyOffset.dy);
+        ParentInfo.rightTopOffset =
+            Offset(ParentInfo.rightTopOffset.dx, xyOffset.dy);
         //ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
         //ParentInfo.rightBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
         break;
       case MakeParentSizePointEnum.LEFTTOPV:
       case MakeParentSizePointEnum.LEFTBOTTOMV:
-        ParentInfo.leftTopOffset = Offset(xyOffset.dx, ParentInfo.leftTopOffset.dy);
+        ParentInfo.leftTopOffset =
+            Offset(xyOffset.dx, ParentInfo.leftTopOffset.dy);
         //ParentInfo.rightTopOffset = Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
-        ParentInfo.leftBottomOffset = Offset(xyOffset.dx, ParentInfo.leftBottomOffset.dy);
+        ParentInfo.leftBottomOffset =
+            Offset(xyOffset.dx, ParentInfo.leftBottomOffset.dy);
         //ParentInfo.rightBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
         break;
       case MakeParentSizePointEnum.RIGHTTOPV:
       case MakeParentSizePointEnum.RIGHTBOTTOMV:
         //ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, ParentInfo.leftTopOffset.dy);
-        ParentInfo.rightTopOffset = Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
+        ParentInfo.rightTopOffset =
+            Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
         //ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
-        ParentInfo.rightBottomOffset = Offset(xyOffset.dx, ParentInfo.rightBottomOffset.dy);
+        ParentInfo.rightBottomOffset =
+            Offset(xyOffset.dx, ParentInfo.rightBottomOffset.dy);
         break;
 
       case MakeParentSizePointEnum.LEFTBOTTOMH:
       case MakeParentSizePointEnum.RIGHTBOTTOMH:
         //ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, ParentInfo.leftTopOffset.dy);
         //ParentInfo.rightTopOffset = Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
-        ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
-        ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
+        ParentInfo.leftBottomOffset =
+            Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
+        ParentInfo.rightBottomOffset =
+            Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
         break;
     }
   }
 
   // 영역을 넘어가는지 체크
-  static bool checkBracketCrossArea(Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+  static bool checkBracketCrossArea(
+      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
     switch (makeParentSizePointEnum) {
       case MakeParentSizePointEnum.LEFTTOP:
         if (xyOffset.dx >= ParentInfo.rightTopOffset.dx ||
@@ -373,7 +396,8 @@ class InfoUtil {
   }
 
   // 영역을 넘어가는지 체크
-  static bool checkBlankArea(Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+  static bool checkBlankArea(
+      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
     switch (makeParentSizePointEnum) {
       case MakeParentSizePointEnum.LEFTTOP:
         if (xyOffset.dx < ParentInfo.xBlank ||
@@ -409,7 +433,7 @@ class InfoUtil {
         }
       case MakeParentSizePointEnum.LEFTTOPH:
       case MakeParentSizePointEnum.RIGHTTOPH:
-      if (xyOffset.dy < ParentInfo.yBlank) {
+        if (xyOffset.dy < ParentInfo.yBlank) {
           //dev.log('checkBlankArea: LEFTTOPH');
           return false;
         } else {
@@ -425,7 +449,7 @@ class InfoUtil {
         }
       case MakeParentSizePointEnum.RIGHTTOPV:
       case MakeParentSizePointEnum.RIGHTBOTTOMV:
-      if (xyOffset.dx > ParentInfo.wScreen - ParentInfo.xBlank) {
+        if (xyOffset.dx > ParentInfo.wScreen - ParentInfo.xBlank) {
           //dev.log('checkBlankArea: RIGHTTOPV');
           return false;
         } else {
@@ -433,7 +457,7 @@ class InfoUtil {
         }
       case MakeParentSizePointEnum.LEFTBOTTOMH:
       case MakeParentSizePointEnum.RIGHTBOTTOMH:
-      if (xyOffset.dy > ParentInfo.hScreen - ParentInfo.yBlank) {
+        if (xyOffset.dy > ParentInfo.hScreen - ParentInfo.yBlank) {
           //dev.log('checkBlankArea: LEFTBOTTOMH');
           return false;
         } else {
@@ -572,26 +596,79 @@ class InfoUtil {
 
     return f_ret;
   }
+
   ////////////////////////////////////////////////////////////////////////////////
 
-  static Offset stickyOffset(Offset xyOffset, double wScreen, double hScreen, double wDivide, double hDivide, double ratio) {
-
+  static Offset stickyOffset(
+      Offset xyOffset,
+      double wScreen,
+      double xBlank,
+      double hScreen,
+      double yBlank,
+      double wDivideRatio,
+      double hDivideRatio,
+      double stickyRatio, MakeParentSizePointEnum makeParentSizePointEnum) {
     double x = xyOffset.dx;
     double y = xyOffset.dy;
+    double xNew = 0;
+    double yNew = 0;
 
-    double wGap = wScreen / wDivide;
-    double hGap = hScreen / hDivide;
+    double wGap = (wScreen - xBlank * 2) * wDivideRatio;
+    double wMax = wGap * stickyRatio - wGap * 0.5; // 10 gap + 0.9 ratio --> 4
+    double hGap = (hScreen - yBlank * 2) * hDivideRatio;
+    double hMax = hGap * stickyRatio - hGap * 0.5;
 
-    double wQuotient = x / wGap;
-    double wRest = x - wQuotient * wGap;
-    if (wRest < wGap * 0.5) {
+    double wRemain = (x - xBlank) % wGap;
+    double hRemain = (y - yBlank) % hGap;
+    double wDiff = (wGap * 0.5) - wRemain;
+    double hDiff = (hGap * 0.5) - hRemain;
 
+    if (wDiff.abs() > wMax) {
+      if (wDiff < 0) {
+        xNew = wGap * ((x - xBlank) ~/ wGap + 1) + xBlank;
+      } else {
+        xNew = ((x - xBlank) ~/ wGap) * wGap + xBlank;
+      }
     } else {
-
+      xNew = x;
+    }
+    if (hDiff.abs() > hMax) {
+      if (hDiff < 0) {
+        yNew = hGap * ((y - yBlank) ~/ hGap + 1) + yBlank;
+      } else {
+        yNew = ((y - yBlank) ~/ hGap) * hGap + yBlank;
+      }
+    } else {
+      yNew = y;
     }
 
-    return Offset(0, 0);
+    switch (makeParentSizePointEnum) {
+      case MakeParentSizePointEnum.LEFTTOP:
+        break;
+      case MakeParentSizePointEnum.RIGHTTOP:
+        break;
+      case MakeParentSizePointEnum.LEFTBOTTOM:
+        break;
+      case MakeParentSizePointEnum.RIGHTBOTTOM:
+        break;
+      case MakeParentSizePointEnum.LEFTTOPH:
+      case MakeParentSizePointEnum.RIGHTTOPH:
+        xNew = x;
+      break;
+      case MakeParentSizePointEnum.LEFTTOPV:
+      case MakeParentSizePointEnum.LEFTBOTTOMV:
+        yNew = y;
+      break;
+      case MakeParentSizePointEnum.RIGHTTOPV:
+      case MakeParentSizePointEnum.RIGHTBOTTOMV:
+        yNew = y;
+      break;
+      case MakeParentSizePointEnum.LEFTBOTTOMH:
+      case MakeParentSizePointEnum.RIGHTBOTTOMH:
+        xNew = x;
+      break;
+    }
+
+    return Offset(xNew, yNew);
   }
-
-
 }

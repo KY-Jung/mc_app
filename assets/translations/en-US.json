@@ -24,6 +24,11 @@
   "SIZE": "Size",
   "SIGN": "Sign",
 
+  "SIZE_INIT": "Screen Init",
+  "SIZE_SAVE": "Screen Save",
+  "SIZE_NOCHANGE": "There is no changed size.",
+
+
 
   "IMAGE_VIEW": "Image view",
 

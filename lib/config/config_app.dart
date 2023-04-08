@@ -15,8 +15,11 @@ class AppConfig {
   static const double SIZE_BRACKET_CORNER_TOUCH = 48;
   static const double SIZE_BRACKET_BAR_TOUCH = 48;
 
-  static const double SIZE_SHRINK_MIN = 0.25;
+  static const double SIZE_SHRINK_MIN = 0.25; // 면적 기준
 
-  static const double SIZE_STICKY_RATION = 0.1;
+  static const double SIZE_STICKY_RATIO = 0.8;  // 0.9 -> 9 이상 1 이하, 0.8 -> 8 이상, 2 이하
+
+  static const double SIZE_GRID_RATIO = 0.1;  // 0.1 -> 10 등분
+  static const int SIZE_INIT_INTERVAL = 100;   // milliseconds
 
 }

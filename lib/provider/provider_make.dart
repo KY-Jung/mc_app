@@ -14,21 +14,10 @@ class MakeProvider with ChangeNotifier {
   ///       ParentWidget 에서 dispose 할때는 에러 발생해서 안됨
   bool _parentSize = false;
 
-  /// MakeScreen 에서 onTapDown 할때
-  /// 해제 : onTapUp 할때
-  bool _parentResize = false;
-
   bool get parentSize => _parentSize;
 
   void setParentSize(bool value) {
     _parentSize = value;
-    notifyListeners();
-  }
-
-  bool get parentResize => _parentResize;
-
-  void setParentResize(bool value) {
-    _parentResize = value;
     notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////

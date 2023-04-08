@@ -1,19 +1,29 @@
+import 'dart:async';
 import 'dart:developer' as dev;
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
+import 'package:jpeg_encode/jpeg_encode.dart';
+import 'package:mc/config/constant_app.dart';
+import 'package:mc/util/util_popup.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/config_app.dart';
 import '../dto/info_parent.dart';
 import '../provider/provider_make.dart';
+import '../util/util_info.dart';
 
 enum MakeParentEnum { FRAME, SIZE, SIGN }
 
 class ParentWidget extends StatefulWidget {
-
   const ParentWidget({super.key});
+
   //final void Function(bool isSize) callbackParentSizeInitScreen;
   //const ParentWidget({required this.callbackParentSizeInitScreen, super.key});
   //const ParentWidget({ Key? key, required this.callbackParentSizeInitScreen, }) : super(key: key);
@@ -139,46 +149,29 @@ class ParentWidgetState extends State<ParentWidget> {
                     onPressed: () {},
                   ),
                   ElevatedButton(
-                    child: Text('FRAME parentResize: ${makeProvider.parentResize}'),
+                    child: Text('FRAME parentSize: ${makeProvider.parentSize}'),
                     onPressed: () {},
                   ),
                 ],
               ),
             ),
           if (_makeParentEnum == MakeParentEnum.SIZE)
-            (makeProvider.parentResize)
-                ? Expanded(
-                    flex: 3,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        ElevatedButton(
-                          child: Text('parentSize: ${makeProvider.parentSize}'),
-                          onPressed: () {},
-                        ),
-                        ElevatedButton(
-                          child: Text('parentResize: ${makeProvider.parentResize}'),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  )
-                : Expanded(
-                    flex: 3,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        OutlinedButton(
-                          child: Text('parentSize: ${makeProvider.parentSize}'),
-                          onPressed: () {},
-                        ),
-                        OutlinedButton(
-                          child: Text('parentResize: ${makeProvider.parentResize}'),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
+            Expanded(
+              flex: 3,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: _onPressedSizeInit,
+                    child: Text('SIZE_INIT'.tr()),
                   ),
+                  ElevatedButton(
+                    onPressed: _onPressedSizeSave,
+                    child: Text('SIZE_SAVE'.tr()),
+                  ),
+                ],
+              ),
+            ),
           if (_makeParentEnum == MakeParentEnum.SIGN)
             Expanded(
               flex: 3,
@@ -190,7 +183,7 @@ class ParentWidgetState extends State<ParentWidget> {
                     onPressed: () {},
                   ),
                   OutlinedButton(
-                    child: Text('SIGN parentResize: ${makeProvider.parentResize}'),
+                    child: Text('SIGN parentSize: ${makeProvider.parentSize}'),
                     onPressed: () {},
                   ),
                 ],
@@ -308,11 +301,120 @@ class ParentWidgetState extends State<ParentWidget> {
     setState(() {});
   }
 
-  /// end 는 dispose, 저장 버튼을 누른 경우
-  void startResize(bool ir) {
-    //isResize = ir;
-    setState(() {
+  void _onPressedSizeInit() {
+    dev.log('# ParentWidget _onPressedSizeInit START');
+    ParentInfo.leftTopOffset = Offset(
+        ParentInfo.leftTopOffset.dx + 10, ParentInfo.leftTopOffset.dy + 10);
+    ParentInfo.rightTopOffset = Offset(
+        ParentInfo.rightTopOffset.dx - 10, ParentInfo.rightTopOffset.dy + 10);
+    ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx + 10,
+        ParentInfo.leftBottomOffset.dy - 10);
+    ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx - 10,
+        ParentInfo.rightBottomOffset.dy - 10);
+    context.read<MakeProvider>().setParentSize(true);
+
+    Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
+      dev.log('# ParentWidget _onPressedSizeInit START2');
+      ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
+      ParentInfo.rightTopOffset =
+          Offset(ParentInfo.wScreen - ParentInfo.xBlank, ParentInfo.yBlank);
+      ParentInfo.leftBottomOffset =
+          Offset(ParentInfo.xBlank, ParentInfo.hScreen - ParentInfo.yBlank);
+      ParentInfo.rightBottomOffset = Offset(
+          ParentInfo.wScreen - ParentInfo.xBlank,
+          ParentInfo.hScreen - ParentInfo.yBlank);
+      context.read<MakeProvider>().setParentSize(true);
     });
   }
 
+  void _onPressedSizeSave() async {
+    dev.log('# ParentWidget _onPressedSizeSave START');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    bool leftTop =
+        (ParentInfo.leftTopOffset.dx.toInt() == ParentInfo.xBlank.toInt() &&
+            ParentInfo.leftTopOffset.dy.toInt() == ParentInfo.yBlank.toInt());
+    bool rightTop = (ParentInfo.rightTopOffset.dx.toInt() ==
+            (ParentInfo.wScreen - ParentInfo.xBlank).toInt() &&
+        ParentInfo.rightTopOffset.dy.toInt() == ParentInfo.yBlank.toInt());
+    bool leftBottom =
+        (ParentInfo.leftBottomOffset.dx.toInt() == ParentInfo.xBlank.toInt() &&
+            ParentInfo.leftBottomOffset.dy.toInt() ==
+                (ParentInfo.hScreen - ParentInfo.yBlank).toInt());
+    bool rightBottom = (ParentInfo.rightBottomOffset.dx.toInt() ==
+            (ParentInfo.wScreen - ParentInfo.xBlank).toInt() &&
+        ParentInfo.rightBottomOffset.dy.toInt() ==
+            (ParentInfo.hScreen - ParentInfo.yBlank).toInt());
+
+    if (leftTop && rightTop && leftBottom && rightBottom) {
+      dev.log('_onPressedSizeSave SIZE_NOCHANGE');
+      PopupUtil.popupToast('SIZE_NOCHANGE'.tr());
+      return;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
+    dev.log('_onPressedSizeSave SIZE_CHANGE');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // 새로 저장
+    //ParentInfo.printParent();
+
+    // 선택한 영역 구하기
+    Offset leftTopOffset = ParentInfo.leftTopOffset;
+    Offset rightTopOffset = ParentInfo.rightTopOffset;
+    Offset leftBottomOffset = ParentInfo.leftBottomOffset;
+    Offset rightBottomOffset = ParentInfo.rightBottomOffset;
+    double xBlank = ParentInfo.xBlank;
+    double yBlank = ParentInfo.yBlank;
+    double inScale = ParentInfo.inScale;
+    Rect srcRect = Offset((leftTopOffset.dx - xBlank) / inScale, (leftTopOffset.dy - yBlank) / inScale) &
+        Size((rightTopOffset.dx - leftTopOffset.dx) / inScale,
+            (rightBottomOffset.dy - rightTopOffset.dy) / inScale);
+    dev.log('srcRect: $srcRect');
+
+    // 저장할 영역 구하기
+    Rect dstRect = const Offset(0, 0) & Size(srcRect.width, srcRect.height);
+
+    // 그리기
+    ui.Image uiImage = await InfoUtil.loadUiImage(ParentInfo.path);
+    PictureRecorder pictureRecorder = PictureRecorder();
+    Canvas canvas = Canvas(
+      pictureRecorder, dstRect
+    );
+    canvas.drawImageRect(uiImage, srcRect, dstRect, Paint());
+    ui.Image newImage = await pictureRecorder
+        .endRecording()
+        .toImage(srcRect.width.toInt(), srcRect.height.toInt());
+
+    // jpgByte 로 변환
+    var rgbByte = await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+    var jpgByte = JpegEncoder().compress(rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 90);
+
+    // byte 저장
+    Directory saveDir = await getApplicationDocumentsDirectory();
+    dev.log('getApplicationDocumentsDirectory $saveDir');
+    String path = '${saveDir.path}/${AppConstant.PARENT_NEW_FILENAME}';
+    File saveFile = File(path);
+    await saveFile.delete();
+    /*
+    if (!saveFile.existsSync()) {
+      saveFile.createSync(recursive: true);
+    } else {
+      saveFile.deleteSync(recursive: true);
+      saveFile.createSync(recursive: true);
+    }
+    */
+    saveFile.writeAsBytesSync(jpgByte.buffer.asUint8List(), flush: true, mode: FileMode.write);
+    dev.log('writeAsBytesSync end');
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // 화면 갱신
+    await InfoUtil.setParentInfo(path);
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    if (!mounted) return;
+    context.read<MakeProvider>().setParentSize(true);
+  }
 }

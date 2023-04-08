@@ -24,6 +24,9 @@
   "SIZE": "크기",
   "SIGN": "서명",
 
+  "SIZE_INIT": "화면 초기화",
+  "SIZE_SAVE": "화면 저장",
+  "SIZE_NOCHANGE": "변경된 크기가 없습니다",
 
 
   "IMAGE_VIEW": "이미지 보기",

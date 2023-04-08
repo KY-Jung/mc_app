@@ -48,7 +48,7 @@ class PopupUtil {
       msg: msg,
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,
-      timeInSecForIosWeb: 6,
+      timeInSecForIosWeb: 3,
       backgroundColor: Colors.grey,
       textColor: Colors.white,
       fontSize: 16.0,
