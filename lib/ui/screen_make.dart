@@ -137,9 +137,11 @@ class MakeScreenState extends State<MakeScreen> {
     dev.log('build _makeEnum: $_makeEnum');
     dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
 
+    /*
     MakeProvider makeProvider =
         Provider.of<MakeProvider>(context, listen: false);
     dev.log('parentSize: ${makeProvider.parentSize}');
+    */
     dev.log('ParentInfo.path: ${ParentInfo.path}');
 
     return Scaffold(
@@ -687,6 +689,7 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.BABY;
       context.read<MakeProvider>().setParentSize(false);
+      InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -701,6 +704,7 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.CAPTION;
       context.read<MakeProvider>().setParentSize(false);
+      InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -714,6 +718,7 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.SOUND;
       context.read<MakeProvider>().setParentSize(false);
+      InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -727,6 +732,7 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {
       _makeEnum = MakeEnum.LINK;
       context.read<MakeProvider>().setParentSize(false);
+      InfoUtil.initParentInfoBracket();
     });
   }
 

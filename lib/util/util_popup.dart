@@ -8,7 +8,7 @@ class PopupUtil {
   static Future<dynamic> popupAlertOk(context, title, msg) {
     return showDialog(
       context: context,
-      //barrierDismissible: false, // 바깥 영역 터치시 창닫기 x
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
       builder: (BuildContext context) => AlertDialog(
         title: Text(title),
         content: Text(msg),
@@ -25,7 +25,7 @@ class PopupUtil {
   static Future<dynamic> popupAlertOkCancel(context, title, msg) {
     return showDialog(
       context: context,
-      //barrierDismissible: false, // 바깥 영역 터치시 창닫기 x
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
       builder: (BuildContext context) => AlertDialog(
         title: Text(title),
         content: Text(msg),
@@ -41,16 +41,48 @@ class PopupUtil {
     );
   }
 
-  static Future<dynamic> popupImageOkCancel(
+  /*
+    static Future<dynamic> popupImageOkCancel(
       context, title, msg, Widget imageWidget) {
     return showDialog(
       context: context,
-      //barrierDismissible: false, // 바깥 영역 터치시 창닫기 x
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
       builder: (BuildContext context) => AlertDialog(
         title: Text(title),
         content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Expanded(
+              child: imageWidget,
+            ),
+            Text(msg),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'OK'),
+              child: Text('OK'.tr())),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'CANCEL'),
+              child: Text('CANCEL'.tr())),
+        ],
+      ),
+    );
+  }
+   */
+  static Future<dynamic> popupImageOkCancel(
+      context, title, msg, Widget imageWidget, wPopup, hPopup) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            SizedBox(
+              height: hPopup,
+              width: wPopup,
               child: imageWidget,
             ),
             Text(msg),

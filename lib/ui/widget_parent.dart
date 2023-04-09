@@ -238,18 +238,21 @@ class ParentWidgetState extends State<ParentWidget> {
         toggleSelectList[0] = true;
         if (!mounted) return;
         context.read<MakeProvider>().setParentSize(false);
+        //makeProviderWatch.setParentSize(false);
         break;
       case MakeParentEnum.SIZE:
         dev.log('case MakeParentEnum.SIZE');
         toggleSelectList[1] = true;
         if (!mounted) return;
         context.read<MakeProvider>().setParentSize(true);
+        //makeProviderWatch.setParentSize(true);
         break;
       case MakeParentEnum.SIGN:
         dev.log('case MakeParentEnum.SIGN');
         toggleSelectList[2] = true;
         if (!mounted) return;
         context.read<MakeProvider>().setParentSize(false);
+        //makeProviderWatch.setParentSize(false);
         break;
     }
 
@@ -287,13 +290,16 @@ class ParentWidgetState extends State<ParentWidget> {
     switch (_makeParentEnum) {
       case MakeParentEnum.FRAME:
         context.read<MakeProvider>().setParentSize(false);
+        //makeProviderWatch.setParentSize(false);
         break;
       case MakeParentEnum.SIZE:
         dev.log('case MakeParentEnum.SIZE');
         context.read<MakeProvider>().setParentSize(true);
+        //makeProviderWatch.setParentSize(true);
         break;
       case MakeParentEnum.SIGN:
         context.read<MakeProvider>().setParentSize(false);
+        //makeProviderWatch.setParentSize(false);
         break;
     }
 
@@ -313,6 +319,7 @@ class ParentWidgetState extends State<ParentWidget> {
     ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx - 10,
         ParentInfo.rightBottomOffset.dy - 10);
     context.read<MakeProvider>().setParentSize(true);
+    //makeProviderWatch.setParentSize(true);
 
     Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
       dev.log('# ParentWidget _onPressedSizeInit START2');
@@ -325,11 +332,10 @@ class ParentWidgetState extends State<ParentWidget> {
           ParentInfo.wScreen - ParentInfo.xBlank,
           ParentInfo.hScreen - ParentInfo.yBlank);
       context.read<MakeProvider>().setParentSize(true);
+      //makeProviderWatch.setParentSize(true);
     });
 
     InfoUtil.setParentInfo(ParentInfo.path);
-
-
   }
 
   void _onPressedSizeSave() async {
@@ -396,8 +402,11 @@ class ParentWidgetState extends State<ParentWidget> {
     Widget imageWidget = RawImage(
         image: newImage,
     );
+    //if (!mounted) return;
+    double wPopup = ParentInfo.wScreen * 0.8;
+    double hPopup = ParentInfo.hScreen * 0.4;
     if (!mounted) return;
-    PopupUtil.popupImageOkCancel(context, 'CONFIRM'.tr(), 'SIZE_SAVE'.tr(), imageWidget)
+    PopupUtil.popupImageOkCancel(context, 'CONFIRM'.tr(), 'SIZE_SAVE_CONFIRM'.tr(), imageWidget, wPopup, hPopup)
         .then((ret) async {
       dev.log('popupImageOkCancel: $ret');
 
@@ -443,8 +452,12 @@ class ParentWidgetState extends State<ParentWidget> {
         ////////////////////////////////////////////////////////////////////////////////
 
         if (!mounted) return;
+        context.read<MakeProvider>().setParentSize(false);
         context.read<MakeProvider>().setParentSize(true);
-
+        //makeProviderWatch.setParentSize(true);
+        dev.log('# ParentWidget _onPressedSizeSave end');
+        setState(() {
+        });
       }
     });
 

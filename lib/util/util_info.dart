@@ -51,6 +51,11 @@ class InfoUtil {
     dev.log('xBlank: ${ParentInfo.xBlank}, yBlank: ${ParentInfo.yBlank}');
 
     // offset
+    initParentInfoBracket();
+  }
+
+  static void initParentInfoBracket() {
+    // offset
     ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
     ParentInfo.rightTopOffset =
         Offset(ParentInfo.wScreen - ParentInfo.xBlank, ParentInfo.yBlank);
