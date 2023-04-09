@@ -9,6 +9,7 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
+import 'package:mc/ui/screen_make.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -325,6 +326,10 @@ class ParentWidgetState extends State<ParentWidget> {
           ParentInfo.hScreen - ParentInfo.yBlank);
       context.read<MakeProvider>().setParentSize(true);
     });
+
+    InfoUtil.setParentInfo(ParentInfo.path);
+
+
   }
 
   void _onPressedSizeSave() async {
@@ -386,35 +391,62 @@ class ParentWidgetState extends State<ParentWidget> {
         .endRecording()
         .toImage(srcRect.width.toInt(), srcRect.height.toInt());
 
-    // jpgByte 로 변환
-    var rgbByte = await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-    var jpgByte = JpegEncoder().compress(rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 90);
 
-    // byte 저장
-    Directory saveDir = await getApplicationDocumentsDirectory();
-    dev.log('getApplicationDocumentsDirectory $saveDir');
-    String path = '${saveDir.path}/${AppConstant.PARENT_NEW_FILENAME}';
-    File saveFile = File(path);
-    await saveFile.delete();
-    /*
-    if (!saveFile.existsSync()) {
-      saveFile.createSync(recursive: true);
-    } else {
-      saveFile.deleteSync(recursive: true);
-      saveFile.createSync(recursive: true);
-    }
-    */
-    saveFile.writeAsBytesSync(jpgByte.buffer.asUint8List(), flush: true, mode: FileMode.write);
-    dev.log('writeAsBytesSync end');
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // 화면 갱신
-    await InfoUtil.setParentInfo(path);
-
-    ////////////////////////////////////////////////////////////////////////////////
-
+    //Image image = Image.file(File(ParentInfo.path));
+    Widget imageWidget = RawImage(
+        image: newImage,
+    );
     if (!mounted) return;
-    context.read<MakeProvider>().setParentSize(true);
+    PopupUtil.popupImageOkCancel(context, 'CONFIRM'.tr(), 'SIZE_SAVE'.tr(), imageWidget)
+        .then((ret) async {
+      dev.log('popupImageOkCancel: $ret');
+
+      // example
+      if (ret == null) {
+        // 팝업 바깥 영역을 클릭한 경우
+        return;
+      }
+      if (ret == AppConstant.OK) {
+
+        // jpgByte 로 변환
+        var rgbByte = await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+        var jpgByte = JpegEncoder().compress(rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 90);
+
+        // byte 저장
+        Directory appDir = await getApplicationDocumentsDirectory();
+        dev.log('getApplicationDocumentsDirectory: $appDir');
+        String newPath = '${appDir.path}/${AppConstant.PARENT_RESIZE_DIR}';
+        dev.log('newPath: $newPath');
+        File newPathFile = File(newPath);
+        bool f = await newPathFile.exists();    // 항상 false --> ?
+        if (f) {
+          dev.log('newPathFile.exists: true');
+          newPathFile.deleteSync(recursive: true);
+        }
+        newPathFile.deleteSync(recursive: true);
+
+        // new 파일 생성
+        String fileName = '${appDir.path}/${AppConstant.PARENT_RESIZE_DIR}/'
+            '${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg';
+        File newImageFile = File(fileName);
+        newImageFile.createSync(recursive: true);
+
+        // byte 저장
+        newImageFile.writeAsBytesSync(jpgByte.buffer.asUint8List(), flush: true, mode: FileMode.write);
+        dev.log('writeAsBytesSync end');
+        ////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 화면 갱신
+        await InfoUtil.setParentInfo(fileName);
+        ParentInfo.makeBringEnum = MakeBringEnum.RESIZE;
+        ////////////////////////////////////////////////////////////////////////////////
+
+        if (!mounted) return;
+        context.read<MakeProvider>().setParentSize(true);
+
+      }
+    });
+
   }
 }

@@ -6,11 +6,10 @@ import '../ui/screen_make.dart';
 class ParentInfo {
 
   static String path = '';
-  static String resizePath = '';
-  //static late ui.Image image;
+  static MakeBringEnum makeBringEnum = MakeBringEnum.NONE;
 
-  static late double wScreen;
-  static late double hScreen;
+  static double wScreen = 0;
+  static double hScreen = 0;
 
   static int wImage = 0;
   static int hImage = 0;
@@ -25,11 +24,11 @@ class ParentInfo {
 
   static double scale = 0;
 
-  static late Offset xyOffset;    // for test
-  static late Offset leftTopOffset;
-  static late Offset rightTopOffset;
-  static late Offset leftBottomOffset;
-  static late Offset rightBottomOffset;
+  static Offset xyOffset = const Offset(0, 0);    // for test
+  static Offset leftTopOffset = const Offset(0, 0);
+  static Offset rightTopOffset = const Offset(0, 0);
+  static Offset leftBottomOffset = const Offset(0, 0);
+  static Offset rightBottomOffset = const Offset(0, 0);
 
   // 선택된 bracket 12개 중 하나
   static MakeParentSizePointEnum makeParentSizePointEnum = MakeParentSizePointEnum.NONE;
@@ -44,6 +43,6 @@ class ParentInfo {
         'xBlank: $xBlank, yBlank: $yBlank, xStart: $xStart, yStart: $yStart, '
         'xyOffset: $xyOffset, leftTopOffset: $leftTopOffset, rightTopOffset: $rightTopOffset, '
         'leftBottomOffset: $leftBottomOffset, rightBottomOffset: $rightBottomOffset, '
-        'inScale: $inScale');
+        'inScale: $inScale, makeParentSizePointEnum: $makeParentSizePointEnum');
   }
 }

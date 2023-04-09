@@ -18,6 +18,7 @@
   "LINK": "링크",
 
   "INFO": "알림",
+  "CONFIRM": "확인"
   "INIT_MAKE": "작업중인 화면을 완전히 초기화하시겠습니까?",
 
   "FRAME": "틀",
@@ -26,7 +27,8 @@
 
   "SIZE_INIT": "화면 초기화",
   "SIZE_SAVE": "화면 저장",
-  "SIZE_NOCHANGE": "변경된 크기가 없습니다",
+  "SIZE_NOCHANGE": "변경된 크기가 없습니다.",
+  "SIZE_SAVE_CONFIRM": "변경된 크기로 설정하시겠습니까?",
 
 
   "IMAGE_VIEW": "이미지 보기",

@@ -14,6 +14,7 @@ import '../ui/screen_make.dart';
 class InfoUtil {
   ////////////////////////////////////////////////////////////////////////////////
   static Future setParentInfo(path) async {
+    dev.log('setParentInfo path: $path');
     ParentInfo.path = path;
 
     ui.Image uiImage = await InfoUtil.loadUiImage(path);
@@ -21,26 +22,35 @@ class InfoUtil {
     /// Parent 이미지 크기
     ParentInfo.wImage = uiImage.width;
     ParentInfo.hImage = uiImage.height;
-    dev.log('image w: ${uiImage.width}, h: ${uiImage.height}');
+    dev.log('wImage: ${uiImage.width}, hImage: ${uiImage.height}');
 
     /// Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
-    var inScale = InfoUtil.calcFitRatioIn(
+    double inScale = InfoUtil.calcFitRatioIn(
         ParentInfo.wScreen, ParentInfo.hScreen, uiImage.width, uiImage.height);
     ParentInfo.inScale = inScale;
     dev.log('inScale: $inScale');
 
     // blank
-    var wReal = uiImage.width * inScale;
-    var hReal = uiImage.height * inScale;
-    if ((ParentInfo.wScreen - wReal) > (ParentInfo.hScreen - hReal)) {
-      ParentInfo.xBlank = (ParentInfo.wScreen - wReal) / 2;
-      ParentInfo.yBlank = 0;
+    if (ParentInfo.inScale < 1.0) {
+      // 화면보다 큰 이미지인 경우
+      double wReal = uiImage.width * inScale;
+      double hReal = uiImage.height * inScale;
+      dev.log('wReal: $wReal, hReal: $hReal');
+      if ((ParentInfo.wScreen - wReal) > (ParentInfo.hScreen - hReal)) {
+        ParentInfo.xBlank = (ParentInfo.wScreen - wReal) / 2;
+        ParentInfo.yBlank = 0;
+      } else {
+        ParentInfo.yBlank = (ParentInfo.hScreen - hReal) / 2;
+        ParentInfo.xBlank = 0;
+      }
     } else {
-      ParentInfo.yBlank = (ParentInfo.hScreen - hReal) / 2;
-      ParentInfo.xBlank = 0;
+      // 화면보다 작은 이미지인 경우
+      ParentInfo.xBlank = (ParentInfo.wScreen - uiImage.width) * 0.5;
+      ParentInfo.yBlank = (ParentInfo.hScreen - uiImage.height) * 0.5;
     }
     dev.log('xBlank: ${ParentInfo.xBlank}, yBlank: ${ParentInfo.yBlank}');
 
+    // offset
     ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
     ParentInfo.rightTopOffset =
         Offset(ParentInfo.wScreen - ParentInfo.xBlank, ParentInfo.yBlank);
@@ -63,6 +73,8 @@ class InfoUtil {
     Offset leftBottomOffset = ParentInfo.leftBottomOffset;
     Offset rightBottomOffset = ParentInfo.rightBottomOffset;
 
+    double bracketLength;
+
     Size cornerSize = const Size(AppConfig.SIZE_BRACKET_CORNER_TOUCH,
         AppConfig.SIZE_BRACKET_CORNER_TOUCH);
     Offset cornerOffset = Offset(
@@ -71,7 +83,16 @@ class InfoUtil {
     Rect cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      return MakeParentSizePointEnum.LEFTTOP;
+      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
+        if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
+          return MakeParentSizePointEnum.LEFTTOP;
+        } else {
+          return MakeParentSizePointEnum.LEFTBOTTOM;
+        }
+      } else {
+        return MakeParentSizePointEnum.RIGHTTOP;
+      }
+      //return MakeParentSizePointEnum.LEFTTOP;
     }
     cornerOffset = Offset(
         rightTopOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8,
@@ -79,7 +100,16 @@ class InfoUtil {
     cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      return MakeParentSizePointEnum.RIGHTTOP;
+      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
+        return MakeParentSizePointEnum.LEFTTOP;   // unnecessary
+      } else {
+        if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
+          return MakeParentSizePointEnum.RIGHTTOP;
+        } else {
+          return MakeParentSizePointEnum.RIGHTBOTTOM;
+        }
+      }
+      //return MakeParentSizePointEnum.RIGHTTOP;
     }
     cornerOffset = Offset(
         leftBottomOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.2,
@@ -87,7 +117,16 @@ class InfoUtil {
     cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      return MakeParentSizePointEnum.LEFTBOTTOM;
+      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
+        if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
+          return MakeParentSizePointEnum.LEFTTOP;   // unnecessary
+        } else {
+          return MakeParentSizePointEnum.LEFTBOTTOM;
+        }
+      } else {
+        return MakeParentSizePointEnum.RIGHTBOTTOM;
+      }
+      //return MakeParentSizePointEnum.LEFTBOTTOM;
     }
     cornerOffset = Offset(
         rightBottomOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8,
@@ -95,19 +134,39 @@ class InfoUtil {
     cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      return MakeParentSizePointEnum.RIGHTBOTTOM;
+
+      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
+        return MakeParentSizePointEnum.LEFTBOTTOM;    // unnecessary
+      } else {
+        if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
+          return MakeParentSizePointEnum.RIGHTTOP;   // unnecessary
+        } else {
+          return MakeParentSizePointEnum.RIGHTBOTTOM;
+        }
+      }
+      //return MakeParentSizePointEnum.RIGHTBOTTOM;
+    }
+
+    bracketLength = ParentInfo.wScreen / 6;
+    if (bracketLength > (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) * 0.5) {
+      bracketLength = (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) * 0.5;
     }
 
     Size barSizeH =
-        Size(ParentInfo.wScreen / 4, AppConfig.SIZE_BRACKET_BAR_TOUCH);
+        Size(bracketLength, AppConfig.SIZE_BRACKET_BAR_TOUCH);
     Size barSizeV =
-        Size(AppConfig.SIZE_BRACKET_BAR_TOUCH, ParentInfo.wScreen / 4);
+        Size(AppConfig.SIZE_BRACKET_BAR_TOUCH, bracketLength);
     Offset barOffset = Offset(
         (leftTopOffset.dx + AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8),
         (leftTopOffset.dy - AppConfig.SIZE_BRACKET_BAR_TOUCH * 0.2));
     Rect barRectHv = barOffset & barSizeH;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
+      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
+        return MakeParentSizePointEnum.LEFTTOPH;
+      } else {
+        return MakeParentSizePointEnum.RIGHTTOPH;
+      }
       return MakeParentSizePointEnum.LEFTTOPH;
     }
     barOffset = Offset(
@@ -116,7 +175,12 @@ class InfoUtil {
     barRectHv = barOffset & barSizeV;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      return MakeParentSizePointEnum.LEFTTOPV;
+      if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
+        return MakeParentSizePointEnum.LEFTTOPV;
+      } else {
+        return MakeParentSizePointEnum.LEFTBOTTOMV;
+      }
+      //return MakeParentSizePointEnum.LEFTTOPV;
     }
 
     barOffset = Offset(
@@ -135,7 +199,12 @@ class InfoUtil {
     barRectHv = barOffset & barSizeV;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      return MakeParentSizePointEnum.RIGHTTOPV;
+      if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
+        return MakeParentSizePointEnum.RIGHTTOPV;
+      } else {
+        return MakeParentSizePointEnum.RIGHTBOTTOMV;
+      }
+      //return MakeParentSizePointEnum.RIGHTTOPV;
     }
 
     barOffset = Offset(
@@ -144,7 +213,12 @@ class InfoUtil {
     barRectHv = barOffset & barSizeH;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      return MakeParentSizePointEnum.LEFTBOTTOMH;
+      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
+        return MakeParentSizePointEnum.LEFTBOTTOMH;
+      } else {
+        return MakeParentSizePointEnum.RIGHTBOTTOMH;
+      }
+      //return MakeParentSizePointEnum.LEFTBOTTOMH;
     }
     barOffset = Offset(
         (leftBottomOffset.dx - AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.2),

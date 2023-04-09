@@ -18,6 +18,7 @@
   "LINK": "Link",
 
   "INFO": "Info",
+  "CONFIRM": "Confirm",
   "INIT_MAKE": "Do you want to completely reset the screen you are working on?",
 
   "FRAME": "Frame",
@@ -27,6 +28,7 @@
   "SIZE_INIT": "Screen Init",
   "SIZE_SAVE": "Screen Save",
   "SIZE_NOCHANGE": "There is no changed size.",
+  "SIZE_SAVE_CONFIRM": "Are you sure you want to set it to a changed size?",
 
 
 
