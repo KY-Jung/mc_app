@@ -95,102 +95,109 @@ class ParentWidgetState extends State<ParentWidget> {
     return Scaffold(
       //backgroundColor: Colors.yellow,
       backgroundColor: Colors.black87,
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 2,
-            child: ToggleButtons(
-              color: Colors.grey,
-              selectedColor: Colors.black,
-              fillColor: Colors.white,
-              //disabledColor: Colors.white10,
-              renderBorder: true,
-              borderRadius: BorderRadius.circular(10),
-              borderWidth: 2,
-              borderColor: Colors.white60,
-              selectedBorderColor: Colors.white70,
-              isSelected: toggleSelectList,
-              //constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.25),
-              onPressed: _toggleButtonsSelect,
-              children: [
-                Container(
+      body: GestureDetector(
+        onTapDown: _onTapDownAll,
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              flex: 3,
+              child: ToggleButtons(
+                color: Colors.grey,
+                selectedColor: Colors.black,
+                fillColor: Colors.white,
+                //disabledColor: Colors.white10,
+                renderBorder: true,
+                borderRadius: BorderRadius.circular(10),
+                borderWidth: 2,
+                borderColor: Colors.white60,
+                selectedBorderColor: Colors.white70,
+                isSelected: toggleSelectList,
+                //constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.25),
+                onPressed: _toggleButtonsSelect,
+                children: [
+                  Container(
+                      //height: 40,
+                      padding: EdgeInsets.symmetric(
+                          horizontal: MediaQuery.of(context).size.width * 0.06),
+                      child: Text(
+                        'FRAME'.tr(),
+                      )),
+                  Container(
                     //height: 40,
                     padding: EdgeInsets.symmetric(
                         horizontal: MediaQuery.of(context).size.width * 0.06),
                     child: Text(
-                      'FRAME'.tr(),
-                    )),
-                Container(
-                  //height: 40,
-                  padding: EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).size.width * 0.06),
-                  child: Text(
-                    'SIZE'.tr(),
+                      'SIZE'.tr(),
+                    ),
                   ),
+                  Container(
+                    //height: 40,
+                    padding: EdgeInsets.symmetric(
+                        horizontal: MediaQuery.of(context).size.width * 0.06),
+                    child: Text(
+                      'SIGN'.tr(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_makeParentEnum == MakeParentEnum.FRAME)
+              Expanded(
+                flex: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    ElevatedButton(
+                      child:
+                          Text('FRAME parentSize: ${makeProvider.parentSize}'),
+                      onPressed: () {},
+                    ),
+                    ElevatedButton(
+                      child:
+                          Text('FRAME parentSize: ${makeProvider.parentSize}'),
+                      onPressed: () {},
+                    ),
+                  ],
                 ),
-                Container(
-                  //height: 40,
-                  padding: EdgeInsets.symmetric(
-                      horizontal: MediaQuery.of(context).size.width * 0.06),
-                  child: Text(
-                    'SIGN'.tr(),
-                  ),
+              ),
+            if (_makeParentEnum == MakeParentEnum.SIZE)
+              Expanded(
+                flex: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    ElevatedButton(
+                      onPressed: _onPressedSizeInit,
+                      child: Text('SIZE_INIT'.tr()),
+                    ),
+                    ElevatedButton(
+                      onPressed: _onPressedSizeSave,
+                      child: Text('SIZE_SAVE'.tr()),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          if (_makeParentEnum == MakeParentEnum.FRAME)
-            Expanded(
-              flex: 3,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  ElevatedButton(
-                    child: Text('FRAME parentSize: ${makeProvider.parentSize}'),
-                    onPressed: () {},
-                  ),
-                  ElevatedButton(
-                    child: Text('FRAME parentSize: ${makeProvider.parentSize}'),
-                    onPressed: () {},
-                  ),
-                ],
               ),
-            ),
-          if (_makeParentEnum == MakeParentEnum.SIZE)
-            Expanded(
-              flex: 3,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  ElevatedButton(
-                    onPressed: _onPressedSizeInit,
-                    child: Text('SIZE_INIT'.tr()),
-                  ),
-                  ElevatedButton(
-                    onPressed: _onPressedSizeSave,
-                    child: Text('SIZE_SAVE'.tr()),
-                  ),
-                ],
+            if (_makeParentEnum == MakeParentEnum.SIGN)
+              Expanded(
+                flex: 5,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    OutlinedButton(
+                      child:
+                          Text('SIGN parentSize: ${makeProvider.parentSize}'),
+                      onPressed: () {},
+                    ),
+                    OutlinedButton(
+                      child:
+                          Text('SIGN parentSize: ${makeProvider.parentSize}'),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
               ),
-            ),
-          if (_makeParentEnum == MakeParentEnum.SIGN)
-            Expanded(
-              flex: 3,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  OutlinedButton(
-                    child: Text('SIGN parentSize: ${makeProvider.parentSize}'),
-                    onPressed: () {},
-                  ),
-                  OutlinedButton(
-                    child: Text('SIGN parentSize: ${makeProvider.parentSize}'),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -260,6 +267,15 @@ class ParentWidgetState extends State<ParentWidget> {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  // fab close 처리
+  // 기존 이벤트는 그대로 처리
+  void _onTapDownAll(TapDownDetails tapDownDetails) async {
+    dev.log('_onTapDownAll');
+
+    // fab close 처리 (provider 를 사용해서 닫기)
+    MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
+    makeProvider.setFabOpen(false);
+  }
 
   void _toggleButtonsSelect(idx) {
     dev.log('# ParentWidget _toggleButtonsSelect START');
@@ -322,7 +338,7 @@ class ParentWidgetState extends State<ParentWidget> {
     //makeProviderWatch.setParentSize(true);
 
     Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
-      dev.log('# ParentWidget _onPressedSizeInit START2');
+      dev.log('# ParentWidget _onPressedSizeInit Timer');
       ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
       ParentInfo.rightTopOffset =
           Offset(ParentInfo.wScreen - ParentInfo.xBlank, ParentInfo.yBlank);
@@ -335,7 +351,7 @@ class ParentWidgetState extends State<ParentWidget> {
       //makeProviderWatch.setParentSize(true);
     });
 
-    InfoUtil.setParentInfo(ParentInfo.path);
+    //InfoUtil.setParentInfo(ParentInfo.path);
   }
 
   void _onPressedSizeSave() async {
@@ -359,7 +375,7 @@ class ParentWidgetState extends State<ParentWidget> {
 
     if (leftTop && rightTop && leftBottom && rightBottom) {
       dev.log('_onPressedSizeSave SIZE_NOCHANGE');
-      PopupUtil.popupToast('SIZE_NOCHANGE'.tr());
+      PopupUtil.toastMsgShort('SIZE_NOCHANGE'.tr());
       return;
     }
     ////////////////////////////////////////////////////////////////////////////////
@@ -373,12 +389,13 @@ class ParentWidgetState extends State<ParentWidget> {
     // 선택한 영역 구하기
     Offset leftTopOffset = ParentInfo.leftTopOffset;
     Offset rightTopOffset = ParentInfo.rightTopOffset;
-    Offset leftBottomOffset = ParentInfo.leftBottomOffset;
+    //Offset leftBottomOffset = ParentInfo.leftBottomOffset;
     Offset rightBottomOffset = ParentInfo.rightBottomOffset;
     double xBlank = ParentInfo.xBlank;
     double yBlank = ParentInfo.yBlank;
     double inScale = ParentInfo.inScale;
-    Rect srcRect = Offset((leftTopOffset.dx - xBlank) / inScale, (leftTopOffset.dy - yBlank) / inScale) &
+    Rect srcRect = Offset((leftTopOffset.dx - xBlank) / inScale,
+            (leftTopOffset.dy - yBlank) / inScale) &
         Size((rightTopOffset.dx - leftTopOffset.dx) / inScale,
             (rightBottomOffset.dy - rightTopOffset.dy) / inScale);
     dev.log('srcRect: $srcRect');
@@ -389,24 +406,22 @@ class ParentWidgetState extends State<ParentWidget> {
     // 그리기
     ui.Image uiImage = await InfoUtil.loadUiImage(ParentInfo.path);
     PictureRecorder pictureRecorder = PictureRecorder();
-    Canvas canvas = Canvas(
-      pictureRecorder, dstRect
-    );
+    Canvas canvas = Canvas(pictureRecorder, dstRect);
     canvas.drawImageRect(uiImage, srcRect, dstRect, Paint());
     ui.Image newImage = await pictureRecorder
         .endRecording()
         .toImage(srcRect.width.toInt(), srcRect.height.toInt());
 
-
     //Image image = Image.file(File(ParentInfo.path));
     Widget imageWidget = RawImage(
-        image: newImage,
+      image: newImage,
     );
     //if (!mounted) return;
     double wPopup = ParentInfo.wScreen * 0.8;
     double hPopup = ParentInfo.hScreen * 0.4;
     if (!mounted) return;
-    PopupUtil.popupImageOkCancel(context, 'CONFIRM'.tr(), 'SIZE_SAVE_CONFIRM'.tr(), imageWidget, wPopup, hPopup)
+    PopupUtil.popupImageOkCancel(context, 'CONFIRM'.tr(),
+            'SIZE_SAVE_CONFIRM'.tr(), imageWidget, wPopup, hPopup)
         .then((ret) async {
       dev.log('popupImageOkCancel: $ret');
 
@@ -416,10 +431,11 @@ class ParentWidgetState extends State<ParentWidget> {
         return;
       }
       if (ret == AppConstant.OK) {
-
         // jpgByte 로 변환
-        var rgbByte = await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-        var jpgByte = JpegEncoder().compress(rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 90);
+        var rgbByte =
+            await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+        var jpgByte = JpegEncoder().compress(
+            rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 90);
 
         // byte 저장
         Directory appDir = await getApplicationDocumentsDirectory();
@@ -427,12 +443,16 @@ class ParentWidgetState extends State<ParentWidget> {
         String newPath = '${appDir.path}/${AppConstant.PARENT_RESIZE_DIR}';
         dev.log('newPath: $newPath');
         File newPathFile = File(newPath);
-        bool f = await newPathFile.exists();    // 항상 false --> ?
-        if (f) {
-          dev.log('newPathFile.exists: true');
+        bool f = await newPathFile.exists(); // 항상 false --> ?
+        try {
+          if (f) {
+            dev.log('newPathFile.exists: true');
+            newPathFile.deleteSync(recursive: true);
+          }
           newPathFile.deleteSync(recursive: true);
+        } catch (e) {
+          print(e);
         }
-        newPathFile.deleteSync(recursive: true);
 
         // new 파일 생성
         String fileName = '${appDir.path}/${AppConstant.PARENT_RESIZE_DIR}/'
@@ -441,7 +461,8 @@ class ParentWidgetState extends State<ParentWidget> {
         newImageFile.createSync(recursive: true);
 
         // byte 저장
-        newImageFile.writeAsBytesSync(jpgByte.buffer.asUint8List(), flush: true, mode: FileMode.write);
+        newImageFile.writeAsBytesSync(jpgByte.buffer.asUint8List(),
+            flush: true, mode: FileMode.write);
         dev.log('writeAsBytesSync end');
         ////////////////////////////////////////////////////////////////////////////////
 
@@ -456,10 +477,8 @@ class ParentWidgetState extends State<ParentWidget> {
         context.read<MakeProvider>().setParentSize(true);
         //makeProviderWatch.setParentSize(true);
         dev.log('# ParentWidget _onPressedSizeSave end');
-        setState(() {
-        });
+        setState(() {});
       }
     });
-
   }
 }

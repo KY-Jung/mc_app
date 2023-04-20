@@ -13,11 +13,16 @@ class MakeProvider with ChangeNotifier {
   ///       MakeScreen 에서 fab 를 눌러서 교체될때 (일일이 찾아서 처리해야 함)
   ///       ParentWidget 에서 dispose 할때는 에러 발생해서 안됨
   bool _parentSize = false;
-
   bool get parentSize => _parentSize;
-
   void setParentSize(bool value) {
     _parentSize = value;
+    notifyListeners();
+  }
+
+  bool _fabOpen = false;
+  bool get fabOpen => _fabOpen;
+  void setFabOpen(bool value) {
+    _fabOpen = value;
     notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -103,8 +105,21 @@ class PopupUtil {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  static Future<dynamic> popupToast(msg) {
-    return Fluttertoast.showToast(
+  static void toastMsgShort(String msg) {
+
+    Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 3,
+      backgroundColor: Colors.grey,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
+  static void toastMsgLong(String msg) {
+
+    Fluttertoast.showToast(
       msg: msg,
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,

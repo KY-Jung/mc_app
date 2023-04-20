@@ -94,7 +94,7 @@ class MakeTabState extends State<MakeTab> {
           }).catchError((e) {
             // browser or FATAL
             dev.log(e.toString());
-            PopupUtil.popupToast(e.toString());
+            PopupUtil.toastMsgShort(e.toString());
           });
           ////////////////////////////////////////////////////////////////////////////////
         },

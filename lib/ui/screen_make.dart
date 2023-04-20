@@ -4,8 +4,7 @@ import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:mc/provider/provider_make.dart';
 import 'package:mc/ui/widget_baby.dart';
@@ -19,6 +18,7 @@ import 'package:provider/provider.dart';
 import '../config/config_app.dart';
 import '../config/constant_app.dart';
 import '../dto/info_parent.dart';
+import '../library/custom_expandable_draggable_widget.dart';
 import '../util/util_info.dart';
 import '../util/util_popup.dart';
 
@@ -70,6 +70,12 @@ class MakeScreenState extends State<MakeScreen> {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
+  // InteractiveView size (_afterBuild 에서 구해짐)
+  late Size screenSize;
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
   // object
 
   final TransformationController _transformationController =
@@ -82,8 +88,8 @@ class MakeScreenState extends State<MakeScreen> {
   final GlobalKey _screenGlobalKey = GlobalKey();
 
   /// fab 을 toggle 할때 사용
-  late final GlobalObjectKey<ExpandableFabState> _fabGlobalKey =
-      GlobalObjectKey<ExpandableFabState>(context);
+  late final GlobalObjectKey<CustomExpandableDraggableFabState> _fabGlobalKey =
+      GlobalObjectKey<CustomExpandableDraggableFabState>(context);
 
   // provider 방식으로 교체
   //ParentWidget _parentWidget = ParentWidget(callbackParentSizeInitScreen: _callbackParentSizeInitScreen);
@@ -133,16 +139,34 @@ class MakeScreenState extends State<MakeScreen> {
   @override
   Widget build(BuildContext context) {
     dev.log('# MakeScreen build START');
-
     dev.log('build _makeEnum: $_makeEnum');
-    dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
+    dev.log('build ParentInfo.path: ${ParentInfo.path}');
+
+    dev.log(
+        'build AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
+    dev.log(
+        'build MediaQuery.of(context).size.width: ${MediaQuery.of(context).size.width}');
 
     /*
     MakeProvider makeProvider =
         Provider.of<MakeProvider>(context, listen: false);
     dev.log('parentSize: ${makeProvider.parentSize}');
     */
-    dev.log('ParentInfo.path: ${ParentInfo.path}');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // function bar 에서 수신된 경우 처리
+    if (!context.watch<MakeProvider>().fabOpen) {
+      var floatKeyState = _fabGlobalKey.currentState;
+      if (floatKeyState != null) {
+        if (floatKeyState.isOpen) {
+          dev.log('build floatKeyState.isOpen and close');
+          // 직접 호출하면 setState() or markNeedsBuild() called during build 에러 발생
+          //floatKeyState.toggle();
+          WidgetsBinding.instance.addPostFrameCallback((_) => floatKeyState.toggle());
+        }
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////
 
     return Scaffold(
       appBar: AppBar(
@@ -167,7 +191,6 @@ class MakeScreenState extends State<MakeScreen> {
           ),
         ],
       ),
-
       body: Scaffold(
         backgroundColor: Colors.black87,
         body: Column(
@@ -200,7 +223,7 @@ class MakeScreenState extends State<MakeScreen> {
                         //panAxis: PanAxis.aligned,   // 중앙을 기준으로만 확대됨
                         //boundaryMargin: const EdgeInsets.all(20.0),   // 이동시키면 공백이 나타남
                         //onInteractionStart: _onInteractionStart,
-                        //onInteractionEnd: _onInteractionEnd,
+                        onInteractionEnd: _onInteractionEnd,
                         onInteractionUpdate: _onInteractionUpdate,
                         //child: Image.asset("assets/images/jeju.jpg"),
                         //child: CustomPaint(
@@ -249,94 +272,95 @@ class MakeScreenState extends State<MakeScreen> {
                             }),
                       ],
                     ),
-                  if (_makeEnum != MakeEnum.BLANK)
-                    Padding(
-                      padding:
-                          EdgeInsets.all((AppBar().preferredSize.height * 0.8)),
-                      child: ExpandableFab(
-                        key: _fabGlobalKey,
-                        duration: const Duration(milliseconds: 300),
-                        distance: 60.0,
-                        type: ExpandableFabType.up,
-                        fanAngle: 90,
-                        child: const Icon(Icons.library_add),
-                        collapsedFabSize: ExpandableFabSize.small,
-                        //foregroundColor: Colors.amber,
-                        //backgroundColor: Colors.green,
-                        closeButtonStyle: const ExpandableFabCloseButtonStyle(
-                          child: Icon(Icons.close),
-                          foregroundColor: Colors.black,
-                          backgroundColor: Colors.black26,
-                        ),
-                        onOpen: () => HapticFeedback.vibrate(),
-                        children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(
-                              Icons.open_in_browser,
-                              color: Colors.white60,
-                            ),
-                            label: Text('LINK'.tr()),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.pinkAccent),
-                            onPressed: _fabLink,
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(
-                              Icons.volume_up_rounded,
-                              color: Colors.white60,
-                            ),
-                            label: Text('SOUND'.tr()),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.lightGreen),
-                            onPressed: _fabSound,
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(
-                              Icons.edit,
-                              color: Colors.white60,
-                            ),
-                            label: Text('CAPTION'.tr()),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.amberAccent),
-                            onPressed: _fabCaption,
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(
-                              Icons.photo_album,
-                              color: Colors.white60,
-                            ),
-                            label: Text('BABY'.tr()),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.orange),
-                            onPressed: _fabBaby,
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(
-                              Icons.aspect_ratio,
-                              color: Colors.white60,
-                            ),
-                            label: Text("PARENT".tr()),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.blueAccent),
-                            onPressed: _fabParent,
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),
             SizedBox(
-              height: AppBar().preferredSize.height * 1.6,
+              height:
+                  AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT,
               child: _chooseFunctionBar(_makeEnum),
             ),
           ],
         ),
       ),
-
-      floatingActionButtonLocation: ExpandableFab.location,
-      //floatingActionButtonLocation: _CenterDockedFloatingActionButtonLocation(),  // not working
-      //floatingActionButtonLocation: CustomFabLocation(),                          // not working
+      floatingActionButtonAnimator: NoScalingAnimation(),
+      floatingActionButtonLocation: ExpandableFloatLocation(),
+      floatingActionButton: (_makeEnum == MakeEnum.BLANK)
+          ? Container()
+          : CustomExpandableDraggableFab(
+              key: _fabGlobalKey,
+              childrenCount: 5,
+              onTab: _onTabFab,
+              childrenTransition: ChildrenTransition.fadeTransation,
+              initialOpen: false,
+              //childrenBoxDecoration: const BoxDecoration(color: Colors.red),
+              enableChildrenAnimation: true,
+              curveAnimation: Curves.linear,
+              reverseAnimation: Curves.linear,
+              childrenType: ChildrenType.columnChildren,
+              closeChildrenRotate: false,
+              childrenAlignment: Alignment.center,
+              initialDraggableOffset: Offset(
+                  MediaQuery.of(context).size.width / 2 - 56 / 2 - 8, // 8 은 모름
+                  MediaQuery.of(context).size.height -
+                      AppBar().preferredSize.height *
+                          AppConfig.FUNCTIONBAR_HEIGHT -
+                      56 -
+                      8),
+              distance: 100,
+              // Animation distance during open and close.
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons.aspect_ratio,
+                    color: Colors.white60,
+                  ),
+                  label: Text("PARENT".tr()),
+                  style:
+                  TextButton.styleFrom(backgroundColor: Colors.blueAccent),
+                  onPressed: _fabParent,
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons.photo_album,
+                    color: Colors.white60,
+                  ),
+                  label: Text('BABY'.tr()),
+                  style: TextButton.styleFrom(backgroundColor: Colors.orange),
+                  onPressed: _fabBaby,
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons.edit,
+                    color: Colors.white60,
+                  ),
+                  label: Text('CAPTION'.tr()),
+                  style:
+                  TextButton.styleFrom(backgroundColor: Colors.amberAccent),
+                  onPressed: _fabCaption,
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons.volume_up_rounded,
+                    color: Colors.white60,
+                  ),
+                  label: Text('SOUND'.tr()),
+                  style:
+                  TextButton.styleFrom(backgroundColor: Colors.lightGreen),
+                  onPressed: _fabSound,
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(
+                    Icons.open_in_browser,
+                    color: Colors.white60,
+                  ),
+                  label: Text('LINK'.tr()),
+                  style:
+                      TextButton.styleFrom(backgroundColor: Colors.pinkAccent),
+                  onPressed: _fabLink,
+                ),
+              ],
+            ),
     );
   }
 
@@ -348,7 +372,7 @@ class MakeScreenState extends State<MakeScreen> {
     /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
     RenderBox renderBox =
         _screenGlobalKey.currentContext!.findRenderObject() as RenderBox;
-    Size screenSize = renderBox.size;
+    screenSize = renderBox.size;
     dev.log('InteractiveViewer size: $screenSize');
     var wScreen = screenSize.width;
     var hScreen = screenSize.height;
@@ -507,6 +531,12 @@ class MakeScreenState extends State<MakeScreen> {
     setState(() {});
   }
 
+  // drag 이후에는 onTapUp 호출안됨
+  void _onInteractionEnd(ScaleEndDetails scaleEndDetails) {
+    dev.log('_onInteractionEnd Velocity: ${scaleEndDetails.velocity}');
+    ParentInfo.makeParentSizePointEnum = MakeParentSizePointEnum.NONE;
+  }
+
   /// 변경되는 값 : xyOffset
   /// 보정되는 값 : _transformationController.value 의 xStart, yStart
   void _onTapDown(TapDownDetails tapDownDetails) async {
@@ -523,6 +553,7 @@ class MakeScreenState extends State<MakeScreen> {
     var floatKeyState = _fabGlobalKey.currentState;
     if (floatKeyState != null) {
       if (floatKeyState.isOpen) {
+        dev.log('_onTapDown floatKeyState.isOpen and return');
         floatKeyState.toggle();
         return;
       }
@@ -582,6 +613,7 @@ class MakeScreenState extends State<MakeScreen> {
   // drag 이후에는 호출안됨
   void _onTapUp(TapUpDetails tapUpDetails) async {
     //dev.log('_onTapUp TapUpDetails: ${tapUpDetails.localPosition}');
+    ParentInfo.makeParentSizePointEnum = MakeParentSizePointEnum.NONE;
   }
 
   /// 변경되는 값 : scale, xStart, yStart, xyOffset
@@ -637,11 +669,35 @@ class MakeScreenState extends State<MakeScreen> {
   void _onTabDelete() {
     dev.log('_onTabDelete');
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // toggle 일 경우 return
+    var floatKeyState = _fabGlobalKey.currentState;
+    if (floatKeyState != null) {
+      if (floatKeyState.isOpen) {
+        dev.log('_onTabDelete floatKeyState.isOpen and return');
+        floatKeyState.toggle();
+        return;
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
     // TODO : 한개씩 지우기
   }
 
   void _onLongPressDelete() {
     dev.log('_onLongPressDelete');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // toggle 일 경우 return
+    var floatKeyState = _fabGlobalKey.currentState;
+    if (floatKeyState != null) {
+      if (floatKeyState.isOpen) {
+        dev.log('_onLongPressDelete floatKeyState.isOpen and return');
+        floatKeyState.toggle();
+        return;
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////
 
     PopupUtil.popupAlertOkCancel(context, 'INFO'.tr(), 'INIT_MAKE'.tr())
         .then((ret) {
@@ -663,6 +719,24 @@ class MakeScreenState extends State<MakeScreen> {
     });
   }
 
+  // floatKeyState.toggle() 을 사용하면 자동으로 onTab 이 호출됨
+  void _onTabFab() {
+    ////////////////////////////////////////////////////////////////////////////////
+    // toggle 일 경우 return
+    var floatKeyState = _fabGlobalKey.currentState;
+    if (floatKeyState != null) {
+      if (floatKeyState.isOpen) {
+        dev.log('_onTabFab open -> close');
+        MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
+        makeProvider.setFabOpen(false);
+      } else {
+        dev.log('_onTabFab close -> open');
+        MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
+        makeProvider.setFabOpen(true);
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+  }
   void _fabParent() {
     dev.log('_fabParent');
 
@@ -939,8 +1013,9 @@ class MakeParentSizePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = bracketWidth;
     // 최소치 검사
-    double minArea =
-        (wScreen - xBlank * 2) * (hScreen - yBlank * 2) * AppConfig.SIZE_SHRINK_MIN;
+    double minArea = (wScreen - xBlank * 2) *
+        (hScreen - yBlank * 2) *
+        AppConfig.SIZE_SHRINK_MIN;
     double updateArea = (rightTopOffset.dx - leftTopOffset.dx) *
         (rightBottomOffset.dy - rightTopOffset.dy);
     //dev.log('--wScreen $wScreen, xBlank $xBlank, ');
@@ -950,7 +1025,6 @@ class MakeParentSizePainter extends CustomPainter {
     //dev.log('--rightBottomOffset.dy ${rightBottomOffset.dy}, rightTopOffset.dy ${rightTopOffset.dy}, ');
     //dev.log('--(rightTopOffset.dx - leftTopOffset.dx) ${ (rightTopOffset.dx - leftTopOffset.dx)}, (rightBottomOffset.dy - rightTopOffset.dy) ${(rightBottomOffset.dy - rightTopOffset.dy)}, ');
     //dev.log('--minArea $minArea, updateArea $updateArea, ');
-
 
     if (minArea >= updateArea * 0.9) {
       // 정확히 하면 catch 안됨
@@ -965,7 +1039,7 @@ class MakeParentSizePainter extends CustomPainter {
         leftBottomOffset.dy - bracketWidth / 2);
     Offset rightBottom = Offset(rightBottomOffset.dx - bracketWidth / 2,
         rightBottomOffset.dy - bracketWidth / 2);
-    bracketLength = wScreen / 6;
+    bracketLength = wScreen * AppConfig.SIZE_BRACKET_LENGTH;
     if (bracketLength > (rightTop.dx - leftTop.dx) * 0.5) {
       bracketLength = (rightTop.dx - leftTop.dx) * 0.5;
     }
@@ -985,8 +1059,10 @@ class MakeParentSizePainter extends CustomPainter {
     canvas.drawLine(leftBottom, leftBottomH, bracketPaint);
     canvas.drawLine(leftBottom, leftBottomV, bracketPaint);
 
-    Offset rightBottomH = Offset(rightBottom.dx - bracketLength, rightBottom.dy);
-    Offset rightBottomV = Offset(rightBottom.dx, rightBottom.dy - bracketLength);
+    Offset rightBottomH =
+        Offset(rightBottom.dx - bracketLength, rightBottom.dy);
+    Offset rightBottomV =
+        Offset(rightBottom.dx, rightBottom.dy - bracketLength);
     canvas.drawLine(rightBottom, rightBottomH, bracketPaint);
     canvas.drawLine(rightBottom, rightBottomV, bracketPaint);
     ////////////////////////////////////////////////////////////////////////////////

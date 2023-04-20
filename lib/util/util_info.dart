@@ -1,11 +1,9 @@
 import 'dart:developer' as dev;
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:mc/config/constant_app.dart';
 
 import '../config/config_app.dart';
 import '../dto/info_parent.dart';
@@ -88,8 +86,10 @@ class InfoUtil {
     Rect cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
-        if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
+      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() <
+          (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
+        if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() <
+            (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
           return MakeParentSizePointEnum.LEFTTOP;
         } else {
           return MakeParentSizePointEnum.LEFTBOTTOM;
@@ -105,10 +105,12 @@ class InfoUtil {
     cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
-        return MakeParentSizePointEnum.LEFTTOP;   // unnecessary
+      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() <
+          (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
+        return MakeParentSizePointEnum.LEFTTOP; // unnecessary
       } else {
-        if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
+        if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() <
+            (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
           return MakeParentSizePointEnum.RIGHTTOP;
         } else {
           return MakeParentSizePointEnum.RIGHTBOTTOM;
@@ -122,9 +124,11 @@ class InfoUtil {
     cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
-        if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
-          return MakeParentSizePointEnum.LEFTTOP;   // unnecessary
+      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() <
+          (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
+        if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() <
+            (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
+          return MakeParentSizePointEnum.LEFTTOP; // unnecessary
         } else {
           return MakeParentSizePointEnum.LEFTBOTTOM;
         }
@@ -139,12 +143,13 @@ class InfoUtil {
     cornerRect = cornerOffset & cornerSize;
     if (canvas != null && paint != null) canvas.drawRect(cornerRect, paint);
     if (cornerRect.contains(xyOffset)) {
-
-      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
-        return MakeParentSizePointEnum.LEFTBOTTOM;    // unnecessary
+      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() <
+          (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
+        return MakeParentSizePointEnum.LEFTBOTTOM; // unnecessary
       } else {
-        if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
-          return MakeParentSizePointEnum.RIGHTTOP;   // unnecessary
+        if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() <
+            (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
+          return MakeParentSizePointEnum.RIGHTTOP; // unnecessary
         } else {
           return MakeParentSizePointEnum.RIGHTBOTTOM;
         }
@@ -152,27 +157,28 @@ class InfoUtil {
       //return MakeParentSizePointEnum.RIGHTBOTTOM;
     }
 
-    bracketLength = ParentInfo.wScreen / 6;
-    if (bracketLength > (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) * 0.5) {
-      bracketLength = (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) * 0.5;
+    bracketLength = ParentInfo.wScreen * AppConfig.SIZE_BRACKET_LENGTH;
+    if (bracketLength >
+        (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) * 0.5) {
+      bracketLength =
+          (ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx) * 0.5;
     }
 
-    Size barSizeH =
-        Size(bracketLength, AppConfig.SIZE_BRACKET_BAR_TOUCH);
-    Size barSizeV =
-        Size(AppConfig.SIZE_BRACKET_BAR_TOUCH, bracketLength);
+    Size barSizeH = Size(bracketLength, AppConfig.SIZE_BRACKET_BAR_TOUCH);
+    Size barSizeV = Size(AppConfig.SIZE_BRACKET_BAR_TOUCH, bracketLength);
     Offset barOffset = Offset(
         (leftTopOffset.dx + AppConfig.SIZE_BRACKET_CORNER_TOUCH * 0.8),
         (leftTopOffset.dy - AppConfig.SIZE_BRACKET_BAR_TOUCH * 0.2));
     Rect barRectHv = barOffset & barSizeH;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
+      if ((xyOffset.dx - ParentInfo.leftTopOffset.dx).abs() <
+          (xyOffset.dx - ParentInfo.rightTopOffset.dx).abs()) {
         return MakeParentSizePointEnum.LEFTTOPH;
       } else {
         return MakeParentSizePointEnum.RIGHTTOPH;
       }
-      return MakeParentSizePointEnum.LEFTTOPH;
+      //return MakeParentSizePointEnum.LEFTTOPH;
     }
     barOffset = Offset(
         (leftTopOffset.dx - AppConfig.SIZE_BRACKET_BAR_TOUCH * 0.2),
@@ -180,7 +186,8 @@ class InfoUtil {
     barRectHv = barOffset & barSizeV;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
+      if ((xyOffset.dy - ParentInfo.leftTopOffset.dy).abs() <
+          (xyOffset.dy - ParentInfo.leftBottomOffset.dy).abs()) {
         return MakeParentSizePointEnum.LEFTTOPV;
       } else {
         return MakeParentSizePointEnum.LEFTBOTTOMV;
@@ -204,7 +211,8 @@ class InfoUtil {
     barRectHv = barOffset & barSizeV;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() < (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
+      if ((xyOffset.dy - ParentInfo.rightTopOffset.dy).abs() <
+          (xyOffset.dy - ParentInfo.rightBottomOffset.dy).abs()) {
         return MakeParentSizePointEnum.RIGHTTOPV;
       } else {
         return MakeParentSizePointEnum.RIGHTBOTTOMV;
@@ -218,7 +226,8 @@ class InfoUtil {
     barRectHv = barOffset & barSizeH;
     if (canvas != null && paint != null) canvas.drawRect(barRectHv, paint);
     if (barRectHv.contains(xyOffset)) {
-      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() < (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
+      if ((xyOffset.dx - ParentInfo.leftBottomOffset.dx).abs() <
+          (xyOffset.dx - ParentInfo.rightBottomOffset.dx).abs()) {
         return MakeParentSizePointEnum.LEFTBOTTOMH;
       } else {
         return MakeParentSizePointEnum.RIGHTBOTTOMH;
@@ -321,6 +330,8 @@ class InfoUtil {
         width = ParentInfo.rightTopOffset.dx - ParentInfo.leftTopOffset.dx;
         height = xyOffset.dy - ParentInfo.leftTopOffset.dy;
         break;
+      case MakeParentSizePointEnum.NONE:
+        break;
     }
     Rect rect = Offset(x, y) & Size(width, height);
     return rect;
@@ -399,6 +410,8 @@ class InfoUtil {
         ParentInfo.rightBottomOffset =
             Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
         break;
+      case MakeParentSizePointEnum.NONE:
+        break;
     }
   }
 
@@ -470,6 +483,8 @@ class InfoUtil {
         } else {
           return true;
         }
+      case MakeParentSizePointEnum.NONE:
+        break;
     }
     return true;
   }
@@ -542,6 +557,8 @@ class InfoUtil {
         } else {
           return true;
         }
+      case MakeParentSizePointEnum.NONE:
+        break;
     }
     return true;
   }
@@ -686,7 +703,8 @@ class InfoUtil {
       double yBlank,
       double wDivideRatio,
       double hDivideRatio,
-      double stickyRatio, MakeParentSizePointEnum makeParentSizePointEnum) {
+      double stickyRatio,
+      MakeParentSizePointEnum makeParentSizePointEnum) {
     double x = xyOffset.dx;
     double y = xyOffset.dy;
     double xNew = 0;
@@ -733,19 +751,21 @@ class InfoUtil {
       case MakeParentSizePointEnum.LEFTTOPH:
       case MakeParentSizePointEnum.RIGHTTOPH:
         xNew = x;
-      break;
+        break;
       case MakeParentSizePointEnum.LEFTTOPV:
       case MakeParentSizePointEnum.LEFTBOTTOMV:
         yNew = y;
-      break;
+        break;
       case MakeParentSizePointEnum.RIGHTTOPV:
       case MakeParentSizePointEnum.RIGHTBOTTOMV:
         yNew = y;
-      break;
+        break;
       case MakeParentSizePointEnum.LEFTBOTTOMH:
       case MakeParentSizePointEnum.RIGHTBOTTOMH:
         xNew = x;
-      break;
+        break;
+      case MakeParentSizePointEnum.NONE:
+        break;
     }
 
     return Offset(xNew, yNew);
