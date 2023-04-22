@@ -2,31 +2,30 @@ import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 
-class LinkWidget extends StatefulWidget {
-  const LinkWidget({super.key});
+class BlankBar extends StatefulWidget {
+  const BlankBar({super.key});
 
   @override
-  State<LinkWidget> createState() => LinkWidgetState();
+  State<BlankBar> createState() => BlankBarState();
 }
 
-class LinkWidgetState extends State<LinkWidget> {
+class BlankBarState extends State<BlankBar> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    dev.log('# LinkWidget initState START');
+    dev.log('# BlankBar initState START');
     super.initState();
 
-    dev.log('# LinkWidget initState END');
+    dev.log('# BlankBar initState END');
   }
 
   @override
   Widget build(BuildContext context) {
-    dev.log('# LinkWidget build START');
+    dev.log('# BlankBar build START');
 
     return Scaffold(
-      //backgroundColor: Colors.black87,
-      backgroundColor: Colors.pinkAccent,
+      backgroundColor: Colors.black87,
       body: Center(child: Text('')),
     );
     ////////////////////////////////////////////////////////////////////////////////

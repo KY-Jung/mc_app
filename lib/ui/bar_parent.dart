@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../dto/info_parent.dart';
 import '../provider/provider_make.dart';
@@ -22,38 +23,39 @@ import '../util/util_info.dart';
 
 enum MakeParentEnum { FRAME, SIZE, SIGN }
 
-class ParentWidget extends StatefulWidget {
-  const ParentWidget({super.key});
+class ParentBar extends StatefulWidget {
+  const ParentBar({super.key});
 
   //final void Function(bool isSize) callbackParentSizeInitScreen;
   //const ParentWidget({required this.callbackParentSizeInitScreen, super.key});
   //const ParentWidget({ Key? key, required this.callbackParentSizeInitScreen, }) : super(key: key);
 
   @override
-  State<ParentWidget> createState() => ParentWidgetState();
+  State<ParentBar> createState() => ParentBarState();
 }
 
-class ParentWidgetState extends State<ParentWidget> {
+class ParentBarState extends State<ParentBar> {
   ////////////////////////////////////////////////////////////////////////////////
   List<bool> toggleSelectList = [true, false, false];
 
   MakeParentEnum _makeParentEnum = MakeParentEnum.FRAME;
 
-  //bool isResize = false;
+  late MakeProvider makeProvider;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    dev.log('# ParentWidget initState START');
+    dev.log('# ParentBar initState START');
     super.initState();
 
     ////////////////////////////////////////////////////////////////////////////////
-    /// 기본값으로 변경해야할 항목들 처리
-    _initPreferences();
-
-    /// frame, size, sign 선택 + 세부 항목
-    _loadPreferences();
+    /// build 이후 실행
+    /// SharedPreferences.getInstance() 는 initState/build 에서는 await 효과 없으므로
+    /// build 이후에 다시 실행하는 것으로 수정함
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _loadPreferences(context));
     ////////////////////////////////////////////////////////////////////////////////
 
     /*
@@ -69,12 +71,12 @@ class ParentWidgetState extends State<ParentWidget> {
     // ######################################################################## //
     */
 
-    dev.log('# ParentWidget initState END');
+    dev.log('# ParentBar initState END');
   }
 
   @override
   void dispose() {
-    dev.log('# ParentWidget dispose START');
+    dev.log('# ParentBar dispose START');
     super.dispose();
 
     // 마지막 상태 저장
@@ -83,24 +85,29 @@ class ParentWidgetState extends State<ParentWidget> {
     // 아래 코드는 에러 유발
     //widget.callbackParentSizeInitScreen();
 
-    //isResize = false;
+    InfoUtil.initParentInfoBracket();
   }
 
   @override
   Widget build(BuildContext context) {
-    dev.log('# ParentWidget build START');
+    dev.log('# ParentBar build START');
 
-    MakeProvider makeProvider = Provider.of<MakeProvider>(context);
+    makeProvider = Provider.of<MakeProvider>(context);
+
+    //_loadPreferences();
+
+    dev.log('# ParentBar build START2');
 
     return Scaffold(
       //backgroundColor: Colors.yellow,
-      backgroundColor: Colors.black87,
+      //backgroundColor: Colors.black87,
+      backgroundColor: AppColors.MAKE_PARENT_FB_BACKGROUND,
       body: GestureDetector(
         onTapDown: _onTapDownAll,
         child: Column(
           children: <Widget>[
             Expanded(
-              flex: 3,
+              flex: AppConfig.MAKE_FUNCTIONBAR_1,
               child: ToggleButtons(
                 color: Colors.grey,
                 selectedColor: Colors.black,
@@ -143,7 +150,7 @@ class ParentWidgetState extends State<ParentWidget> {
             ),
             if (_makeParentEnum == MakeParentEnum.FRAME)
               Expanded(
-                flex: 5,
+                flex: AppConfig.MAKE_FUNCTIONBAR_2,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
@@ -162,7 +169,7 @@ class ParentWidgetState extends State<ParentWidget> {
               ),
             if (_makeParentEnum == MakeParentEnum.SIZE)
               Expanded(
-                flex: 5,
+                flex: AppConfig.MAKE_FUNCTIONBAR_2,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
@@ -179,19 +186,50 @@ class ParentWidgetState extends State<ParentWidget> {
               ),
             if (_makeParentEnum == MakeParentEnum.SIGN)
               Expanded(
-                flex: 5,
+                flex: AppConfig.MAKE_FUNCTIONBAR_2,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    OutlinedButton(
-                      child:
-                          Text('SIGN parentSize: ${makeProvider.parentSize}'),
-                      onPressed: () {},
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          OutlinedButton(
+                            child: Text(
+                                'aaaaaa 22222222222 : ${makeProvider.parentSize}'),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
-                    OutlinedButton(
-                      child:
-                          Text('SIGN parentSize: ${makeProvider.parentSize}'),
-                      onPressed: () {},
+                    SizedBox.fromSize(
+                      size: const Size(AppConfig.SQUARE_BUTTON_SIZE,
+                          AppConfig.SQUARE_BUTTON_SIZE),
+                      child: ClipOval(
+                        child: Material(
+                          color: Colors.black38,
+                          child: InkWell(
+                            splashColor: Colors.grey,
+                            onTap: _onTapSignNew,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                const Icon(Icons.edit),
+                                Text('SIZE_SIGN_MAKE'.tr()),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: (AppBar().preferredSize.height *
+                                  AppConfig.FUNCTIONBAR_HEIGHT *
+                                  AppConfig.MAKE_FUNCTIONBAR_2 /
+                                  (AppConfig.MAKE_FUNCTIONBAR_1 +
+                                      AppConfig.MAKE_FUNCTIONBAR_2) -
+                              AppConfig.SQUARE_BUTTON_SIZE) /
+                          2,
                     ),
                   ],
                 ),
@@ -207,62 +245,65 @@ class ParentWidgetState extends State<ParentWidget> {
   /// 1. Frame 선택, 목록에서 없음 선택
   /// 2. Size 에서 화면과 버튼 초기화
   /// 3. Sign 에서 선택 초기화 안함
-  void _initPreferences() async {
-    dev.log('# ParentWidget _initPreferences START');
-
-    //SharedPreferences prefs = await SharedPreferences.getInstance();
-    //prefs.setString('MakeParentEnum', EnumToString.convertToString(makeParentEnum));
-  }
 
   /// frame, size, sign 선택 + 세부 항목
-  void _loadPreferences() async {
-    dev.log('# ParentWidget _loadPreferences START');
+  void _loadPreferences(context) {
+    dev.log('# ParentBar _loadPreferences START');
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var retPrefs = prefs.getString('MakeParentEnum');
-    if (retPrefs == null) {
-      // 처음인 경우
-      _makeParentEnum = MakeParentEnum.FRAME;
-      prefs.setString(
-          'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
-    } else {
-      var retEnum = EnumToString.fromString(MakeParentEnum.values, retPrefs);
-      if (retEnum == null) {
-        // 에러 상황 (enum 에 없는 값이 저장된 경우)
+    SharedPreferences.getInstance().then((prefs) {
+      var retPrefs = prefs.getString('MakeParentEnum');
+      if (retPrefs == null) {
+        // 처음인 경우
         _makeParentEnum = MakeParentEnum.FRAME;
         prefs.setString(
             'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
       } else {
-        _makeParentEnum = retEnum;
+        var retEnum = EnumToString.fromString(MakeParentEnum.values, retPrefs);
+        if (retEnum == null) {
+          // 에러 상황 (enum 에 없는 값이 저장된 경우)
+          _makeParentEnum = MakeParentEnum.FRAME;
+          prefs.setString(
+              'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
+        } else {
+          _makeParentEnum = retEnum;
+        }
       }
-    }
-    dev.log('_makeParentEnum: $_makeParentEnum');
+      dev.log('_makeParentEnum: $_makeParentEnum');
 
-    toggleSelectList = [false, false, false];
-    switch (_makeParentEnum) {
-      case MakeParentEnum.FRAME:
-        dev.log('case MakeParentEnum.FRAME');
-        toggleSelectList[0] = true;
-        if (!mounted) return;
-        context.read<MakeProvider>().setParentSize(false);
-        //makeProviderWatch.setParentSize(false);
-        break;
-      case MakeParentEnum.SIZE:
-        dev.log('case MakeParentEnum.SIZE');
-        toggleSelectList[1] = true;
-        if (!mounted) return;
-        context.read<MakeProvider>().setParentSize(true);
-        //makeProviderWatch.setParentSize(true);
-        break;
-      case MakeParentEnum.SIGN:
-        dev.log('case MakeParentEnum.SIGN');
-        toggleSelectList[2] = true;
-        if (!mounted) return;
-        context.read<MakeProvider>().setParentSize(false);
-        //makeProviderWatch.setParentSize(false);
-        break;
-    }
+      toggleSelectList = [false, false, false];
+      switch (_makeParentEnum) {
+        case MakeParentEnum.FRAME:
+          dev.log('case MakeParentEnum.FRAME');
+          toggleSelectList[0] = true;
 
+          if (!mounted) return;
+          if (makeProvider.parentSize) {
+            makeProvider.setParentSize(false);
+          }
+          break;
+        case MakeParentEnum.SIZE:
+          dev.log('case MakeParentEnum.SIZE');
+          toggleSelectList[1] = true;
+
+          if (!mounted) return;
+          if (!makeProvider.parentSize) {
+            makeProvider.setParentSize(true);
+          }
+          break;
+        case MakeParentEnum.SIGN:
+          dev.log('case MakeParentEnum.SIGN');
+          toggleSelectList[2] = true;
+
+          if (!mounted) return;
+          if (makeProvider.parentSize) {
+            makeProvider.setParentSize(false);
+          }
+          break;
+      }
+
+      setState(() {});
+    });
+    dev.log('# ParentBar _loadPreferences END');
     //ParentInfo.xyOffset = const Offset(0, 0);
   }
 
@@ -273,12 +314,13 @@ class ParentWidgetState extends State<ParentWidget> {
     dev.log('_onTapDownAll');
 
     // fab close 처리 (provider 를 사용해서 닫기)
-    MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
-    makeProvider.setFabOpen(false);
+    if (makeProvider.fabOpen) {
+      makeProvider.setFabOpen(false);
+    }
   }
 
   void _toggleButtonsSelect(idx) {
-    dev.log('# ParentWidget _toggleButtonsSelect START');
+    dev.log('# ParentBar _toggleButtonsSelect START');
     toggleSelectList = [false, false, false];
     switch (idx) {
       case 0:
@@ -305,17 +347,23 @@ class ParentWidgetState extends State<ParentWidget> {
     // TODO : impl
     switch (_makeParentEnum) {
       case MakeParentEnum.FRAME:
-        context.read<MakeProvider>().setParentSize(false);
-        //makeProviderWatch.setParentSize(false);
+        if (makeProvider.parentSize) {
+          makeProvider.setParentSize(false);
+        }
+        //context.read<MakeProvider>().setParentSize(false);
         break;
       case MakeParentEnum.SIZE:
         dev.log('case MakeParentEnum.SIZE');
-        context.read<MakeProvider>().setParentSize(true);
-        //makeProviderWatch.setParentSize(true);
+        if (!makeProvider.parentSize) {
+          makeProvider.setParentSize(true);
+        }
+        //context.read<MakeProvider>().setParentSize(true);
         break;
       case MakeParentEnum.SIGN:
-        context.read<MakeProvider>().setParentSize(false);
-        //makeProviderWatch.setParentSize(false);
+        if (makeProvider.parentSize) {
+          makeProvider.setParentSize(false);
+        }
+        //context.read<MakeProvider>().setParentSize(false);
         break;
     }
 
@@ -325,7 +373,8 @@ class ParentWidgetState extends State<ParentWidget> {
   }
 
   void _onPressedSizeInit() {
-    dev.log('# ParentWidget _onPressedSizeInit START');
+    dev.log('# ParentBar _onPressedSizeInit START');
+
     ParentInfo.leftTopOffset = Offset(
         ParentInfo.leftTopOffset.dx + 10, ParentInfo.leftTopOffset.dy + 10);
     ParentInfo.rightTopOffset = Offset(
@@ -334,28 +383,20 @@ class ParentWidgetState extends State<ParentWidget> {
         ParentInfo.leftBottomOffset.dy - 10);
     ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx - 10,
         ParentInfo.rightBottomOffset.dy - 10);
-    context.read<MakeProvider>().setParentSize(true);
-    //makeProviderWatch.setParentSize(true);
+    makeProvider.setParentSize(true);
+    //context.read<MakeProvider>().setParentSize(true);
 
     Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
-      dev.log('# ParentWidget _onPressedSizeInit Timer');
-      ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
-      ParentInfo.rightTopOffset =
-          Offset(ParentInfo.wScreen - ParentInfo.xBlank, ParentInfo.yBlank);
-      ParentInfo.leftBottomOffset =
-          Offset(ParentInfo.xBlank, ParentInfo.hScreen - ParentInfo.yBlank);
-      ParentInfo.rightBottomOffset = Offset(
-          ParentInfo.wScreen - ParentInfo.xBlank,
-          ParentInfo.hScreen - ParentInfo.yBlank);
-      context.read<MakeProvider>().setParentSize(true);
-      //makeProviderWatch.setParentSize(true);
-    });
+      dev.log('# ParentBar _onPressedSizeInit Timer');
+      InfoUtil.initParentInfoBracket();
 
-    //InfoUtil.setParentInfo(ParentInfo.path);
+      // 한번 더 refresh 해야 함
+      makeProvider.setParentSize(true);
+    });
   }
 
   void _onPressedSizeSave() async {
-    dev.log('# ParentWidget _onPressedSizeSave START');
+    dev.log('# ParentBar _onPressedSizeSave START');
 
     ////////////////////////////////////////////////////////////////////////////////
     bool leftTop =
@@ -374,8 +415,8 @@ class ParentWidgetState extends State<ParentWidget> {
             (ParentInfo.hScreen - ParentInfo.yBlank).toInt());
 
     if (leftTop && rightTop && leftBottom && rightBottom) {
-      dev.log('_onPressedSizeSave SIZE_NOCHANGE');
-      PopupUtil.toastMsgShort('SIZE_NOCHANGE'.tr());
+      dev.log('_onPressedSizeSave SIZE_NO_CHANGE');
+      PopupUtil.toastMsgShort('SIZE_NO_CHANGE'.tr());
       return;
     }
     ////////////////////////////////////////////////////////////////////////////////
@@ -473,12 +514,46 @@ class ParentWidgetState extends State<ParentWidget> {
         ////////////////////////////////////////////////////////////////////////////////
 
         if (!mounted) return;
-        context.read<MakeProvider>().setParentSize(false);
-        context.read<MakeProvider>().setParentSize(true);
-        //makeProviderWatch.setParentSize(true);
-        dev.log('# ParentWidget _onPressedSizeSave end');
+        //if (!makeProvider.parentSize) {
+        makeProvider.setParentSize(true);
+        //}
+        //context.read<MakeProvider>().setParentSize(false);
+        //context.read<MakeProvider>().setParentSize(true);
+        dev.log('# ParentBar _onPressedSizeSave end');
         setState(() {});
       }
     });
+  }
+
+  void _onTapSignNew() {
+    dev.log('# ParentBar _onTabSignNew START');
+
+    showDialog(
+      context: context,
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
+      builder: (BuildContext context) => AlertDialog(
+        title: Text("SIZE_SIGN_MAKE_TITLE".tr()),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            SizedBox(
+              height: ParentInfo.hScreen * 0.5,
+              width: ParentInfo.wScreen * 1.0,
+              child: Text('content'),
+            ),
+            Text('aaaaaa'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'CANCEL'),
+              child: Text('CANCEL'.tr())),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'OK'),
+              child: Text('OK'.tr())),
+        ],
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+      ),
+    );
   }
 }

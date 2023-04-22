@@ -33,11 +33,11 @@ class PopupUtil {
         content: Text(msg),
         actions: [
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'OK'),
-              child: Text('OK'.tr())),
-          ElevatedButton(
               onPressed: () => Navigator.pop(context, 'CANCEL'),
               child: Text('CANCEL'.tr())),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'OK'),
+              child: Text('OK'.tr())),
         ],
       ),
     );
@@ -92,11 +92,11 @@ class PopupUtil {
         ),
         actions: [
           ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'OK'),
-              child: Text('OK'.tr())),
-          ElevatedButton(
               onPressed: () => Navigator.pop(context, 'CANCEL'),
               child: Text('CANCEL'.tr())),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'OK'),
+              child: Text('OK'.tr())),
         ],
       ),
     );

@@ -27,8 +27,12 @@
 
   "SIZE_INIT": "화면 초기화",
   "SIZE_SAVE": "화면 저장",
-  "SIZE_NOCHANGE": "변경된 크기가 없습니다.",
+  "SIZE_NO_CHANGE": "변경된 크기가 없습니다.",
   "SIZE_SAVE_CONFIRM": "변경된 크기로 설정하시겠습니까?",
+
+  "SIZE_SIGN_MAKE": "만들기",
+  "SIZE_SIGN_MAKE_TITLE": "서명 만들기",
+
 
 
   "IMAGE_VIEW": "이미지 보기",

@@ -27,8 +27,12 @@
 
   "SIZE_INIT": "Screen Init",
   "SIZE_SAVE": "Screen Save",
-  "SIZE_NOCHANGE": "There is no changed size.",
+  "SIZE_NO_CHANGE": "There is no changed size.",
   "SIZE_SAVE_CONFIRM": "Are you sure you want to set it to a changed size?",
+
+  "SIZE_SIGN_MAKE": "Make",
+  "SIZE_SIGN_MAKE_TITLE": "Make Sign",
+
 
 
 

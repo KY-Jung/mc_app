@@ -2,30 +2,33 @@ import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 
-class BlankWidget extends StatefulWidget {
-  const BlankWidget({super.key});
+import '../config/color_app.dart';
+
+class BabyBar extends StatefulWidget {
+  const BabyBar({super.key});
 
   @override
-  State<BlankWidget> createState() => BlankWidgetState();
+  State<BabyBar> createState() => BabyBarState();
 }
 
-class BlankWidgetState extends State<BlankWidget> {
+class BabyBarState extends State<BabyBar> {
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    dev.log('# BlankWidget initState START');
+    dev.log('# BabyBar initState START');
     super.initState();
 
-    dev.log('# BlankWidget initState END');
+    dev.log('# BabyBar initState END');
   }
 
   @override
   Widget build(BuildContext context) {
-    dev.log('# BlankWidget build START');
+    dev.log('# BabyBar build START');
 
     return Scaffold(
-      backgroundColor: Colors.black87,
+      //backgroundColor: Colors.orange,
+      backgroundColor: AppColors.MAKE_BABY_FB_BACKGROUND,
       body: Center(child: Text('')),
     );
     ////////////////////////////////////////////////////////////////////////////////

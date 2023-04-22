@@ -55,14 +55,14 @@ class IndexScreenState extends State<IndexScreen> {
             centerTitle: true,
             //backgroundColor: Colors.black,
             leading: IconButton(
-              icon: Icon(Icons.menu),
+              icon: const Icon(Icons.menu),
               onPressed: () {
                 dev.log('leading pressed');
               },
             ),
             actions: [
               IconButton(
-                icon: Icon(Icons.image),
+                icon: const Icon(Icons.image),
                 onPressed: () {
                   dev.log('actions pressed');
                 },

@@ -82,7 +82,7 @@ class SplashScreenState extends State<SplashScreen> {
           checkCnt++;
         } else {
           // 최소 splash 화면을 보여 주는 시간
-          Timer(const Duration(milliseconds: AppConfig.SPLASH_MSEC_WAIT), () {
+          Timer(const Duration(milliseconds: AppConfig.SPLASH_WAIT), () {
             PopupUtil.popupAlertOk(context, '', initMsg).then((ret) {
               dev.log('popupAlertOk: $ret');
 
@@ -101,7 +101,7 @@ class SplashScreenState extends State<SplashScreen> {
     });
 
     // 최소 splash 화면을 보여 주는 시간
-    Timer(const Duration(milliseconds: AppConfig.SPLASH_MSEC_WAIT), () {
+    Timer(const Duration(milliseconds: AppConfig.SPLASH_WAIT), () {
       Timer.periodic(const Duration(milliseconds: 100), (timer) {
         //dev.log('Timer.periodic');
         if (checkCnt >= checkCntAll) {

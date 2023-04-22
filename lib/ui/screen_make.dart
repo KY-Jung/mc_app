@@ -7,18 +7,20 @@ import 'package:flutter/material.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:mc/provider/provider_make.dart';
-import 'package:mc/ui/widget_baby.dart';
-import 'package:mc/ui/widget_blank.dart';
-import 'package:mc/ui/widget_caption.dart';
-import 'package:mc/ui/widget_link.dart';
-import 'package:mc/ui/widget_parent.dart';
-import 'package:mc/ui/widget_sound.dart';
+import 'package:mc/ui/bar_baby.dart';
+import 'package:mc/ui/bar_blank.dart';
+import 'package:mc/ui/bar_caption.dart';
+import 'package:mc/ui/bar_link.dart';
+import 'package:mc/ui/bar_parent.dart';
+import 'package:mc/ui/bar_sound.dart';
 import 'package:provider/provider.dart';
 
+import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../config/constant_app.dart';
 import '../dto/info_parent.dart';
 import '../library/custom_expandable_draggable_widget.dart';
+import '../util/util_bracket.dart';
 import '../util/util_info.dart';
 import '../util/util_popup.dart';
 
@@ -78,6 +80,8 @@ class MakeScreenState extends State<MakeScreen> {
   ////////////////////////////////////////////////////////////////////////////////
   // object
 
+  late MakeProvider makeProvider;
+
   final TransformationController _transformationController =
       TransformationController(
           Matrix4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
@@ -128,6 +132,7 @@ class MakeScreenState extends State<MakeScreen> {
     dev.log('# MakeScreen initState END');
   }
 
+  // 뒤로가기 클릭하면 호출됨
   @override
   void dispose() {
     dev.log('# MakeScreen dispose START');
@@ -142,27 +147,28 @@ class MakeScreenState extends State<MakeScreen> {
     dev.log('build _makeEnum: $_makeEnum');
     dev.log('build ParentInfo.path: ${ParentInfo.path}');
 
+    /*
     dev.log(
         'build AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
     dev.log(
         'build MediaQuery.of(context).size.width: ${MediaQuery.of(context).size.width}');
-
-    /*
-    MakeProvider makeProvider =
-        Provider.of<MakeProvider>(context, listen: false);
-    dev.log('parentSize: ${makeProvider.parentSize}');
+    dev.log(
+        'build MediaQuery.of(context).size.height: ${MediaQuery.of(context).size.height}');
     */
+
+    makeProvider = Provider.of<MakeProvider>(context);
 
     ////////////////////////////////////////////////////////////////////////////////
     // function bar 에서 수신된 경우 처리
-    if (!context.watch<MakeProvider>().fabOpen) {
+    if (!makeProvider.fabOpen) {
       var floatKeyState = _fabGlobalKey.currentState;
       if (floatKeyState != null) {
         if (floatKeyState.isOpen) {
           dev.log('build floatKeyState.isOpen and close');
           // 직접 호출하면 setState() or markNeedsBuild() called during build 에러 발생
           //floatKeyState.toggle();
-          WidgetsBinding.instance.addPostFrameCallback((_) => floatKeyState.toggle());
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => floatKeyState.toggle());
         }
       }
     }
@@ -210,10 +216,10 @@ class MakeScreenState extends State<MakeScreen> {
                       child: InteractiveViewer(
                         // build 이후 InteractiveViewer 의 사이즈 구하기
                         key: _screenGlobalKey,
-                        maxScale: (context.read<MakeProvider>().parentSize)
+                        maxScale: (makeProvider.parentSize)
                             ? 1.0
                             : AppConfig.MAKE_SCREEN_MAX,
-                        minScale: (context.read<MakeProvider>().parentSize)
+                        minScale: (makeProvider.parentSize)
                             ? 1.0
                             : AppConfig.MAKE_SCREEN_MIN,
                         transformationController: _transformationController,
@@ -237,7 +243,7 @@ class MakeScreenState extends State<MakeScreen> {
                       child: RepaintBoundary(
                         child: CustomPaint(
                           // size 안 정해도 동작함
-                          painter: (context.watch<MakeProvider>().parentSize)
+                          painter: (makeProvider.parentSize)
                               ? MakeParentSizePainter()
                               : MakePainter(),
                         ),
@@ -250,17 +256,6 @@ class MakeScreenState extends State<MakeScreen> {
                       children: <Widget>[
                         ElevatedButton.icon(
                             icon: const Icon(
-                              Icons.camera_alt_rounded,
-                              color: Colors.lightGreen,
-                            ),
-                            label: Text('CAMERA'.tr()),
-                            style: TextButton.styleFrom(
-                                backgroundColor: Colors.white),
-                            onPressed: () {
-                              _bringParentPressed(MakeBringEnum.CAMERA);
-                            }),
-                        ElevatedButton.icon(
-                            icon: const Icon(
                               Icons.photo,
                               color: Colors.amber,
                             ),
@@ -269,6 +264,17 @@ class MakeScreenState extends State<MakeScreen> {
                                 backgroundColor: Colors.white),
                             onPressed: () {
                               _bringParentPressed(MakeBringEnum.GALLERY);
+                            }),
+                        ElevatedButton.icon(
+                            icon: const Icon(
+                              Icons.camera_alt_rounded,
+                              color: Colors.lightGreen,
+                            ),
+                            label: Text('CAMERA'.tr()),
+                            style: TextButton.styleFrom(
+                                backgroundColor: Colors.white),
+                            onPressed: () {
+                              _bringParentPressed(MakeBringEnum.CAMERA);
                             }),
                       ],
                     ),
@@ -317,7 +323,7 @@ class MakeScreenState extends State<MakeScreen> {
                   ),
                   label: Text("PARENT".tr()),
                   style:
-                  TextButton.styleFrom(backgroundColor: Colors.blueAccent),
+                      TextButton.styleFrom(backgroundColor: AppColors.MAKE_PARENT_FAB_BACKGROUND),
                   onPressed: _fabParent,
                 ),
                 ElevatedButton.icon(
@@ -326,7 +332,7 @@ class MakeScreenState extends State<MakeScreen> {
                     color: Colors.white60,
                   ),
                   label: Text('BABY'.tr()),
-                  style: TextButton.styleFrom(backgroundColor: Colors.orange),
+                  style: TextButton.styleFrom(backgroundColor: AppColors.MAKE_BABY_FAB_BACKGROUND),
                   onPressed: _fabBaby,
                 ),
                 ElevatedButton.icon(
@@ -336,7 +342,7 @@ class MakeScreenState extends State<MakeScreen> {
                   ),
                   label: Text('CAPTION'.tr()),
                   style:
-                  TextButton.styleFrom(backgroundColor: Colors.amberAccent),
+                      TextButton.styleFrom(backgroundColor: AppColors.MAKE_CAPTION_FAB_BACKGROUND),
                   onPressed: _fabCaption,
                 ),
                 ElevatedButton.icon(
@@ -346,7 +352,7 @@ class MakeScreenState extends State<MakeScreen> {
                   ),
                   label: Text('SOUND'.tr()),
                   style:
-                  TextButton.styleFrom(backgroundColor: Colors.lightGreen),
+                      TextButton.styleFrom(backgroundColor: AppColors.MAKE_SOUND_FAB_BACKGROUND),
                   onPressed: _fabSound,
                 ),
                 ElevatedButton.icon(
@@ -356,7 +362,7 @@ class MakeScreenState extends State<MakeScreen> {
                   ),
                   label: Text('LINK'.tr()),
                   style:
-                      TextButton.styleFrom(backgroundColor: Colors.pinkAccent),
+                      TextButton.styleFrom(backgroundColor: AppColors.MAKE_LINK_FAB_BACKGROUND),
                   onPressed: _fabLink,
                 ),
               ],
@@ -387,20 +393,20 @@ class MakeScreenState extends State<MakeScreen> {
   Widget _chooseFunctionBar(type) {
     switch (type) {
       case MakeEnum.BLANK:
-        return const BlankWidget();
+        return const BlankBar();
       case MakeEnum.PARENT:
         //return ParentWidget(callbackParentSizeInitScreen: _callbackParentSizeInitScreen);
-        return const ParentWidget();
+        return const ParentBar();
       case MakeEnum.BABY:
-        return const BabyWidget();
+        return const BabyBar();
       case MakeEnum.CAPTION:
-        return const CaptionWidget();
+        return const CaptionBar();
       case MakeEnum.SOUND:
-        return const SoundWidget();
+        return const SoundBar();
       case MakeEnum.LINK:
-        return const LinkWidget();
+        return const LinkBar();
       default:
-        return const BlankWidget();
+        return const BlankBar();
     }
   }
 
@@ -470,29 +476,29 @@ class MakeScreenState extends State<MakeScreen> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // resize 상태 라면
-    if (context.read<MakeProvider>().parentSize) {
-      // _onTapDown 이 호출되지 않은 경우
+    if (makeProvider.parentSize) {
+      // _onTapDown 이 호출되지 않은 경우, _onTapDown 에서 선택되지 않은 경우
       if (ParentInfo.makeParentSizePointEnum == MakeParentSizePointEnum.NONE) {
         return;
       }
 
       // blank 검사
-      if (!InfoUtil.checkBlankArea(
+      if (!BracketUtil.checkBlankArea(
           xyOffset, ParentInfo.makeParentSizePointEnum)) {
         dev.log('\n\n### checkBlankArea return\n\n');
         return;
       }
 
       // bracket 간에 침범할 수 없는 영역을 순식간에 넘어갔는지 검사
-      if (!InfoUtil.checkBracketCrossArea(
+      if (!BracketUtil.checkBracketCross(
           xyOffset, ParentInfo.makeParentSizePointEnum)) {
-        dev.log('\n\n### checkBracketCrossArea return\n\n');
+        dev.log('\n\n### checkBracketCross return\n\n');
         return;
       }
 
       // shrink 허용치 검사
-      Rect bracketRect =
-          InfoUtil.calcRect(xyOffset, ParentInfo.makeParentSizePointEnum);
+      Rect bracketRect = BracketUtil.calcBracketRect(
+          xyOffset, ParentInfo.makeParentSizePointEnum);
       dev.log('bracketRect: $bracketRect');
       double minArea = (ParentInfo.wScreen - ParentInfo.xBlank * 2) *
           (ParentInfo.hScreen - ParentInfo.yBlank * 2) *
@@ -505,7 +511,7 @@ class MakeScreenState extends State<MakeScreen> {
 
       // sticky
       dev.log('org xyOffset: $xyOffset');
-      xyOffset = InfoUtil.stickyOffset(
+      xyOffset = BracketUtil.stickyBracketOffset(
           xyOffset,
           ParentInfo.wScreen,
           ParentInfo.xBlank,
@@ -524,7 +530,8 @@ class MakeScreenState extends State<MakeScreen> {
       ////////////////////////////////////////////////////////////////////////////////
 
       // ParentInfo 의 Offset 수정 --> paint 에서 사용
-      InfoUtil.updateBracketArea(xyOffset, ParentInfo.makeParentSizePointEnum);
+      BracketUtil.updateBracketArea(
+          xyOffset, ParentInfo.makeParentSizePointEnum);
     }
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -593,14 +600,14 @@ class MakeScreenState extends State<MakeScreen> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // size 상태인 경우 bracket 이 선택되었는지 검사
-    if (context.read<MakeProvider>().parentSize) {
+    if (makeProvider.parentSize) {
       dev.log(
           'parentSize leftTopOffset: ${ParentInfo.leftTopOffset}, rightTopOffset: ${ParentInfo.rightTopOffset}, '
           'leftBottomOffset: ${ParentInfo.leftBottomOffset}, rightBottomOffset: ${ParentInfo.rightBottomOffset}');
 
       ParentInfo.xyOffset = xyOffset; // for test
       MakeParentSizePointEnum makeParentSizeEnum =
-          InfoUtil.findBracketArea(xyOffset);
+          BracketUtil.findBracketArea(xyOffset);
       dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
       //if (makeParentSizeEnum != MakeParentSizePointEnum.NONE) {
       //  ParentInfo.makeParentSizePointEnum = makeParentSizeEnum;
@@ -608,6 +615,12 @@ class MakeScreenState extends State<MakeScreen> {
       ParentInfo.makeParentSizePointEnum = makeParentSizeEnum;
     }
     ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // for debug
+    //setState(() {});
+    ////////////////////////////////////////////////////////////////////////////////
+
   }
 
   // drag 이후에는 호출안됨
@@ -634,7 +647,7 @@ class MakeScreenState extends State<MakeScreen> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // return 하는 경우
-    if (context.read<MakeProvider>().parentSize) {
+    if (makeProvider.parentSize) {
       dev.log('_onDoubleTap parentSize return');
       return;
     }
@@ -727,16 +740,19 @@ class MakeScreenState extends State<MakeScreen> {
     if (floatKeyState != null) {
       if (floatKeyState.isOpen) {
         dev.log('_onTabFab open -> close');
-        MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
-        makeProvider.setFabOpen(false);
+        if (makeProvider.fabOpen) {
+          makeProvider.setFabOpen(false);
+        }
       } else {
         dev.log('_onTabFab close -> open');
-        MakeProvider makeProvider = Provider.of<MakeProvider>(context, listen: false);
-        makeProvider.setFabOpen(true);
+        if (!makeProvider.fabOpen) {
+          makeProvider.setFabOpen(true);
+        }
       }
     }
     ////////////////////////////////////////////////////////////////////////////////
   }
+
   void _fabParent() {
     dev.log('_fabParent');
 
@@ -762,8 +778,11 @@ class MakeScreenState extends State<MakeScreen> {
 
     setState(() {
       _makeEnum = MakeEnum.BABY;
-      context.read<MakeProvider>().setParentSize(false);
-      InfoUtil.initParentInfoBracket();
+      if (makeProvider.parentSize) {
+        makeProvider.setParentSize(false);
+      }
+      //context.read<MakeProvider>().setParentSize(false);
+      //InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -777,8 +796,11 @@ class MakeScreenState extends State<MakeScreen> {
 
     setState(() {
       _makeEnum = MakeEnum.CAPTION;
-      context.read<MakeProvider>().setParentSize(false);
-      InfoUtil.initParentInfoBracket();
+      if (makeProvider.parentSize) {
+        makeProvider.setParentSize(false);
+      }
+      //context.read<MakeProvider>().setParentSize(false);
+      //InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -791,8 +813,11 @@ class MakeScreenState extends State<MakeScreen> {
 
     setState(() {
       _makeEnum = MakeEnum.SOUND;
-      context.read<MakeProvider>().setParentSize(false);
-      InfoUtil.initParentInfoBracket();
+      if (makeProvider.parentSize) {
+        makeProvider.setParentSize(false);
+      }
+      //context.read<MakeProvider>().setParentSize(false);
+      //InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -805,8 +830,11 @@ class MakeScreenState extends State<MakeScreen> {
 
     setState(() {
       _makeEnum = MakeEnum.LINK;
-      context.read<MakeProvider>().setParentSize(false);
-      InfoUtil.initParentInfoBracket();
+      if (makeProvider.parentSize) {
+        makeProvider.setParentSize(false);
+      }
+      //context.read<MakeProvider>().setParentSize(false);
+      //InfoUtil.initParentInfoBracket();
     });
   }
 
@@ -871,6 +899,12 @@ class MakePainter extends CustomPainter {
 
     ////////////////////////////////////////////////////////////////////////////////
     initParentData();
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // grid
+    InfoUtil.drawGrid(canvas, wScreen, hScreen, wImage, hImage, inScale, xBlank,
+        yBlank, AppConfig.SIZE_GRID_RATIO);
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -964,6 +998,9 @@ class MakeParentSizePainter extends CustomPainter {
 
     ////////////////////////////////////////////////////////////////////////////////
     // grid
+    InfoUtil.drawGrid(canvas, wScreen, hScreen, wImage, hImage, inScale, xBlank,
+        yBlank, AppConfig.SIZE_GRID_RATIO);
+    /*
     Paint gridPaint = Paint()
       ..color = Colors.white30
       ..strokeCap = StrokeCap.round
@@ -1004,6 +1041,7 @@ class MakeParentSizePainter extends CustomPainter {
           endOffset.dy);
       canvas.drawLine(startOffset, endOffset, gridPaint);
     }
+    */
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1093,6 +1131,7 @@ class MakeParentSizePainter extends CustomPainter {
     canvas.drawRect(bottomRect, unselectedPaint);
     ////////////////////////////////////////////////////////////////////////////////
 
+
     /*
     ////////////////////////////////////////////////////////////////////////////////
     // for test
@@ -1100,9 +1139,16 @@ class MakeParentSizePainter extends CustomPainter {
       ..color = Colors.red
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 4;
-    InfoUtil.findBracketCorner(Offset(-10000, -10000), canvas: canvas, paint: testPaint);
+    Paint testPaint2 = Paint()
+      ..color = Colors.yellow
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 4;
+    MakeParentSizePointEnum makeParentSizeEnum =
+          BracketUtil.findBracketArea(ParentInfo.xyOffset, canvas: canvas, cornerPaint: testPaint, bracketPaint: testPaint2);
+      dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
     ////////////////////////////////////////////////////////////////////////////////
     */
+
   }
 
   /// 그려야할 정보를 모두 검사해서 틀린 것이 있으면 다시 그리기

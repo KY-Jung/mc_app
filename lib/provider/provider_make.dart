@@ -8,10 +8,10 @@ import '../dto/info_sound.dart';
 
 class MakeProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
-  /// 설정 : ParentWidget 에서 버튼 누를때, loadPreferences 할때
-  /// 해제 : ParentWidget 에서 버튼 누를때,
+  /// 설정 : ParentBar 에서 버튼 누를때, loadPreferences 할때
+  /// 해제 : ParentBar 에서 버튼 누를때,
   ///       MakeScreen 에서 fab 를 눌러서 교체될때 (일일이 찾아서 처리해야 함)
-  ///       ParentWidget 에서 dispose 할때는 에러 발생해서 안됨
+  ///       ParentBar 에서 dispose 할때는 에러 발생해서 안됨
   bool _parentSize = false;
   bool get parentSize => _parentSize;
   void setParentSize(bool value) {
