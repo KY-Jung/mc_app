@@ -1,10 +1,8 @@
-
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 class AppColors {
-
   ////////////////////////////////////////////////////////////////////////////////
   // MAKE fab button
   static const Color MAKE_PARENT_FAB_BACKGROUND = Colors.blueAccent;
@@ -20,6 +18,18 @@ class AppColors {
   static const Color MAKE_SOUND_FB_BACKGROUND = Color(0xffa8ffa8);
   static const Color MAKE_LINK_FB_BACKGROUND = Color(0xffffa8ff);
 
+  // MAKE SIGN
+  static const Color MAKE_SIGN_BOARD = Color(0xffffffa8);
+
   ////////////////////////////////////////////////////////////////////////////////
+
+  static BoxDecoration BOXDECO_GRAY = BoxDecoration(color: Colors.green[50], boxShadow: [
+    BoxShadow(
+      color: Colors.grey.withOpacity(0.6),
+      blurRadius: 6.0,
+      spreadRadius: 1.0,
+    )
+  ]);
+
 
 }

@@ -20,6 +20,8 @@ import '../config/config_app.dart';
 import '../config/constant_app.dart';
 import '../dto/info_parent.dart';
 import '../library/custom_expandable_draggable_widget.dart';
+import '../painter/painter_make.dart';
+import '../painter/painter_make_parent_size.dart';
 import '../util/util_bracket.dart';
 import '../util/util_info.dart';
 import '../util/util_popup.dart';
@@ -866,6 +868,7 @@ class MakeScreenState extends State<MakeScreen> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 class MakePainter extends CustomPainter {
   ////////////////////////////////////////////////////////////////////////////////
   late double wScreen;
@@ -1186,3 +1189,4 @@ class MakeParentSizePainter extends CustomPainter {
   }
 ////////////////////////////////////////////////////////////////////////////////
 }
+*/

@@ -24,6 +24,7 @@
   "FRAME": "틀",
   "SIZE": "크기",
   "SIGN": "서명",
+  "DELETE": "삭제",
 
   "SIZE_INIT": "화면 초기화",
   "SIZE_SAVE": "화면 저장",

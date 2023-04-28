@@ -133,17 +133,21 @@ class InfoUtil {
 
     return f_ret;
   }
-////////////////////////////////////////////////////////////////////////////////
+
+  /// 폴더폰의 경우 길쭉하지 않은 화면이므로 계산한 값을 사용
+  static double calcFitSign(wScreen, hScreen) {
+    double ret_d = hScreen * 0.3;
+
+    return ret_d;
+  }
+  ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  static void drawGrid(Canvas canvas, double wScreen, double hScreen,
+  static void drawGridScale(Canvas canvas, double wScreen, double hScreen,
       int wImage, int hImage, double inScale, double xBlank, double yBlank,
-      double gridRatio) {
-    // grid
-    Paint gridPaint = Paint()
-      ..color = Colors.white30
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1;
+      double gridRatio, Paint gridPaint) {
+
+    // horizontal
     Offset startOffset = Offset(xBlank, yBlank);
     Offset endOffset = Offset(wScreen - xBlank, yBlank);
     // 가로 줄
@@ -162,6 +166,8 @@ class InfoUtil {
                   gridRatio);
       canvas.drawLine(startOffset, endOffset, gridPaint);
     }
+
+    // vertical
     startOffset = Offset(xBlank, yBlank);
     endOffset = Offset(xBlank, hScreen - yBlank);
     // 세로 줄
@@ -181,7 +187,37 @@ class InfoUtil {
       canvas.drawLine(startOffset, endOffset, gridPaint);
     }
   }
+  static void drawGrid(Canvas canvas, double wScreen, double hScreen,
+      double xBlank, double yBlank, double gridRatio, Paint gridPaint) {
 
+    Offset startOffset = Offset(xBlank, yBlank);
+    Offset endOffset = Offset(wScreen - xBlank, yBlank);
+    // 가로 줄
+    canvas.drawLine(startOffset, endOffset, gridPaint);
+    for (int i = 0, j = (1 ~/ gridRatio); i < j; i++) {
+      startOffset = Offset(
+          startOffset.dx,
+          startOffset.dy + (hScreen - yBlank * 2) * gridRatio);
+      endOffset = Offset(
+          endOffset.dx,
+          endOffset.dy + (hScreen - yBlank * 2) * gridRatio);
+      canvas.drawLine(startOffset, endOffset, gridPaint);
+    }
+
+    startOffset = Offset(xBlank, yBlank);
+    endOffset = Offset(xBlank, hScreen - yBlank);
+    // 세로 줄
+    canvas.drawLine(startOffset, endOffset, gridPaint);
+    for (int i = 0, j = (1 ~/ gridRatio); i < j; i++) {
+      startOffset = Offset(
+          startOffset.dx + (wScreen - xBlank * 2) * gridRatio,
+          startOffset.dy);
+      endOffset = Offset(
+          endOffset.dx + (wScreen - xBlank * 2) * gridRatio,
+          endOffset.dy);
+      canvas.drawLine(startOffset, endOffset, gridPaint);
+    }
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
 }

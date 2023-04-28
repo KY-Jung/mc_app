@@ -24,6 +24,7 @@
   "FRAME": "Frame",
   "SIZE": "Size",
   "SIGN": "Sign",
+  "DELETE": "Delete",
 
   "SIZE_INIT": "Screen Init",
   "SIZE_SAVE": "Screen Save",

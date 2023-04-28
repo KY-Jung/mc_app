@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
+import 'package:contained_tab_bar_view/contained_tab_bar_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../dto/info_parent.dart';
+import '../painter/painter_make_parent_sign.dart';
 import '../provider/provider_make.dart';
 import '../util/util_info.dart';
 
@@ -93,8 +95,6 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar build START');
 
     makeProvider = Provider.of<MakeProvider>(context);
-
-    //_loadPreferences();
 
     dev.log('# ParentBar build START2');
 
@@ -251,6 +251,9 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar _loadPreferences START');
 
     SharedPreferences.getInstance().then((prefs) {
+      //SharedPreferences prefs = SharedPreferences.getInstance();
+      bool isChanged = false;
+
       var retPrefs = prefs.getString('MakeParentEnum');
       if (retPrefs == null) {
         // 처음인 경우
@@ -265,6 +268,9 @@ class ParentBarState extends State<ParentBar> {
           prefs.setString(
               'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
         } else {
+          if (_makeParentEnum != retEnum) {
+            isChanged = true;
+          }
           _makeParentEnum = retEnum;
         }
       }
@@ -301,8 +307,11 @@ class ParentBarState extends State<ParentBar> {
           break;
       }
 
-      setState(() {});
+      if (isChanged) {
+        setState(() {});
+      }
     });
+
     dev.log('# ParentBar _loadPreferences END');
     //ParentInfo.xyOffset = const Offset(0, 0);
   }
@@ -528,23 +537,114 @@ class ParentBarState extends State<ParentBar> {
   void _onTapSignNew() {
     dev.log('# ParentBar _onTabSignNew START');
 
+    double wSignFit =
+        InfoUtil.calcFitSign(ParentInfo.wScreen, ParentInfo.hScreen);
+
     showDialog(
       context: context,
       barrierDismissible: true, // 바깥 영역 터치시 창닫기
       builder: (BuildContext context) => AlertDialog(
         title: Text("SIZE_SIGN_MAKE_TITLE".tr()),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            SizedBox(
-              height: ParentInfo.hScreen * 0.5,
-              width: ParentInfo.wScreen * 1.0,
-              child: Text('content'),
-            ),
-            Text('aaaaaa'),
-          ],
+        content: Container(
+          //color: Colors.white10,  // 효과없음
+          // 최대로 맞추면 AlertDialog 에서 내부적으로 다시 조정함
+          width: MediaQuery.of(context).size.width * 1.0,
+          // w, h 둘중 하나에 맞추어짐
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                //padding: const EdgeInsets.all(10),
+                decoration:
+                    BoxDecoration(color: AppColors.MAKE_SIGN_BOARD, boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.6),
+                    blurRadius: 6.0,
+                    spreadRadius: 1.0,
+                  )
+                ]),
+                child: IgnorePointer(
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      size: Size(wSignFit, wSignFit),
+                      painter: MakeParentSignPainter(wSignFit.toInt(), wSignFit.toInt()),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Container(
+                //color: Colors.green[50],
+                decoration: BoxDecoration(color: Colors.green[50], boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.6),
+                    blurRadius: 6.0,
+                    spreadRadius: 1.0,
+                  )
+                ]),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 1.0,
+                  height: 80, // TODO : calc
+                  child: Text('선택리스트'),
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Container(
+                //padding: const EdgeInsets.all(8.0),
+                //color: Colors.green[50],
+                decoration: BoxDecoration(color: Colors.green[50], boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.6),
+                    blurRadius: 6.0,
+                    spreadRadius: 1.0,
+                  )
+                ]),
+                width: MediaQuery.of(context).size.width * 1.0,
+                height: 160, // TODO : calc
+                child: ContainedTabBarView(
+                  tabBarProperties: TabBarProperties(
+                    width: MediaQuery.of(context).size.width * 1.0,
+                    height: 32,
+                    // TODO : calc
+                    position: TabBarPosition.top,
+                    alignment: TabBarAlignment.center,
+                    indicatorColor: Colors.transparent,
+                    labelColor: Colors.black87,
+                    unselectedLabelColor: Colors.grey[400],
+                  ),
+                  tabs: [
+                    Text('First'),
+                    Text('Second'),
+                    Text('third'),
+                  ],
+                  views: [
+                    Container(
+                      //color: Colors.red,
+                      decoration: BoxDecoration(color: Colors.green[50], boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.6),
+                          blurRadius: 6.0,
+                          spreadRadius: 1.0,
+                        )
+                      ]),
+                    ),
+                    Container(color: Colors.green),
+                    Container(color: Colors.yellow)
+                  ],
+                  onChange: (index) => print(index),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, 'DELETE'),
+              child: Text('DELETE'.tr())),
           ElevatedButton(
               onPressed: () => Navigator.pop(context, 'CANCEL'),
               child: Text('CANCEL'.tr())),
