@@ -23,6 +23,7 @@ class MakeParentSignPainter extends CustomPainter {
     ////////////////////////////////////////////////////////////////////////////////
     // grid
     Paint gridPaint = Paint()
+      //..color = Colors.red
       ..color = Colors.black12
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1;

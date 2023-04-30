@@ -4,10 +4,12 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
+import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:contained_tab_bar_view/contained_tab_bar_view.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
 import 'package:mc/ui/screen_make.dart';
@@ -15,6 +17,7 @@ import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:badges/badges.dart' as badges;
 
 import '../config/color_app.dart';
 import '../config/config_app.dart';
@@ -95,6 +98,15 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar build START');
 
     makeProvider = Provider.of<MakeProvider>(context);
+
+    double hBarDetail = AppBar().preferredSize.height *
+        AppConfig.FUNCTIONBAR_HEIGHT *
+        AppConfig.MAKE_FUNCTIONBAR_2 /
+        (AppConfig.MAKE_FUNCTIONBAR_1 + AppConfig.MAKE_FUNCTIONBAR_2);
+    double whPreSign = hBarDetail - 20 * 2;
+
+    List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4'];
+    List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100];
 
     dev.log('# ParentBar build START2');
 
@@ -190,16 +202,60 @@ class ParentBarState extends State<ParentBar> {
                 child: Row(
                   //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
+                    InkWell(
+                      onTap: _onTapNone,
+                      child: Container(
+                        width: whPreSign,
+                        height: whPreSign,
+                        //margin: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.fromLTRB(20, 10, 10, 10),
+                        alignment: Alignment.center,
+                        color: Colors.black12,
+                        child: Text(
+                          'NONE'.tr(),
+                        ),
+                      ),
+                    ),
                     Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          OutlinedButton(
-                            child: Text(
-                                'aaaaaa 22222222222 : ${makeProvider.parentSize}'),
-                            onPressed: () {},
-                          ),
-                        ],
+                      child: Container(
+                        //color: Colors.yellow[50],
+                        //margin: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(10),
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: preSignList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Row(
+                              children: [
+                                InkWell(
+                                  onTap: () => _onTapPreSign(index),
+                                  child: Container(
+                                    width: whPreSign,
+                                    height: whPreSign,
+                                    color: Colors.amber[colorCodes[index]],
+                                    child: badges.Badge(
+                                      badgeContent: Text('${index + 1}'),
+                                      badgeStyle: badges.BadgeStyle(
+                                        badgeColor: AppColors.BLUE_LIGHT,
+                                      ),
+                                      child: Center(
+                                          child:
+                                          Text('${preSignList[index]}')),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 20,
+                                ),
+                              ],
+                            );
+                          },
+                          separatorBuilder:
+                              (BuildContext context, int index) =>
+                          const Divider(),
+                        ),
                       ),
                     ),
                     SizedBox.fromSize(
@@ -223,13 +279,7 @@ class ParentBarState extends State<ParentBar> {
                       ),
                     ),
                     SizedBox(
-                      width: (AppBar().preferredSize.height *
-                                  AppConfig.FUNCTIONBAR_HEIGHT *
-                                  AppConfig.MAKE_FUNCTIONBAR_2 /
-                                  (AppConfig.MAKE_FUNCTIONBAR_1 +
-                                      AppConfig.MAKE_FUNCTIONBAR_2) -
-                              AppConfig.SQUARE_BUTTON_SIZE) /
-                          2,
+                      width: (hBarDetail - AppConfig.SQUARE_BUTTON_SIZE) / 2,
                     ),
                   ],
                 ),
@@ -537,18 +587,27 @@ class ParentBarState extends State<ParentBar> {
   void _onTapSignNew() {
     dev.log('# ParentBar _onTabSignNew START');
 
-    double wSignFit =
-        InfoUtil.calcFitSign(ParentInfo.wScreen, ParentInfo.hScreen);
+    double whSignFit = InfoUtil.calcFitSign(
+        MediaQuery.of(context).size.width, MediaQuery.of(context).size.height);
+    double hBarDetail = AppBar().preferredSize.height *
+        AppConfig.FUNCTIONBAR_HEIGHT *
+        AppConfig.MAKE_FUNCTIONBAR_2 /
+        (AppConfig.MAKE_FUNCTIONBAR_1 + AppConfig.MAKE_FUNCTIONBAR_2);
+    double whPreSign = hBarDetail - 20 * 2;
+
+    List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4'];
+    List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100];
 
     showDialog(
       context: context,
       barrierDismissible: true, // 바깥 영역 터치시 창닫기
       builder: (BuildContext context) => AlertDialog(
         title: Text("SIZE_SIGN_MAKE_TITLE".tr()),
+        scrollable: true,
         content: Container(
           //color: Colors.white10,  // 효과없음
           // 최대로 맞추면 AlertDialog 에서 내부적으로 다시 조정함
-          width: MediaQuery.of(context).size.width * 1.0,
+          //width: MediaQuery.of(context).size.width * 1.0,
           // w, h 둘중 하나에 맞추어짐
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -561,13 +620,14 @@ class ParentBarState extends State<ParentBar> {
                     color: Colors.grey.withOpacity(0.6),
                     blurRadius: 6.0,
                     spreadRadius: 1.0,
-                  )
+                  ),
                 ]),
                 child: IgnorePointer(
                   child: RepaintBoundary(
                     child: CustomPaint(
-                      size: Size(wSignFit, wSignFit),
-                      painter: MakeParentSignPainter(wSignFit.toInt(), wSignFit.toInt()),
+                      size: Size(whSignFit, whSignFit),
+                      painter: MakeParentSignPainter(
+                          whSignFit.toInt(), whSignFit.toInt()),
                     ),
                   ),
                 ),
@@ -582,12 +642,71 @@ class ParentBarState extends State<ParentBar> {
                     color: Colors.grey.withOpacity(0.6),
                     blurRadius: 6.0,
                     spreadRadius: 1.0,
-                  )
+                  ),
                 ]),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 1.0,
-                  height: 80, // TODO : calc
-                  child: Text('선택리스트'),
+                  height: hBarDetail,
+                  child: Row(
+                    children: <Widget>[
+                      InkWell(
+                        onTap: _onTapNone,
+                        child: Container(
+                          width: whPreSign,
+                          height: whPreSign,
+                          //margin: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                          alignment: Alignment.center,
+                          color: Colors.black12,
+                          child: Text(
+                            'NONE'.tr(),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          color: Colors.yellow[50],
+                          //margin: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.all(10),
+                            shrinkWrap: true,
+                            scrollDirection: Axis.horizontal,
+                            itemCount: preSignList.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              return Row(
+                                children: [
+                                  InkWell(
+                                    onTap: () => _onTapPreSign(index),
+                                    child: Container(
+                                      width: whPreSign,
+                                      height: whPreSign,
+                                      color: Colors.amber[colorCodes[index]],
+                                      child: badges.Badge(
+                                        badgeContent: Text('${index + 1}'),
+                                        badgeStyle: badges.BadgeStyle(
+                                          badgeColor: AppColors.BLUE_LIGHT,
+                                        ),
+                                        child: Center(
+                                            child:
+                                                Text('${preSignList[index]}')),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 20,
+                                  ),
+                                ],
+                              );
+                            },
+                            separatorBuilder:
+                                (BuildContext context, int index) =>
+                                    const Divider(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(
@@ -595,13 +714,12 @@ class ParentBarState extends State<ParentBar> {
               ),
               Container(
                 //padding: const EdgeInsets.all(8.0),
-                //color: Colors.green[50],
                 decoration: BoxDecoration(color: Colors.green[50], boxShadow: [
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.6),
                     blurRadius: 6.0,
                     spreadRadius: 1.0,
-                  )
+                  ),
                 ]),
                 width: MediaQuery.of(context).size.width * 1.0,
                 height: 160, // TODO : calc
@@ -612,31 +730,259 @@ class ParentBarState extends State<ParentBar> {
                     // TODO : calc
                     position: TabBarPosition.top,
                     alignment: TabBarAlignment.center,
-                    indicatorColor: Colors.transparent,
+                    //indicatorColor: Colors.transparent,
                     labelColor: Colors.black87,
                     unselectedLabelColor: Colors.grey[400],
+                    isScrollable: false,
                   ),
                   tabs: [
-                    Text('First'),
-                    Text('Second'),
-                    Text('third'),
+                    Text('TEXT'.tr()),
+                    Text('BACKGROUND'.tr()),
+                    Text('SHAPE'.tr()),
                   ],
                   views: [
                     Container(
-                      //color: Colors.red,
-                      decoration: BoxDecoration(color: Colors.green[50], boxShadow: [
+                      decoration:
+                          BoxDecoration(color: Colors.green[50], boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.6),
                           blurRadius: 6.0,
                           spreadRadius: 1.0,
-                        )
+                        ),
                       ]),
+                      child: Row(
+                        children: <Widget>[
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                child: Text(
+                                  "COLOR".tr(),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                child: Text(
+                                  "THICKNESS".tr(),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Expanded(
+                                  child: Container(
+                                    //color: Colors.yellow[50],
+                                    //margin: const EdgeInsets.all(10),
+                                    margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                                    child: ListView.separated(
+                                      padding: const EdgeInsets.all(10),
+                                      shrinkWrap: true,
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: preSignList.length,
+                                      itemBuilder: (BuildContext context, int index) {
+                                        return Row(
+                                          children: [
+                                            InkWell(
+                                              onTap: () => _onTapPreSign(index),
+                                              child: Container(
+                                                width: whPreSign,
+                                                height: whPreSign,
+                                                color: Colors.amber[colorCodes[index]],
+                                                child: badges.Badge(
+                                                  badgeContent: Text('${index + 1}'),
+                                                  badgeStyle: badges.BadgeStyle(
+                                                    badgeColor: AppColors.BLUE_LIGHT,
+                                                  ),
+                                                  child: Center(
+                                                      child:
+                                                      Text('${preSignList[index]}')),
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              width: 20,
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      separatorBuilder:
+                                          (BuildContext context, int index) =>
+                                      const Divider(),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Text(
+                                    "COLOR33".tr(),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Container(color: Colors.green),
-                    Container(color: Colors.yellow)
+                    Container(
+                      decoration:
+                          BoxDecoration(color: Colors.green[50], boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.6),
+                          blurRadius: 6.0,
+                          spreadRadius: 1.0,
+                        ),
+                      ]),
+                      child: Text("222222222222"),
+                    ),
+                    Container(
+                      decoration:
+                          BoxDecoration(color: Colors.green[50], boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.6),
+                          blurRadius: 6.0,
+                          spreadRadius: 1.0,
+                        ),
+                      ]),
+                      child: SvgPicture.asset(
+                        '${AppConstant.SHAPE_DIR}ic_baby_heart.svg',
+                        width: 10,
+                        height: 10,
+                      ),
+                    ),
                   ],
                   onChange: (index) => print(index),
                 ),
+
+/*
+                    DefaultTabController(
+                  length: 3,
+                  child: Column(
+                    children: <Widget>[
+                      TabBar(
+                        tabs: <Widget>[
+                          Tab(
+                            icon: Icon(Icons.directions_car),
+                            text: 'TEXT'.tr(),
+                          ),
+                          Tab(
+                            icon: Icon(Icons.directions_transit),
+                            text: 'BACKGROUND'.tr(),
+                          ),
+                          Tab(
+                            icon: Icon(Icons.directions_transit),
+                            text: 'SHAPE'.tr(),
+                          ),
+                        ],
+                      ),
+                      TabBarView(
+                        children: <Widget>[
+                          Container(
+                            decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.6),
+                                    blurRadius: 6.0,
+                                    spreadRadius: 1.0,
+                                  ),
+                                ]),
+                            child: Row(
+                              children: <Widget>[
+                                Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        "COLOR".tr(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        "THICKNESS".tr(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            child: Text(
+                                              "COLOR22",
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        "COLOR33333".tr(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.6),
+                                    blurRadius: 6.0,
+                                    spreadRadius: 1.0,
+                                  ),
+                                ]),
+                            child: Text("222222222222"),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.6),
+                                    blurRadius: 6.0,
+                                    spreadRadius: 1.0,
+                                  ),
+                                ]),
+                            child: SvgPicture.asset(
+                              '${AppConstant.SHAPE_DIR}ic_baby_heart.svg',
+                              width: 10,
+                              height: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+*/
               ),
             ],
           ),
@@ -656,4 +1002,18 @@ class ParentBarState extends State<ParentBar> {
       ),
     );
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Event Start //
+  ////////////////////////////////////////////////////////////////////////////////
+  void _onTapNone() {
+    dev.log('# ParentBar _onTapNone START');
+  }
+
+  void _onTapPreSign(int index) {
+    dev.log('# ParentBar _onTapPreSign START index: $index');
+  }
+////////////////////////////////////////////////////////////////////////////////
+// Event Start //
+////////////////////////////////////////////////////////////////////////////////
 }

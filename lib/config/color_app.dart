@@ -23,13 +23,11 @@ class AppColors {
 
   ////////////////////////////////////////////////////////////////////////////////
 
-  static BoxDecoration BOXDECO_GRAY = BoxDecoration(color: Colors.green[50], boxShadow: [
-    BoxShadow(
-      color: Colors.grey.withOpacity(0.6),
-      blurRadius: 6.0,
-      spreadRadius: 1.0,
-    )
-  ]);
+  static Color BLUE_LIGHT = MAKE_PARENT_FB_BACKGROUND;
+  static Color ORANGE_LIGHT = MAKE_BABY_FB_BACKGROUND;
+  static Color YELLOW_LIGHT = MAKE_CAPTION_FB_BACKGROUND;
+  static Color GREEN_LIGHT = MAKE_SOUND_FB_BACKGROUND;
+  static Color PINK_LIGHT = MAKE_LINK_FB_BACKGROUND;
 
 
 }

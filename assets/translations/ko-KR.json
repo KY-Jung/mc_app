@@ -10,6 +10,7 @@
   "MAKE_NEW": "새로 만들기",
   "GALLERY": "사진 가져오기",
   "CAMERA": "카메라",
+  "NONE": "없음",
 
   "PARENT": "배경이미지",
   "BABY":  "작은이미지",
@@ -33,6 +34,13 @@
 
   "SIZE_SIGN_MAKE": "만들기",
   "SIZE_SIGN_MAKE_TITLE": "서명 만들기",
+
+  "TEXT": "글자",
+  "COLOR": "색",
+  "THICKNESS": "굵기",
+  "BACKGROUND": "배경",
+  "SHAPE": "모양",
+  "FRAME": "틀",
 
 
 

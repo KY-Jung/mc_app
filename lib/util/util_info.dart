@@ -136,8 +136,8 @@ class InfoUtil {
 
   /// 폴더폰의 경우 길쭉하지 않은 화면이므로 계산한 값을 사용
   static double calcFitSign(wScreen, hScreen) {
-    double ret_d = hScreen * 0.3;
-
+    double ret_d = hScreen * 0.25;
+    //dev.log("wScreen: $wScreen, hScreen: $hScreen, fit: $ret_d");
     return ret_d;
   }
   ////////////////////////////////////////////////////////////////////////////////

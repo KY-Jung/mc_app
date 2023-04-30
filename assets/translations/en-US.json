@@ -10,6 +10,7 @@
   "MAKE_NEW": "Make new one",
   "GALLERY": "Gallery",
   "CAMERA": "Camera",
+  "NONE": "None",
 
   "PARENT": "Big image",
   "BABY":  "Smalll image",
@@ -33,6 +34,13 @@
 
   "SIZE_SIGN_MAKE": "Make",
   "SIZE_SIGN_MAKE_TITLE": "Make Sign",
+
+  "TEXT": "Text",
+  "COLOR": "Color",
+  "THICKNESS": "Thick",
+  "BACKGROUND": "Background",
+  "SHAPE": "Shape",
+  "FRAME": "Frame",
 
 
 
