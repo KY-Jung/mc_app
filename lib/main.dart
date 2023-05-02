@@ -3,6 +3,7 @@ import 'dart:developer' as dev;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mc/provider/provider_make.dart';
+import 'package:mc/provider/provider_sign.dart';
 import 'package:mc/ui/screen_imageview.dart';
 import 'package:mc/ui/screen_index.dart';
 import 'package:mc/ui/screen_splash.dart';
@@ -50,6 +51,9 @@ class MyApp extends StatelessWidget {
         // MakeTap 에서 하면 이상하게 최상위로 올라가는 현상이 있어서 부득이 여기로 옴
         ChangeNotifierProvider<MakeProvider>(
           create: (context) => MakeProvider(),
+        ),
+        ChangeNotifierProvider<SignProvider>(
+          create: (context) => SignProvider(),
         ),
       ],
       child: MaterialApp(

@@ -193,7 +193,7 @@ class MakeScreenState extends State<MakeScreen> {
               onTap: _onTabDelete,
               onLongPress: _onLongPressDelete,
               child: Ink(
-                child: const Icon(Icons.delete),
+                child: const Icon(Icons.delete_forever),
               ),
             ),
           ),

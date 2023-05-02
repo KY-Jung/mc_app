@@ -1,20 +1,18 @@
 import 'dart:developer' as dev;
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../config/config_app.dart';
-import '../dto/info_parent.dart';
+import '../dto/info_dot.dart';
 import '../util/util_info.dart';
 
 class MakeParentSignPainter extends CustomPainter {
 
-  int width;
-  int height;
+  double width;
+  double height;
+  List<List<DotInfo>> lines;
 
-  MakeParentSignPainter(this.width, this.height);
+  MakeParentSignPainter(this.width, this.height, this.lines);
 
-  /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
   @override
   void paint(Canvas canvas, Size size) {
     // wScreen, hScreen 과 동일
@@ -29,26 +27,65 @@ class MakeParentSignPainter extends CustomPainter {
       ..strokeWidth = 1;
     //InfoUtil.drawGrid(canvas, width.toDouble(), height.toDouble(), width, height, 1.0, 0,
     //    0, 0.2, gridPaint);
-    InfoUtil.drawGrid(canvas, width.toDouble(), height.toDouble(), 0, 0,
+    InfoUtil.drawGrid(canvas, width, height, 0, 0,
         0.5, gridPaint);
     ////////////////////////////////////////////////////////////////////////////////
 
-    /*
     ////////////////////////////////////////////////////////////////////////////////
-    // for test
-    Paint testPaint = Paint()
-      ..color = Colors.red
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 4;
-    Paint testPaint2 = Paint()
-      ..color = Colors.yellow
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 4;
-    MakeParentSizePointEnum makeParentSizeEnum =
-          BracketUtil.findBracketArea(ParentInfo.xyOffset, canvas: canvas, cornerPaint: testPaint, bracketPaint: testPaint2);
-      dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
+    Rect rect = const Offset(0, 0) & Size (width, height);
     ////////////////////////////////////////////////////////////////////////////////
-    */
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    Paint signPaint = Paint()
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    double size;
+    List<Offset> offsetList = <Offset>[];
+    Path path = Path();
+    DotInfo dotInfo0;   // 첫번째 dot
+    for (List<DotInfo> oneLine in lines) {
+      dotInfo0 = oneLine.elementAt(0);
+      signPaint.color = dotInfo0.color!;
+      size = dotInfo0.size;
+
+      for (DotInfo dotInfo in oneLine) {
+        if (rect.contains(dotInfo.offset)) {
+          if (dotInfo.size.toInt() == size.toInt()) {
+            offsetList.add(dotInfo.offset);
+          } else {
+            offsetList.add(dotInfo.offset);
+
+            path = Path();
+            path.addPolygon(offsetList, false);
+            signPaint.strokeWidth = size;
+            canvas.drawPath(path, signPaint);
+
+            offsetList.clear();
+            offsetList.add(dotInfo.offset);
+            size = dotInfo.size;
+          }
+        } else {
+          // 화면을 벗어난 경우
+          if (offsetList.isNotEmpty) {
+            path = Path();
+            path.addPolygon(offsetList, false);
+            signPaint.strokeWidth = size;
+            canvas.drawPath(path, signPaint);
+
+            offsetList.clear();
+          }
+          size = dotInfo.size;
+        }
+      }
+      path = Path();
+      path.addPolygon(offsetList, false);
+      signPaint.strokeWidth = size;
+      canvas.drawPath(path, signPaint);
+
+      offsetList.clear();
+    }
+    ////////////////////////////////////////////////////////////////////////////////
 
   }
 

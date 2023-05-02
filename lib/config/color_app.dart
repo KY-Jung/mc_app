@@ -29,5 +29,20 @@ class AppColors {
   static Color GREEN_LIGHT = MAKE_SOUND_FB_BACKGROUND;
   static Color PINK_LIGHT = MAKE_LINK_FB_BACKGROUND;
 
-
+  static BoxDecoration BOXDECO_YELLO50 =
+      BoxDecoration(color: Colors.yellow[50], boxShadow: [
+    BoxShadow(
+      color: Colors.grey.withOpacity(0.6),
+      blurRadius: 6.0,
+      spreadRadius: 1.0,
+    ),
+  ]);
+  static BoxDecoration BOXDECO_GREEN50 =
+      BoxDecoration(color: Colors.green[50], boxShadow: [
+    BoxShadow(
+      color: Colors.grey.withOpacity(0.6),
+      blurRadius: 6.0,
+      spreadRadius: 1.0,
+    ),
+  ]);
 }
