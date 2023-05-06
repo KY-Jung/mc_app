@@ -41,6 +41,9 @@ class AppConfig {
 
   // svg
   static const double SVG_WH = 24;
+
+  // sign save max
+  static const int SIGN_SAVE_MAX = 10;
   ////////////////////////////////////////////////////////////////////////////////
 
 

@@ -263,7 +263,7 @@ class SignPopupState extends State<SignPopup> {
                   Expanded(
                     child: TabBarView(
                       children: <Widget>[
-                        Container(
+                        Container(    // 첫번째 탭
                           decoration: AppColors.BOXDECO_GREEN50,
                           child: Row(
                             children: <Widget>[
@@ -360,16 +360,30 @@ class SignPopupState extends State<SignPopup> {
                                       child: Container(
                                         alignment: Alignment.centerLeft,
                                         padding: const EdgeInsets.all(10),
-                                        child: Slider(
-                                          activeColor: Colors.white,
-                                          inactiveColor: Colors.white,
-                                          value: signProvider.size,
-                                          onChanged: (size) {
-                                            signProvider.changeSize(size);
-                                            dev.log('Slider size: $size');
-                                          },
-                                          min: 1,
-                                          max: AppConfig.SIGN_WIDTH_MAX,
+                                        child: Row(
+                                          children: [
+                                            Slider(
+                                              activeColor: Colors.blue,
+                                              inactiveColor: Colors.grey,
+                                              value: signProvider.size,
+                                              onChanged: (size) {
+                                                signProvider.changeSize(size);
+                                                dev.log('Slider size: $size');
+                                              },
+                                              min: 1,
+                                              max: AppConfig.SIGN_WIDTH_MAX,
+                                            ),
+                                            Expanded(
+                                              child: MaterialButton(
+                                                height: signProvider.size,
+                                                onPressed: () { },
+                                                color: Colors.blue,
+                                                textColor: Colors.white,
+                                                padding: EdgeInsets.all(10),
+                                                shape: const CircleBorder(),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -382,7 +396,7 @@ class SignPopupState extends State<SignPopup> {
                             ],
                           ),
                         ),
-                        Container(
+                        Container(    // 두번째 탭
                           decoration: AppColors.BOXDECO_GREEN50,
                           child: Row(
                             children: <Widget>[
@@ -477,29 +491,145 @@ class SignPopupState extends State<SignPopup> {
                               ),
                             ],
                           ),
-
                         ),
-                        Container(
+                        Container(  // 세번째 탭
                           decoration: AppColors.BOXDECO_GREEN50,
-                          child: ElevatedButton.icon(
-                              icon: const Icon(
-                                Icons.photo,
-                                color: Colors.amber,
+                          child: Row(
+                            children: <Widget>[
+                              Column(
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                    height: 8,
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      alignment: Alignment.centerLeft,
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        'SHAPE'.tr(),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      alignment: Alignment.centerLeft,
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        'COLOR'.tr(),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      alignment: Alignment.centerLeft,
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        'THICKNESS'.tr(),
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    height: 8,
+                                  ),
+                                ],
                               ),
-                              label: Text('GALLERY'.tr()),
-                              style: TextButton.styleFrom(
-                                  backgroundColor: Colors.white),
-                              onPressed: () {
-                                signProvider.loadShapeBackground('assets/images/jeju.jpg', whSignBoard);
-                                //signProvider.loadShapeBackground('${AppConstant.SHAPE_DIR}ic_baby_heart.svg');
-                              }),
-                          /*
-                          SvgPicture.asset(
-                            '${AppConstant.SHAPE_DIR}ic_baby_heart.svg',
-                            width: 10,
-                            height: 10,
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Container(
+                                      height: 8,
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        alignment: Alignment.centerLeft,
+                                        padding: const EdgeInsets.all(10),
+                                        child: Text(
+                                          'SHAPE'.tr(),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        //color: Colors.yellow[50],
+                                        margin: const EdgeInsets.fromLTRB(
+                                            0, 10, 10, 10),
+                                        child: ListView.separated(
+                                          padding: const EdgeInsets.all(10),
+                                          shrinkWrap: true,
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: preSignList.length,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            return Row(
+                                              children: [
+                                                InkWell(
+                                                  onTap: () =>
+                                                      _onTapPreSign(index),
+                                                  child: Container(
+                                                    width: whPreSign,
+                                                    height: whPreSign,
+                                                    color: Colors.amber[
+                                                    colorCodes[index]],
+                                                    child: badges.Badge(
+                                                      badgeContent:
+                                                      Text('${index + 1}'),
+                                                      badgeStyle:
+                                                      badges.BadgeStyle(
+                                                        badgeColor: AppColors
+                                                            .BLUE_LIGHT,
+                                                      ),
+                                                      child: Center(
+                                                          child: Text(
+                                                              '${preSignList[index]}')),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: 20,
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                          separatorBuilder:
+                                              (BuildContext context,
+                                              int index) =>
+                                          const Divider(),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        alignment: Alignment.centerLeft,
+                                        padding: const EdgeInsets.all(10),
+                                        child: Slider(
+                                          activeColor: Colors.white,
+                                          inactiveColor: Colors.white,
+                                          value: signProvider.size,
+                                          onChanged: (size) {
+                                            signProvider.changeSize(size);
+                                            dev.log('Slider size: $size');
+                                          },
+                                          min: 1,
+                                          max: AppConfig.SIGN_WIDTH_MAX,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      height: 8,
+                                    ),
+                                  ],
+                                ),
+
+                              ),
+                            ],
                           ),
-                          */
+
                         ),
                       ],
                     ),
