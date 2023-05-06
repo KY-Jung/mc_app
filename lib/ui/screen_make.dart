@@ -233,7 +233,7 @@ class MakeScreenState extends State<MakeScreen> {
                         //onInteractionStart: _onInteractionStart,
                         onInteractionEnd: _onInteractionEnd,
                         onInteractionUpdate: _onInteractionUpdate,
-                        //child: Image.asset("assets/images/jeju.jpg"),
+                        //child: Image.asset('assets/images/jeju.jpg'),
                         //child: CustomPaint(
                         //  painter: MyPainter(ParentInfo.image!),
                         //),
@@ -323,7 +323,7 @@ class MakeScreenState extends State<MakeScreen> {
                     Icons.aspect_ratio,
                     color: Colors.white60,
                   ),
-                  label: Text("PARENT".tr()),
+                  label: Text('PARENT'.tr()),
                   style:
                       TextButton.styleFrom(backgroundColor: AppColors.MAKE_PARENT_FAB_BACKGROUND),
                   onPressed: _fabParent,
@@ -411,7 +411,6 @@ class MakeScreenState extends State<MakeScreen> {
         return const BlankBar();
     }
   }
-
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////

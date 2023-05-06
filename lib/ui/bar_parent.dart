@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
+import 'package:mc/ui/popup_sign.dart';
 import 'package:mc/ui/screen_make.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,6 +25,7 @@ import '../dto/info_parent.dart';
 import '../painter/painter_make_parent_sign.dart';
 import '../provider/provider_make.dart';
 import '../provider/provider_sign.dart';
+import '../util/util_file.dart';
 import '../util/util_info.dart';
 
 enum MakeParentEnum { FRAME, SIZE, SIGN }
@@ -45,9 +48,7 @@ class ParentBarState extends State<ParentBar> {
   MakeParentEnum _makeParentEnum = MakeParentEnum.FRAME;
 
   late MakeProvider makeProvider;
-
   late SignProvider signProvider;
-
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -378,6 +379,10 @@ class ParentBarState extends State<ParentBar> {
 
   void _toggleButtonsSelect(idx) {
     dev.log('# ParentBar _toggleButtonsSelect START');
+
+    // for test
+    ParentInfo.printParent();
+
     toggleSelectList = [false, false, false];
     switch (idx) {
       case 0:
@@ -471,6 +476,7 @@ class ParentBarState extends State<ParentBar> {
         ParentInfo.rightBottomOffset.dy.toInt() ==
             (ParentInfo.hScreen - ParentInfo.yBlank).toInt());
 
+    // 변경된 것이 없으면 return
     if (leftTop && rightTop && leftBottom && rightBottom) {
       dev.log('_onPressedSizeSave SIZE_NO_CHANGE');
       PopupUtil.toastMsgShort('SIZE_NO_CHANGE'.tr());
@@ -482,7 +488,6 @@ class ParentBarState extends State<ParentBar> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // 새로 저장
-    //ParentInfo.printParent();
 
     // 선택한 영역 구하기
     Offset leftTopOffset = ParentInfo.leftTopOffset;
@@ -502,19 +507,21 @@ class ParentBarState extends State<ParentBar> {
     Rect dstRect = const Offset(0, 0) & Size(srcRect.width, srcRect.height);
 
     // 그리기
-    ui.Image uiImage = await InfoUtil.loadUiImage(ParentInfo.path);
+    ui.Image uiImage = await InfoUtil.loadUiImageFromPath(ParentInfo.path);
     ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     Canvas canvas = Canvas(pictureRecorder, dstRect);
     canvas.drawImageRect(uiImage, srcRect, dstRect, Paint());
+    uiImage.dispose();
+
+    // 새로 uiImage 생성
     ui.Image newImage = await pictureRecorder
         .endRecording()
-        .toImage(srcRect.width.toInt(), srcRect.height.toInt());
+        .toImage(srcRect.width.toInt(), srcRect.height.toInt());    // 여기서 scaling 안됨
 
-    //Image image = Image.file(File(ParentInfo.path));
+    // 화면에 보여주기
     Widget imageWidget = RawImage(
       image: newImage,
     );
-    //if (!mounted) return;
     double wPopup = ParentInfo.wScreen * 0.8;
     double hPopup = ParentInfo.hScreen * 0.4;
     if (!mounted) return;
@@ -526,16 +533,12 @@ class ParentBarState extends State<ParentBar> {
       // example
       if (ret == null) {
         // 팝업 바깥 영역을 클릭한 경우
+        newImage.dispose();
         return;
       }
       if (ret == AppConstant.OK) {
-        // jpgByte 로 변환
-        var rgbByte =
-            await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-        var jpgByte = JpegEncoder().compress(
-            rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 90);
-
-        // byte 저장
+        /*
+        // 이전 파일 지우고 신규 파일명 구하기
         Directory appDir = await getApplicationDocumentsDirectory();
         dev.log('getApplicationDocumentsDirectory: $appDir');
         String newPath = '${appDir.path}/${AppConstant.PARENT_RESIZE_DIR}';
@@ -551,33 +554,39 @@ class ParentBarState extends State<ParentBar> {
         } catch (e) {
           print(e);
         }
-
-        // new 파일 생성
         String fileName = '${appDir.path}/${AppConstant.PARENT_RESIZE_DIR}/'
             '${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg';
         File newImageFile = File(fileName);
         newImageFile.createSync(recursive: true);
+        */
+        ////////////////////////////////////////////////////////////////////////////////
+        File newImageFile = await FileUtil.initTempDirAndFile(AppConstant.PARENT_RESIZE_DIR, 'jpg');
+        dev.log('newImageFile.path: ${newImageFile.path}');
 
+        /*
+        // Uint8List 로 변환
+        ByteData? rgbByte = await newImage.toByteData(format: ui.ImageByteFormat.rawRgba);
+        Uint8List jpgByte = JpegEncoder().compress(
+            rgbByte!.buffer.asUint8List(), newImage.width, newImage.height, 98);
         // byte 저장
         newImageFile.writeAsBytesSync(jpgByte.buffer.asUint8List(),
             flush: true, mode: FileMode.write);
+        */
+        await FileUtil.saveUiImageToJpg(newImage, newImageFile);
         dev.log('writeAsBytesSync end');
         ////////////////////////////////////////////////////////////////////////////////
 
         ////////////////////////////////////////////////////////////////////////////////
         // 화면 갱신
-        await InfoUtil.setParentInfo(fileName);
+        await InfoUtil.setParentInfo(newImageFile.path);
         ParentInfo.makeBringEnum = MakeBringEnum.RESIZE;
         ////////////////////////////////////////////////////////////////////////////////
 
-        if (!mounted) return;
-        //if (!makeProvider.parentSize) {
         makeProvider.setParentSize(true);
-        //}
-        //context.read<MakeProvider>().setParentSize(false);
-        //context.read<MakeProvider>().setParentSize(true);
         dev.log('# ParentBar _onPressedSizeSave end');
         setState(() {});
+      } else {
+        newImage.dispose();
       }
     });
   }
@@ -586,26 +595,21 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar _onTabSignNew START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    // sign board wh
-    double whSignBoard = InfoUtil.calcFitSign(
-        MediaQuery.of(context).size.width, MediaQuery.of(context).size.height);
-    // bar 에서 2번째 높이
-    double hBarDetail = AppBar().preferredSize.height *
-        AppConfig.FUNCTIONBAR_HEIGHT *
-        AppConfig.MAKE_FUNCTIONBAR_2 /
-        (AppConfig.MAKE_FUNCTIONBAR_1 + AppConfig.MAKE_FUNCTIONBAR_2);
-    // pre sign 의 크기 (bar 에서 크기와 동일)
-    double whPreSign = hBarDetail - 20 * 2;
+    signProvider.initLines();
+    signProvider.changeColorSize(Colors.blue, AppConfig.SIGN_WIDTH_DEFAULT);    // TODO : from prefs
 
-    double hAppBar = AppBar().preferredSize.height;
+    signProvider.initShapeBackground();
     ////////////////////////////////////////////////////////////////////////////////
 
-    List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4'];
-    List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100];
+    showDialog(
+        context: context,
+        barrierDismissible: true, // 바깥 영역 터치시 창닫기
+        builder: (BuildContext context) {
+          return const SignPopup();
+        }
+    );
 
-    signProvider.init();
-    signProvider.changeColor(Colors.blue);
-
+    /*
     showDialog(
         context: context,
         barrierDismissible: true, // 바깥 영역 터치시 창닫기
@@ -613,9 +617,8 @@ class ParentBarState extends State<ParentBar> {
         builder: (BuildContext context) {
           return StatefulBuilder(builder: (context, setState) {
             SignProvider sp = Provider.of<SignProvider>(context); // for rebuild
-
             return AlertDialog(
-              title: Text("SIZE_SIGN_MAKE_TITLE".tr()),
+              title: Text('SIZE_SIGN_MAKE_TITLE'.tr()),
               scrollable: true,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -640,7 +643,7 @@ class ParentBarState extends State<ParentBar> {
                       //dev.log('onPanUpdate: ${signProvider.lines}');
                     },
                     child: Container(
-                      decoration: AppColors.BOXDECO_YELLO50,
+                      decoration: AppColors.BOXDECO_YELLOW50,
                       child: CustomPaint(
                         size: Size(whSignBoard, whSignBoard),
                         painter: MakeParentSignPainter(
@@ -767,7 +770,7 @@ class ParentBarState extends State<ParentBar> {
                                               alignment: Alignment.centerLeft,
                                               padding: const EdgeInsets.all(10),
                                               child: Text(
-                                                "COLOR".tr(),
+                                                'COLOR'.tr(),
                                               ),
                                             ),
                                           ),
@@ -776,7 +779,7 @@ class ParentBarState extends State<ParentBar> {
                                               alignment: Alignment.centerLeft,
                                               padding: const EdgeInsets.all(10),
                                               child: Text(
-                                                "THICKNESS".tr(),
+                                                'THICKNESS'.tr(),
                                               ),
                                             ),
                                           ),
@@ -869,19 +872,6 @@ class ParentBarState extends State<ParentBar> {
                                                 ),
                                               ),
                                             ),
-
-                                            /*
-                                            Expanded(
-                                              child: Container(
-                                                alignment: Alignment.centerLeft,
-                                                padding: const EdgeInsets.all(10),
-                                                child: Text(
-                                                  "COLOR33".tr(),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ),
-                                            */
                                             Container(
                                               height: 8,
                                             ),
@@ -893,7 +883,10 @@ class ParentBarState extends State<ParentBar> {
                                 ),
                                 Container(
                                   decoration: AppColors.BOXDECO_GREEN50,
-                                  child: Text("222222222222"),
+                                  child: Text(
+                                    'COLOR33'.tr(),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 Container(
                                   decoration: AppColors.BOXDECO_GREEN50,
@@ -927,6 +920,7 @@ class ParentBarState extends State<ParentBar> {
             );
           });
         });
+    */
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -934,7 +928,8 @@ class ParentBarState extends State<ParentBar> {
   ////////////////////////////////////////////////////////////////////////////////
   void _onTapNone() {
     dev.log('# ParentBar _onTapNone START');
-    signProvider.init();
+    signProvider.initLines();
+    signProvider.initShapeBackground();
   }
 
   void _onTapPreSign(int index) {

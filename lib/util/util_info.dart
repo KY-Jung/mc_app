@@ -2,8 +2,10 @@ import 'dart:developer' as dev;
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:image/image.dart' as IMG;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../dto/info_parent.dart';
 
@@ -19,7 +21,7 @@ class InfoUtil {
     dev.log('setParentInfo path: $path');
     ParentInfo.path = path;
 
-    ui.Image uiImage = await InfoUtil.loadUiImage(path);
+    ui.Image uiImage = await InfoUtil.loadUiImageFromPath(path);
 
     /// Parent 이미지 크기
     ParentInfo.wImage = uiImage.width;
@@ -52,6 +54,8 @@ class InfoUtil {
     }
     dev.log('xBlank: ${ParentInfo.xBlank}, yBlank: ${ParentInfo.yBlank}');
 
+    uiImage.dispose();
+
     // offset
     initParentInfoBracket();
   }
@@ -72,6 +76,12 @@ class InfoUtil {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
+  // asset/media 모두 사용
+  static Future<ui.Image> loadUiImageFromPath(String path) async {
+    Image image = Image.file(File(path));
+
+    return changeImageToUiImage(image);
+  }
   static Future<ui.Image> changeImageToUiImage(Image image) async {
     //final Image image = Image(image: AssetImage('assets/images/jeju.jpg'));
     Completer<ui.Image> completer = Completer<ui.Image>();
@@ -84,13 +94,32 @@ class InfoUtil {
 
     return uiImage;
   }
+  static Future<ui.Image> changeImageToUiImageSize(Image image, double width, double height) async {
+    //final Image image = Image(image: AssetImage('assets/images/jeju.jpg'));
+    Completer<ui.Image> completer = Completer<ui.Image>();
+    image.image
+        .resolve(ImageConfiguration(size: Size(width, height)))   // <-- size 지정해도 효과없음
+        .addListener(ImageStreamListener((ImageInfo image, bool _) {
+      completer.complete(image.image);
+    }));
+    ui.Image uiImage = await completer.future;
 
-  static Future<ui.Image> loadUiImage(String path) async {
-    Image image = Image.file(File(path));
-
-    return changeImageToUiImage(image);
+    return uiImage;
   }
 
+  // 아래 함수는 asset 에서만 동작함
+  // The asset does not exist or has empty data.
+  static Future<ui.Image> loadUiImageFromAsset(String imageAssetPath, {int height = 0, int width = 0}) async {
+    final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);
+    final codec = await ui.instantiateImageCodec(
+      assetImageByteData.buffer.asUint8List(),
+      targetHeight: (height == 0) ? null : height,
+      targetWidth: (width == 0) ? null : width,
+    );
+    final image = (await codec.getNextFrame()).image;
+
+    return image;
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +166,7 @@ class InfoUtil {
   /// 폴더폰의 경우 길쭉하지 않은 화면이므로 계산한 값을 사용
   static double calcFitSign(wScreen, hScreen) {
     double ret_d = hScreen * 0.25;
-    //dev.log("wScreen: $wScreen, hScreen: $hScreen, fit: $ret_d");
+    //dev.log('wScreen: $wScreen, hScreen: $hScreen, fit: $ret_d');
     return ret_d;
   }
   ////////////////////////////////////////////////////////////////////////////////

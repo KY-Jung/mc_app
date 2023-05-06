@@ -35,6 +35,12 @@ class AppConfig {
   // square button width/height
   static const double SQUARE_BUTTON_SIZE = 56;
 
+  // default sign size
+  static const double SIGN_WIDTH_MAX = 20;
+  static const double SIGN_WIDTH_DEFAULT = 10;
+
+  // svg
+  static const double SVG_WH = 24;
   ////////////////////////////////////////////////////////////////////////////////
 
 

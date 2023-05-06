@@ -25,11 +25,10 @@ class MakePainter extends CustomPainter {
 
   double scale = 0;
 
-  late Offset leftTopOffset;
-  late Offset rightTopOffset;
-  late Offset leftBottomOffset;
-  late Offset rightBottomOffset;
-
+  Offset leftTopOffset = const Offset(0, 0);
+  Offset rightTopOffset = const Offset(0, 0);
+  Offset leftBottomOffset = const Offset(0, 0);
+  Offset rightBottomOffset = const Offset(0, 0);
   ////////////////////////////////////////////////////////////////////////////////
 
   /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
@@ -73,6 +72,21 @@ class MakePainter extends CustomPainter {
   bool shouldRepaint(MakePainter oldDelegate) {
     // TODO : impl
     // 다시 그려야할 정보 검사
+
+    if (ParentInfo.leftTopOffset.dx != oldDelegate.leftTopOffset.dx)  return true;
+    if (ParentInfo.leftTopOffset.dy != oldDelegate.leftTopOffset.dy)  return true;
+    if (ParentInfo.rightTopOffset.dx != oldDelegate.rightTopOffset.dx)  return true;
+    if (ParentInfo.rightTopOffset.dy != oldDelegate.rightTopOffset.dy)  return true;
+    if (ParentInfo.leftBottomOffset.dx != oldDelegate.leftBottomOffset.dx)  return true;
+    if (ParentInfo.leftBottomOffset.dy != oldDelegate.leftBottomOffset.dy)  return true;
+    if (ParentInfo.rightBottomOffset.dx != oldDelegate.rightBottomOffset.dx)  return true;
+    if (ParentInfo.rightBottomOffset.dy != oldDelegate.rightBottomOffset.dy)  return true;
+
+    if (ParentInfo.inScale != oldDelegate.inScale)  return true;
+    if (ParentInfo.xStart != oldDelegate.xStart)  return true;
+    if (ParentInfo.yStart != oldDelegate.yStart)  return true;
+    if (ParentInfo.scale != oldDelegate.scale)  return true;
+
 
     return false;
     //return true;

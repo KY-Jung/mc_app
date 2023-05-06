@@ -58,7 +58,7 @@ class MakeTabState extends State<MakeTab> {
             Text('MAKE'.tr()),
             Text('McImageId is ${mcImageProvider.getImageId()}'),
             ElevatedButton(
-              child: Text("MAKE_NEW".tr()),
+              child: Text('MAKE_NEW'.tr()),
               onPressed: () {
 
                 ////////////////////////////////////////////////////////////////////////////////
