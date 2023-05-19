@@ -38,12 +38,18 @@
   "TEXT": "Text",
   "LINE": "Line",
   "COLOR": "Color",
-  "THICKNESS": "Thick",
+  "THICKNESS": "Thickness",
   "BACKGROUND": "Background",
   "SHAPE": "Shape",
   "FRAME": "Frame",
   "BRING": "Bring",
 
+  "COLOR_SELECT_TITLE": "Select color",
+  "COLOR_SELECT_PRIMARY": "Primary",
+  "COLOR_SELECT_WHEEL": "Details",
+  "COLOR_SELECT_SHADE": "Related colors",
+  "COLOR_SELECT_RECENT": "Recent colors",
+  "LONGCLICK_FOR_REORDERING": "* Press LONG-CLICK for reordering",
 
 
 

@@ -25,6 +25,9 @@ class MakeParentSignPainter extends CustomPainter {
     // wScreen, hScreen 과 동일
     dev.log('# MakeParentSignPainter paint START');
 
+
+    dev.log('width: $width, height: $height');
+
     ////////////////////////////////////////////////////////////////////////////////
     // grid
     Paint gridPaint = Paint()

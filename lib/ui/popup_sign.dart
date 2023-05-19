@@ -13,7 +13,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
-import 'package:mc/ui/screen_make.dart';
+import 'package:mc/ui/page_make.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +27,7 @@ import '../dto/info_parent.dart';
 import '../painter/clipper_sign.dart';
 import '../painter/painter_make_parent_sign.dart';
 import '../provider/provider_make.dart';
-import '../provider/provider_sign.dart';
+import '../provider/provider_parent.dart';
 import '../util/util_file.dart';
 import '../util/util_info.dart';
 
@@ -40,7 +40,7 @@ class SignPopup extends StatefulWidget {
 
 class SignPopupState extends State<SignPopup> {
   ////////////////////////////////////////////////////////////////////////////////
-  late SignProvider signProvider;
+  late ParentProvider parentProvider;
 
   late double whSignBoard;
   late double hBarDetail;
@@ -68,7 +68,7 @@ class SignPopupState extends State<SignPopup> {
     dev.log('# SignPopup build START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    signProvider = Provider.of<SignProvider>(context);
+    parentProvider = Provider.of<ParentProvider>(context);
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ class SignPopupState extends State<SignPopup> {
           GestureDetector(
             behavior: HitTestBehavior.translucent,
             onPanStart: (DragStartDetails d) {
-              signProvider.drawStart(d.localPosition);
+              parentProvider.drawSignLinesStart(d.localPosition);
             },
             onPanUpdate: (DragUpdateDetails dragUpdateDetails) {
               //double? primaryDelta = dragUpdateDetails.primaryDelta;  // 항상 null
@@ -110,10 +110,10 @@ class SignPopupState extends State<SignPopup> {
                   math.sqrt(math.pow(offset.dx, 2) + math.pow(offset.dy, 2));
               //dev.log('delta: $delta');
               double newSize =
-                  signProvider.size - signProvider.size / 10 * delta;
+                  parentProvider.signWidth - parentProvider.signWidth / 10 * delta;
 
-              signProvider.drawing(dragUpdateDetails.localPosition, newSize);
-              //dev.log('onPanUpdate: ${signProvider.lines}');
+              parentProvider.drawSignLines(dragUpdateDetails.localPosition, newSize);
+              //dev.log('onPanUpdate: ${ParentProvider.lines}');
             },
             child: Stack(
               alignment: Alignment.center,
@@ -163,7 +163,7 @@ class SignPopupState extends State<SignPopup> {
                 CustomPaint(
                     size: Size(whSignBoard, whSignBoard),
                     painter: MakeParentSignPainter(
-                        whSignBoard, whSignBoard, signProvider.lines, signProvider.shapeBackground),
+                        whSignBoard, whSignBoard, parentProvider.signLines, parentProvider.shapeBackgroundUiImage),
                 ),
               ],
             ),
@@ -309,7 +309,7 @@ class SignPopupState extends State<SignPopup> {
                                     ),
                                     Expanded(
                                       child: Container(
-                                        //color: Colors.yellow[50],
+                                        color: Colors.yellow[50],
                                         margin: const EdgeInsets.fromLTRB(
                                             0, 10, 10, 10),
                                         child: ListView.separated(
@@ -359,15 +359,15 @@ class SignPopupState extends State<SignPopup> {
                                     Expanded(
                                       child: Container(
                                         alignment: Alignment.centerLeft,
-                                        padding: const EdgeInsets.all(10),
+                                        //padding: const EdgeInsets.all(10),
                                         child: Row(
                                           children: [
                                             Slider(
                                               activeColor: Colors.blue,
                                               inactiveColor: Colors.grey,
-                                              value: signProvider.size,
+                                              value: parentProvider.signWidth,
                                               onChanged: (size) {
-                                                signProvider.changeSize(size);
+                                                parentProvider.changeSignWidth(size);
                                                 dev.log('Slider size: $size');
                                               },
                                               min: 1,
@@ -375,7 +375,7 @@ class SignPopupState extends State<SignPopup> {
                                             ),
                                             Expanded(
                                               child: MaterialButton(
-                                                height: signProvider.size,
+                                                height: parentProvider.signWidth,
                                                 onPressed: () { },
                                                 color: Colors.blue,
                                                 textColor: Colors.white,
@@ -463,7 +463,7 @@ class SignPopupState extends State<SignPopup> {
                                                 style: TextButton.styleFrom(
                                                     backgroundColor: Colors.white),
                                                 onPressed: () {
-                                                  _bringSignPressed(MakeBringEnum.GALLERY, whSignBoard);
+                                                  _bringSignPressed(MakePageBringEnum.GALLERY, whSignBoard);
                                                 }),
                                           ),
                                           Expanded(
@@ -476,7 +476,7 @@ class SignPopupState extends State<SignPopup> {
                                                 style: TextButton.styleFrom(
                                                     backgroundColor: Colors.white),
                                                 onPressed: () {
-                                                  _bringSignPressed(MakeBringEnum.CAMERA, whSignBoard);
+                                                  _bringSignPressed(MakePageBringEnum.CAMERA, whSignBoard);
                                                 }),
                                           ),
                                         ],
@@ -547,16 +547,56 @@ class SignPopupState extends State<SignPopup> {
                                     ),
                                     Expanded(
                                       child: Container(
-                                        alignment: Alignment.centerLeft,
-                                        padding: const EdgeInsets.all(10),
-                                        child: Text(
-                                          'SHAPE'.tr(),
+                                        color: Colors.yellow[50],
+                                        margin: const EdgeInsets.fromLTRB(
+                                            0, 10, 10, 10),
+                                        child: ListView.separated(
+                                          padding: const EdgeInsets.all(10),
+                                          shrinkWrap: true,
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: preSignList.length,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            return Row(
+                                              children: [
+                                                InkWell(
+                                                  onTap: () =>
+                                                      _onTapPreSign(index),
+                                                  child: Container(
+                                                    width: whPreSign,
+                                                    height: whPreSign,
+                                                    color: Colors.amber[
+                                                    colorCodes[index]],
+                                                    child: badges.Badge(
+                                                      badgeContent:
+                                                      Text('${index + 1}'),
+                                                      badgeStyle:
+                                                      badges.BadgeStyle(
+                                                        badgeColor: AppColors
+                                                            .BLUE_LIGHT,
+                                                      ),
+                                                      child: Center(
+                                                          child: Text(
+                                                              '${preSignList[index]}')),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: 20,
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                          separatorBuilder:
+                                              (BuildContext context,
+                                              int index) =>
+                                          const Divider(),
                                         ),
                                       ),
                                     ),
                                     Expanded(
                                       child: Container(
-                                        //color: Colors.yellow[50],
+                                        color: Colors.yellow[50],
                                         margin: const EdgeInsets.fromLTRB(
                                             0, 10, 10, 10),
                                         child: ListView.separated(
@@ -606,17 +646,31 @@ class SignPopupState extends State<SignPopup> {
                                     Expanded(
                                       child: Container(
                                         alignment: Alignment.centerLeft,
-                                        padding: const EdgeInsets.all(10),
-                                        child: Slider(
-                                          activeColor: Colors.white,
-                                          inactiveColor: Colors.white,
-                                          value: signProvider.size,
-                                          onChanged: (size) {
-                                            signProvider.changeSize(size);
-                                            dev.log('Slider size: $size');
-                                          },
-                                          min: 1,
-                                          max: AppConfig.SIGN_WIDTH_MAX,
+                                        //padding: const EdgeInsets.all(10),
+                                        child: Row(
+                                          children: [
+                                            Slider(
+                                              activeColor: Colors.blue,
+                                              inactiveColor: Colors.grey,
+                                              value: parentProvider.signWidth,
+                                            onChanged: (size) {
+                                              parentProvider.changeSignWidth(size);
+                                              dev.log('Slider size: $size');
+                                            },
+                                            min: 1,
+                                            max: AppConfig.SIGN_WIDTH_MAX,
+                                          ),
+                                            Expanded(
+                                              child: MaterialButton(
+                                                height: parentProvider.signWidth,
+                                                onPressed: () { },
+                                                color: Colors.blue,
+                                                textColor: Colors.white,
+                                                padding: EdgeInsets.all(10),
+                                                shape: const CircleBorder(),
+                                              ),
+                                            ),
+                                        ],
                                         ),
                                       ),
                                     ),
@@ -653,6 +707,7 @@ class SignPopupState extends State<SignPopup> {
             child: Text('OK'.tr())),
       ],
     );
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -662,19 +717,19 @@ class SignPopupState extends State<SignPopup> {
   ////////////////////////////////////////////////////////////////////////////////
   void _onTapNone() {
     dev.log('# SignPopup _onTapNone START');
-    signProvider.initLines();
-    signProvider.initShapeBackground();
+    parentProvider.initSignLines();
+    parentProvider.initShapeBackgroundUiImage();
   }
 
   void _onTapPreSign(int index) {
     dev.log('# SignPopup _onTapPreSign START index: $index');
   }
 
-  void _bringSignPressed(MakeBringEnum type, double whSignBoard) async {
+  void _bringSignPressed(MakePageBringEnum type, double whSignBoard) async {
     dev.log('# SignPopup _bringSignPressed START');
 
     XFile? xFile;
-    if (type == MakeBringEnum.CAMERA) {
+    if (type == MakePageBringEnum.CAMERA) {
       xFile = await ImagePicker().pickImage(source: ImageSource.camera);
     } else {
       xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -682,7 +737,7 @@ class SignPopupState extends State<SignPopup> {
     dev.log('file: ${xFile?.path}');
     if (xFile == null) return; // 취소한 경우
 
-    signProvider.loadShapeBackground(xFile!.path, whSignBoard);
+    await parentProvider.loadShapeBackgroundUiImage(xFile!.path, whSignBoard);
 
     dev.log('# SignPopup _bringSignPressed END');
   }
@@ -727,8 +782,8 @@ class SignPopupState extends State<SignPopup> {
 
     canvas.clipPath(borderPath);   // path 영역에서만 그리기가 동작함
 
-    if (signProvider.shapeBackground != null)
-      canvas.drawImage(signProvider.shapeBackground!, Offset(0, -68 / 2), Paint());
+    if (parentProvider.shapeBackgroundUiImage != null)
+      canvas.drawImage(parentProvider.shapeBackgroundUiImage!, Offset(0, -68 / 2), Paint());
 
 
 

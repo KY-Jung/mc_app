@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../config/config_app.dart';
 import '../dto/info_parent.dart';
-import '../ui/screen_make.dart';
+import '../ui/page_make.dart';
 
 class BracketUtil {
 
@@ -15,7 +15,7 @@ class BracketUtil {
   // ParentInfo 의 bracket offset 을 가져온다
   // bracket touch 영역에 속하는지 검사한다
   // MakeParentSizePointEnum 으로 반환한다
-  static MakeParentSizePointEnum findBracketArea(Offset xyOffset,
+  static MakeParentResizePointEnum findBracketArea(Offset xyOffset,
       {Canvas? canvas, Paint? cornerPaint, Paint? bracketPaint}) {
     //dev.log('findBracketArea: $xyOffset');
 
@@ -71,7 +71,7 @@ class BracketUtil {
       cornerRect = cornerOffset & cornerSize;
       if (canvas != null && cornerPaint != null) canvas.drawRect(cornerRect, cornerPaint);
       if (cornerRect.contains(xyOffset)) {
-        return MakeParentSizePointEnum.LEFTTOP;
+        return MakeParentResizePointEnum.LEFTTOP;
       }
 
       directionOffset = Offset(xyOffset.dx - leftTopOffset.dx, xyOffset.dy - leftTopOffset.dy);
@@ -83,7 +83,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeH;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.LEFTTOPH;
+          return MakeParentResizePointEnum.LEFTTOPH;
         }
       } else {
         barOffset = Offset(
@@ -92,7 +92,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeV;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.LEFTTOPV;
+          return MakeParentResizePointEnum.LEFTTOPV;
         }
       }
 
@@ -103,7 +103,7 @@ class BracketUtil {
       cornerRect = cornerOffset & cornerSize;
       if (canvas != null && cornerPaint != null) canvas.drawRect(cornerRect, cornerPaint);
       if (cornerRect.contains(xyOffset)) {
-        return MakeParentSizePointEnum.RIGHTTOP;
+        return MakeParentResizePointEnum.RIGHTTOP;
       }
 
       directionOffset = Offset(xyOffset.dx - rightTopOffset.dx, xyOffset.dy - rightTopOffset.dy);
@@ -116,7 +116,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeH;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.RIGHTTOPH;
+          return MakeParentResizePointEnum.RIGHTTOPH;
         }
       } else {
         barOffset = Offset(
@@ -125,7 +125,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeV;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.RIGHTTOPV;
+          return MakeParentResizePointEnum.RIGHTTOPV;
         }
       }
 
@@ -136,7 +136,7 @@ class BracketUtil {
       cornerRect = cornerOffset & cornerSize;
       if (canvas != null && cornerPaint != null) canvas.drawRect(cornerRect, cornerPaint);
       if (cornerRect.contains(xyOffset)) {
-        return MakeParentSizePointEnum.LEFTBOTTOM;
+        return MakeParentResizePointEnum.LEFTBOTTOM;
       }
 
       directionOffset = Offset(xyOffset.dx - leftBottomOffset.dx, xyOffset.dy - leftBottomOffset.dy);
@@ -148,7 +148,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeH;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.LEFTBOTTOMH;
+          return MakeParentResizePointEnum.LEFTBOTTOMH;
         }
       } else {
         barOffset = Offset(
@@ -158,7 +158,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeV;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.LEFTBOTTOMV;
+          return MakeParentResizePointEnum.LEFTBOTTOMV;
         }
       }
 
@@ -169,7 +169,7 @@ class BracketUtil {
       cornerRect = cornerOffset & cornerSize;
       if (canvas != null && cornerPaint != null) canvas.drawRect(cornerRect, cornerPaint);
       if (cornerRect.contains(xyOffset)) {
-        return MakeParentSizePointEnum.RIGHTBOTTOM;
+        return MakeParentResizePointEnum.RIGHTBOTTOM;
       }
       directionOffset = Offset(xyOffset.dx - rightBottomOffset.dx, xyOffset.dy - rightBottomOffset.dy);
       direction = directionOffset.direction;
@@ -181,7 +181,7 @@ class BracketUtil {
         barRectHv = barOffset & barSizeH;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.RIGHTBOTTOMH;
+          return MakeParentResizePointEnum.RIGHTBOTTOMH;
         }
       } else {
         barOffset = Offset(
@@ -191,13 +191,13 @@ class BracketUtil {
         barRectHv = barOffset & barSizeV;
         if (canvas != null && bracketPaint != null) canvas.drawRect(barRectHv, bracketPaint);
         if (barRectHv.contains(xyOffset)) {
-          return MakeParentSizePointEnum.RIGHTBOTTOMV;
+          return MakeParentResizePointEnum.RIGHTBOTTOMV;
         }
       }
     }
     ////////////////////////////////////////////////////////////////////////////////
 
-    return MakeParentSizePointEnum.NONE;
+    return MakeParentResizePointEnum.NONE;
     /*
     dev.log('findBracketArea: $xyOffset');
 
@@ -391,7 +391,7 @@ class BracketUtil {
   // bracket touch 영역에 속하는지 검사한다
   // MakeParentSizePointEnum 으로 반환한다
   static Rect calcBracketRect(
-      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+      Offset xyOffset, MakeParentResizePointEnum makeParentSizePointEnum) {
 
     ////////////////////////////////////////////////////////////////////////////////
     double x = 0.0;
@@ -406,60 +406,60 @@ class BracketUtil {
     ////////////////////////////////////////////////////////////////////////////////
 
     switch (makeParentSizePointEnum) {
-      case MakeParentSizePointEnum.LEFTTOP:
+      case MakeParentResizePointEnum.LEFTTOP:
         x = xyOffset.dx;
         y = xyOffset.dy;
         width = rightTopOffset.dx - x;
         height = rightBottomOffset.dy - y;
         break;
-      case MakeParentSizePointEnum.RIGHTTOP:
+      case MakeParentResizePointEnum.RIGHTTOP:
         x = leftTopOffset.dx;
         y = xyOffset.dy;
         width = xyOffset.dx - leftTopOffset.dx;
         height = leftBottomOffset.dy - y;
         break;
-      case MakeParentSizePointEnum.LEFTBOTTOM:
+      case MakeParentResizePointEnum.LEFTBOTTOM:
         x = xyOffset.dx;
         y = leftTopOffset.dy;
         width = rightTopOffset.dx - x;
         height = xyOffset.dy - rightTopOffset.dy;
         break;
-      case MakeParentSizePointEnum.RIGHTBOTTOM:
+      case MakeParentResizePointEnum.RIGHTBOTTOM:
         x = leftTopOffset.dx;
         y = leftTopOffset.dy;
         width = xyOffset.dx - leftTopOffset.dx;
         height = xyOffset.dy - leftTopOffset.dy;
         break;
 
-      case MakeParentSizePointEnum.LEFTTOPH:
-      case MakeParentSizePointEnum.RIGHTTOPH:
+      case MakeParentResizePointEnum.LEFTTOPH:
+      case MakeParentResizePointEnum.RIGHTTOPH:
         x = leftTopOffset.dx;
         y = xyOffset.dy;
         width = rightTopOffset.dx - x;
         height = rightBottomOffset.dy - y;
         break;
-      case MakeParentSizePointEnum.LEFTTOPV:
-      case MakeParentSizePointEnum.LEFTBOTTOMV:
+      case MakeParentResizePointEnum.LEFTTOPV:
+      case MakeParentResizePointEnum.LEFTBOTTOMV:
         x = xyOffset.dx;
         y = leftTopOffset.dy;
         width = rightTopOffset.dx - x;
         height = rightBottomOffset.dy - y;
         break;
-      case MakeParentSizePointEnum.RIGHTTOPV:
-      case MakeParentSizePointEnum.RIGHTBOTTOMV:
+      case MakeParentResizePointEnum.RIGHTTOPV:
+      case MakeParentResizePointEnum.RIGHTBOTTOMV:
         x = leftTopOffset.dx;
         y = leftTopOffset.dy;
         width = xyOffset.dx - leftTopOffset.dx;
         height = rightBottomOffset.dy - y;
         break;
-      case MakeParentSizePointEnum.LEFTBOTTOMH:
-      case MakeParentSizePointEnum.RIGHTBOTTOMH:
+      case MakeParentResizePointEnum.LEFTBOTTOMH:
+      case MakeParentResizePointEnum.RIGHTBOTTOMH:
         x = leftTopOffset.dx;
         y = leftTopOffset.dy;
         width = rightTopOffset.dx - leftTopOffset.dx;
         height = xyOffset.dy - leftTopOffset.dy;
         break;
-      case MakeParentSizePointEnum.NONE:
+      case MakeParentResizePointEnum.NONE:
         break;
     }
     Rect rect = Offset(x, y) & Size(width, height);
@@ -469,10 +469,10 @@ class BracketUtil {
 
   // ParentInfo 의 bracket offset 을 업데이트할때 사용
   static void updateBracketArea(
-      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+      Offset xyOffset, MakeParentResizePointEnum makeParentSizePointEnum) {
 
     switch (makeParentSizePointEnum) {
-      case MakeParentSizePointEnum.LEFTTOP:
+      case MakeParentResizePointEnum.LEFTTOP:
         ParentInfo.leftTopOffset = Offset(xyOffset.dx, xyOffset.dy);
         ParentInfo.rightTopOffset =
             Offset(ParentInfo.rightTopOffset.dx, xyOffset.dy);
@@ -480,7 +480,7 @@ class BracketUtil {
             Offset(xyOffset.dx, ParentInfo.leftBottomOffset.dy);
         //ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx, ParentInfo.rightBottomOffset.dy);
         break;
-      case MakeParentSizePointEnum.RIGHTTOP:
+      case MakeParentResizePointEnum.RIGHTTOP:
         ParentInfo.leftTopOffset =
             Offset(ParentInfo.leftTopOffset.dx, xyOffset.dy);
         ParentInfo.rightTopOffset = Offset(xyOffset.dx, xyOffset.dy);
@@ -488,7 +488,7 @@ class BracketUtil {
         ParentInfo.rightBottomOffset =
             Offset(xyOffset.dx, ParentInfo.rightBottomOffset.dy);
         break;
-      case MakeParentSizePointEnum.LEFTBOTTOM:
+      case MakeParentResizePointEnum.LEFTBOTTOM:
         ParentInfo.leftTopOffset =
             Offset(xyOffset.dx, ParentInfo.leftTopOffset.dy);
         //ParentInfo.rightTopOffset = Offset(ParentInfo.rightTopOffset.dx, ParentInfo.rightTopOffset.dy);
@@ -496,7 +496,7 @@ class BracketUtil {
         ParentInfo.rightBottomOffset =
             Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
         break;
-      case MakeParentSizePointEnum.RIGHTBOTTOM:
+      case MakeParentResizePointEnum.RIGHTBOTTOM:
         //ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, ParentInfo.leftTopOffset.dy);
         ParentInfo.rightTopOffset =
             Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
@@ -505,8 +505,8 @@ class BracketUtil {
         ParentInfo.rightBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
         break;
 
-      case MakeParentSizePointEnum.LEFTTOPH:
-      case MakeParentSizePointEnum.RIGHTTOPH:
+      case MakeParentResizePointEnum.LEFTTOPH:
+      case MakeParentResizePointEnum.RIGHTTOPH:
         ParentInfo.leftTopOffset =
             Offset(ParentInfo.leftTopOffset.dx, xyOffset.dy);
         ParentInfo.rightTopOffset =
@@ -514,8 +514,8 @@ class BracketUtil {
         //ParentInfo.leftBottomOffset = Offset(ParentInfo.leftBottomOffset.dx, xyOffset.dy);
         //ParentInfo.rightBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
         break;
-      case MakeParentSizePointEnum.LEFTTOPV:
-      case MakeParentSizePointEnum.LEFTBOTTOMV:
+      case MakeParentResizePointEnum.LEFTTOPV:
+      case MakeParentResizePointEnum.LEFTBOTTOMV:
         ParentInfo.leftTopOffset =
             Offset(xyOffset.dx, ParentInfo.leftTopOffset.dy);
         //ParentInfo.rightTopOffset = Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
@@ -523,8 +523,8 @@ class BracketUtil {
             Offset(xyOffset.dx, ParentInfo.leftBottomOffset.dy);
         //ParentInfo.rightBottomOffset = Offset(xyOffset.dx, xyOffset.dy);
         break;
-      case MakeParentSizePointEnum.RIGHTTOPV:
-      case MakeParentSizePointEnum.RIGHTBOTTOMV:
+      case MakeParentResizePointEnum.RIGHTTOPV:
+      case MakeParentResizePointEnum.RIGHTBOTTOMV:
         //ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, ParentInfo.leftTopOffset.dy);
         ParentInfo.rightTopOffset =
             Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
@@ -533,8 +533,8 @@ class BracketUtil {
             Offset(xyOffset.dx, ParentInfo.rightBottomOffset.dy);
         break;
 
-      case MakeParentSizePointEnum.LEFTBOTTOMH:
-      case MakeParentSizePointEnum.RIGHTBOTTOMH:
+      case MakeParentResizePointEnum.LEFTBOTTOMH:
+      case MakeParentResizePointEnum.RIGHTBOTTOMH:
         //ParentInfo.leftTopOffset = Offset(ParentInfo.leftTopOffset.dx, ParentInfo.leftTopOffset.dy);
         //ParentInfo.rightTopOffset = Offset(xyOffset.dx, ParentInfo.rightTopOffset.dy);
         ParentInfo.leftBottomOffset =
@@ -542,7 +542,7 @@ class BracketUtil {
         ParentInfo.rightBottomOffset =
             Offset(ParentInfo.rightBottomOffset.dx, xyOffset.dy);
         break;
-      case MakeParentSizePointEnum.NONE:
+      case MakeParentResizePointEnum.NONE:
         break;
     }
 
@@ -550,7 +550,7 @@ class BracketUtil {
 
   // bracket 간에 침범할 수 없는 영역을 순식간에 넘어갔는지 검사
   static bool checkBracketCross(
-      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+      Offset xyOffset, MakeParentResizePointEnum makeParentSizePointEnum) {
 
     ////////////////////////////////////////////////////////////////////////////////
     Offset leftTopOffset = ParentInfo.leftTopOffset;
@@ -560,7 +560,7 @@ class BracketUtil {
     ////////////////////////////////////////////////////////////////////////////////
 
     switch (makeParentSizePointEnum) {
-      case MakeParentSizePointEnum.LEFTTOP:
+      case MakeParentResizePointEnum.LEFTTOP:
         if (xyOffset.dx >= rightTopOffset.dx ||
             xyOffset.dy >= rightBottomOffset.dy) {
           dev.log('checkBracketCross: LEFTTOP');
@@ -568,7 +568,7 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.RIGHTTOP:
+      case MakeParentResizePointEnum.RIGHTTOP:
         if (xyOffset.dx <= leftTopOffset.dx ||
             xyOffset.dy >= leftBottomOffset.dy) {
           dev.log('checkBracketCross: RIGHTTOP');
@@ -576,7 +576,7 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTBOTTOM:
+      case MakeParentResizePointEnum.LEFTBOTTOM:
         if (xyOffset.dx >= rightBottomOffset.dx ||
             xyOffset.dy <= rightTopOffset.dy) {
           dev.log('checkBracketCross: LEFTBOTTOM');
@@ -584,7 +584,7 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.RIGHTBOTTOM:
+      case MakeParentResizePointEnum.RIGHTBOTTOM:
         if (xyOffset.dx <= leftBottomOffset.dx ||
             xyOffset.dy <= leftTopOffset.dy) {
           dev.log('checkBracketCross: RIGHTBOTTOM');
@@ -593,49 +593,49 @@ class BracketUtil {
           return true;
         }
 
-      case MakeParentSizePointEnum.LEFTTOPH:
-      case MakeParentSizePointEnum.RIGHTTOPH:
+      case MakeParentResizePointEnum.LEFTTOPH:
+      case MakeParentResizePointEnum.RIGHTTOPH:
         if (xyOffset.dy >= leftBottomOffset.dy) {
           dev.log('checkBracketCross: LEFTTOPH');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTTOPV:
-      case MakeParentSizePointEnum.LEFTBOTTOMV:
+      case MakeParentResizePointEnum.LEFTTOPV:
+      case MakeParentResizePointEnum.LEFTBOTTOMV:
         if (xyOffset.dx >= rightBottomOffset.dx) {
           dev.log('checkBracketCross: LEFTTOPV');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.RIGHTTOPV:
-      case MakeParentSizePointEnum.RIGHTBOTTOMV:
+      case MakeParentResizePointEnum.RIGHTTOPV:
+      case MakeParentResizePointEnum.RIGHTBOTTOMV:
         if (xyOffset.dx <= leftBottomOffset.dx) {
           dev.log('checkBracketCross: RIGHTTOPV');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTBOTTOMH:
-      case MakeParentSizePointEnum.RIGHTBOTTOMH:
+      case MakeParentResizePointEnum.LEFTBOTTOMH:
+      case MakeParentResizePointEnum.RIGHTBOTTOMH:
         if (xyOffset.dy <= leftTopOffset.dy) {
           dev.log('checkBracketCross: LEFTBOTTOMH');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.NONE:
+      case MakeParentResizePointEnum.NONE:
         return false;
     }
   }
 
   // blank 영역으로 넘어가는지 체크
   static bool checkBlankArea(
-      Offset xyOffset, MakeParentSizePointEnum makeParentSizePointEnum) {
+      Offset xyOffset, MakeParentResizePointEnum makeParentSizePointEnum) {
 
     switch (makeParentSizePointEnum) {
-      case MakeParentSizePointEnum.LEFTTOP:
+      case MakeParentResizePointEnum.LEFTTOP:
         if (xyOffset.dx < ParentInfo.xBlank ||
             xyOffset.dy < ParentInfo.yBlank) {
           //dev.log('checkBlankArea: LEFTTOP');
@@ -643,7 +643,7 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.RIGHTTOP:
+      case MakeParentResizePointEnum.RIGHTTOP:
         if (xyOffset.dx > ParentInfo.wScreen - ParentInfo.xBlank ||
             xyOffset.dy < ParentInfo.yBlank) {
           //dev.log('checkBlankArea: RIGHTTOP');
@@ -651,7 +651,7 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTBOTTOM:
+      case MakeParentResizePointEnum.LEFTBOTTOM:
         if (xyOffset.dx < ParentInfo.xBlank ||
             xyOffset.dy > ParentInfo.hScreen - ParentInfo.yBlank) {
           //dev.log('checkBlankArea: LEFTBOTTOM');
@@ -659,7 +659,7 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.RIGHTBOTTOM:
+      case MakeParentResizePointEnum.RIGHTBOTTOM:
         if (xyOffset.dx > ParentInfo.wScreen - ParentInfo.xBlank ||
             xyOffset.dy > ParentInfo.hScreen - ParentInfo.yBlank) {
           //dev.log('checkBlankArea: RIGHTBOTTOM');
@@ -667,39 +667,39 @@ class BracketUtil {
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTTOPH:
-      case MakeParentSizePointEnum.RIGHTTOPH:
+      case MakeParentResizePointEnum.LEFTTOPH:
+      case MakeParentResizePointEnum.RIGHTTOPH:
         if (xyOffset.dy < ParentInfo.yBlank) {
           //dev.log('checkBlankArea: LEFTTOPH');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTTOPV:
-      case MakeParentSizePointEnum.LEFTBOTTOMV:
+      case MakeParentResizePointEnum.LEFTTOPV:
+      case MakeParentResizePointEnum.LEFTBOTTOMV:
         if (xyOffset.dx < ParentInfo.xBlank) {
           //dev.log('checkBlankArea: LEFTTOPV');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.RIGHTTOPV:
-      case MakeParentSizePointEnum.RIGHTBOTTOMV:
+      case MakeParentResizePointEnum.RIGHTTOPV:
+      case MakeParentResizePointEnum.RIGHTBOTTOMV:
         if (xyOffset.dx > ParentInfo.wScreen - ParentInfo.xBlank) {
           //dev.log('checkBlankArea: RIGHTTOPV');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.LEFTBOTTOMH:
-      case MakeParentSizePointEnum.RIGHTBOTTOMH:
+      case MakeParentResizePointEnum.LEFTBOTTOMH:
+      case MakeParentResizePointEnum.RIGHTBOTTOMH:
         if (xyOffset.dy > ParentInfo.hScreen - ParentInfo.yBlank) {
           //dev.log('checkBlankArea: LEFTBOTTOMH');
           return false;
         } else {
           return true;
         }
-      case MakeParentSizePointEnum.NONE:
+      case MakeParentResizePointEnum.NONE:
         return true;
     }
   }
@@ -714,7 +714,7 @@ class BracketUtil {
       double wDivideRatio,
       double hDivideRatio,
       double stickyRatio,
-      MakeParentSizePointEnum makeParentSizePointEnum) {
+      MakeParentResizePointEnum makeParentSizePointEnum) {
 
     ////////////////////////////////////////////////////////////////////////////////
     double x = xyOffset.dx;
@@ -753,31 +753,31 @@ class BracketUtil {
     }
 
     switch (makeParentSizePointEnum) {
-      case MakeParentSizePointEnum.LEFTTOP:
+      case MakeParentResizePointEnum.LEFTTOP:
         break;
-      case MakeParentSizePointEnum.RIGHTTOP:
+      case MakeParentResizePointEnum.RIGHTTOP:
         break;
-      case MakeParentSizePointEnum.LEFTBOTTOM:
+      case MakeParentResizePointEnum.LEFTBOTTOM:
         break;
-      case MakeParentSizePointEnum.RIGHTBOTTOM:
+      case MakeParentResizePointEnum.RIGHTBOTTOM:
         break;
-      case MakeParentSizePointEnum.LEFTTOPH:
-      case MakeParentSizePointEnum.RIGHTTOPH:
+      case MakeParentResizePointEnum.LEFTTOPH:
+      case MakeParentResizePointEnum.RIGHTTOPH:
         xNew = x;
         break;
-      case MakeParentSizePointEnum.LEFTTOPV:
-      case MakeParentSizePointEnum.LEFTBOTTOMV:
+      case MakeParentResizePointEnum.LEFTTOPV:
+      case MakeParentResizePointEnum.LEFTBOTTOMV:
         yNew = y;
         break;
-      case MakeParentSizePointEnum.RIGHTTOPV:
-      case MakeParentSizePointEnum.RIGHTBOTTOMV:
+      case MakeParentResizePointEnum.RIGHTTOPV:
+      case MakeParentResizePointEnum.RIGHTBOTTOMV:
         yNew = y;
         break;
-      case MakeParentSizePointEnum.LEFTBOTTOMH:
-      case MakeParentSizePointEnum.RIGHTBOTTOMH:
+      case MakeParentResizePointEnum.LEFTBOTTOMH:
+      case MakeParentResizePointEnum.RIGHTBOTTOMH:
         xNew = x;
         break;
-      case MakeParentSizePointEnum.NONE:
+      case MakeParentResizePointEnum.NONE:
         break;
     }
 

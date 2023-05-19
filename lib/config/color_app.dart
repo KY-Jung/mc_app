@@ -29,20 +29,67 @@ class AppColors {
   static Color GREEN_LIGHT = MAKE_SOUND_FB_BACKGROUND;
   static Color PINK_LIGHT = MAKE_LINK_FB_BACKGROUND;
 
-  static BoxDecoration BOXDECO_YELLOW50 =
-      BoxDecoration(color: Colors.yellow[50], boxShadow: [
+  ////////////////////////////////////////////////////////////////////////////////
+  static BoxDecoration BOXDECO_YELLOW50 = BoxDecoration(color: Colors.yellow[50], boxShadow: [
     BoxShadow(
       color: Colors.grey.withOpacity(0.6),
       blurRadius: 6.0,
       spreadRadius: 1.0,
     ),
   ]);
-  static BoxDecoration BOXDECO_GREEN50 =
-      BoxDecoration(color: Colors.green[50], boxShadow: [
+  static BoxDecoration BOXDECO_GREEN50 = BoxDecoration(color: Colors.green[50], boxShadow: [
     BoxShadow(
       color: Colors.grey.withOpacity(0.6),
       blurRadius: 6.0,
       spreadRadius: 1.0,
     ),
   ]);
+  static BoxDecoration BOXDECO_YELLOW50_BORDER = BoxDecoration(
+    color: Colors.yellow[50],
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.withOpacity(0.6),
+        blurRadius: 6.0,
+        spreadRadius: 1.0,
+      ),
+    ],
+    border: Border.all(color: Colors.grey),
+  );
+  static BoxDecoration BOXDECO_GREEN50_BORDER = BoxDecoration(
+    color: Colors.green[50],
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.withOpacity(0.6),
+        blurRadius: 6.0,
+        spreadRadius: 1.0,
+      ),
+    ],
+    border: Border.all(color: Colors.grey),
+  );
+  static BoxDecoration BOXDECO_GREEN100_BORDER = BoxDecoration(
+    color: Colors.green[100],
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.withOpacity(0.6),
+        blurRadius: 6.0,
+        spreadRadius: 1.0,
+      ),
+    ],
+    border: Border.all(color: Colors.grey),
+  );
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  static List<Color> DEFAULT_COLOR_LIST = <Color>[
+    const Color(0xffff0000),
+    const Color(0xffff8000),
+    const Color(0xfffafc00),
+    const Color(0xff00ff00),
+    const Color(0xff0080ff),
+    const Color(0xffff00ff),
+    const Color(0xff000000),
+    const Color(0xff828282),
+    const Color(0xffffffff)
+  ];
+////////////////////////////////////////////////////////////////////////////////
 }

@@ -1,12 +1,12 @@
 import 'dart:developer' as dev;
 import 'dart:ui';
 
-import '../ui/screen_make.dart';
+import '../ui/page_make.dart';
 
 class ParentInfo {
 
   static String path = '';
-  static MakeBringEnum makeBringEnum = MakeBringEnum.NONE;
+  static MakePageBringEnum makeBringEnum = MakePageBringEnum.NONE;
 
   static double wScreen = 0;
   static double hScreen = 0;
@@ -31,7 +31,7 @@ class ParentInfo {
   static Offset rightBottomOffset = const Offset(0, 0);
 
   // 선택된 bracket 12개 중 하나
-  static MakeParentSizePointEnum makeParentSizePointEnum = MakeParentSizePointEnum.NONE;
+  static MakeParentResizePointEnum makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
 
   static void initAll() {
 

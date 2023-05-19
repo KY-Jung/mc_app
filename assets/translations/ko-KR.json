@@ -44,7 +44,12 @@
   "FRAME": "틀",
   "BRING": "가져오기",
 
-
+  "COLOR_SELECT_TITLE": "색깔 선택",
+  "COLOR_SELECT_PRIMARY": "주요 색",
+  "COLOR_SELECT_WHEEL": "세부 색",
+  "COLOR_SELECT_SHADE": "관련 색",
+  "COLOR_SELECT_RECENT": '최근 선택한 색',
+  "LONGCLICK_FOR_REORDERING": "* 순서를 바꾸려면 길게 꾹 눌러서 이동하십시요.",
 
   "IMAGE_VIEW": "이미지 보기",
 

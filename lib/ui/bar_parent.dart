@@ -12,7 +12,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
 import 'package:mc/ui/popup_sign.dart';
-import 'package:mc/ui/screen_make.dart';
+import 'package:mc/ui/page_make.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -22,13 +22,15 @@ import 'package:badges/badges.dart' as badges;
 import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../dto/info_parent.dart';
+import '../dto/info_shape.dart';
 import '../painter/painter_make_parent_sign.dart';
 import '../provider/provider_make.dart';
-import '../provider/provider_sign.dart';
+import '../provider/provider_parent.dart';
 import '../util/util_file.dart';
 import '../util/util_info.dart';
+import 'mbs_sign.dart';
 
-enum MakeParentEnum { FRAME, SIZE, SIGN }
+enum ParentBarEnum { FRAME, RESIZE, SIGN }
 
 class ParentBar extends StatefulWidget {
   const ParentBar({super.key});
@@ -43,12 +45,12 @@ class ParentBar extends StatefulWidget {
 
 class ParentBarState extends State<ParentBar> {
   ////////////////////////////////////////////////////////////////////////////////
-  List<bool> toggleSelectList = [true, false, false];
+  List<bool> toggleSelectList = [false, false, false];
 
-  MakeParentEnum _makeParentEnum = MakeParentEnum.FRAME;
+  //ParentBarEnum _makeParentEnum = ParentBarEnum.FRAME;
 
   late MakeProvider makeProvider;
-  late SignProvider signProvider;
+  late ParentProvider parentProvider;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -57,12 +59,17 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar initState START');
     super.initState();
 
+    // resize 하다가 다른 bar 로 갔다가 다시 돌아온 경우 처리
+    InfoUtil.initParentInfoBracket();
+
     ////////////////////////////////////////////////////////////////////////////////
     /// build 이후 실행
     /// SharedPreferences.getInstance() 는 initState/build 에서는 await 효과 없으므로
     /// build 이후에 다시 실행하는 것으로 수정함
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _loadPreferences(context));
+
+
+    //WidgetsBinding.instance
+    //    .addPostFrameCallback((_) => _loadPreferences(context));
     ////////////////////////////////////////////////////////////////////////////////
 
     /*
@@ -92,16 +99,41 @@ class ParentBarState extends State<ParentBar> {
     // 아래 코드는 에러 유발
     //widget.callbackParentSizeInitScreen();
 
-    InfoUtil.initParentInfoBracket();
+    //InfoUtil.initParentInfoBracket();
+    //makeProvider.setParentResize(false);
+    //makeProvider.setParentResizeWithNoNotify(false);
   }
 
   @override
   Widget build(BuildContext context) {
     dev.log('# ParentBar build START');
 
+    ////////////////////////////////////////////////////////////////////////////////
     makeProvider = Provider.of<MakeProvider>(context);
-    signProvider = Provider.of<SignProvider>(context);
+    parentProvider = Provider.of<ParentProvider>(context);
+    ////////////////////////////////////////////////////////////////////////////////
 
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //toggleSelectList = [false, false, false];
+    //switch (_makeParentEnum) {
+    switch (parentProvider.parentBarEnum) {
+      case ParentBarEnum.FRAME:
+        dev.log('case ParentBarEnum.FRAME');
+        toggleSelectList[0] = true;
+        break;
+      case ParentBarEnum.RESIZE:
+        dev.log('case ParentBarEnum.RESIZE');
+        toggleSelectList[1] = true;
+        break;
+      case ParentBarEnum.SIGN:
+        dev.log('case ParentBarEnum.SIGN');
+        toggleSelectList[2] = true;
+        break;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
     double hBarDetail = AppBar().preferredSize.height *
         AppConfig.FUNCTIONBAR_HEIGHT *
         AppConfig.MAKE_FUNCTIONBAR_2 /
@@ -110,181 +142,179 @@ class ParentBarState extends State<ParentBar> {
 
     List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4'];
     List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100];
+    ////////////////////////////////////////////////////////////////////////////////
 
     return Scaffold(
       //backgroundColor: Colors.yellow,
       //backgroundColor: Colors.black87,
       backgroundColor: AppColors.MAKE_PARENT_FB_BACKGROUND,
-      body: GestureDetector(
-        onTapDown: _onTapDownAll,
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              flex: AppConfig.MAKE_FUNCTIONBAR_1,
-              child: ToggleButtons(
-                color: Colors.grey,
-                selectedColor: Colors.black,
-                fillColor: Colors.white,
-                //disabledColor: Colors.white10,
-                renderBorder: true,
-                borderRadius: BorderRadius.circular(10),
-                borderWidth: 2,
-                borderColor: Colors.white60,
-                selectedBorderColor: Colors.white70,
-                isSelected: toggleSelectList,
-                //constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.25),
-                onPressed: _toggleButtonsSelect,
-                children: [
-                  Container(
-                      //height: 40,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: MediaQuery.of(context).size.width * 0.06),
-                      child: Text(
-                        'FRAME'.tr(),
-                      )),
-                  Container(
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            flex: AppConfig.MAKE_FUNCTIONBAR_1,
+            child: ToggleButtons(
+              color: Colors.grey,
+              selectedColor: Colors.black,
+              fillColor: Colors.white,
+              //disabledColor: Colors.white10,
+              renderBorder: true,
+              borderRadius: BorderRadius.circular(10),
+              borderWidth: 2,
+              borderColor: Colors.white60,
+              selectedBorderColor: Colors.white70,
+              isSelected: toggleSelectList,
+              //constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.25),
+              onPressed: _toggleButtonsSelect,
+              children: [
+                Container(
                     //height: 40,
                     padding: EdgeInsets.symmetric(
                         horizontal: MediaQuery.of(context).size.width * 0.06),
                     child: Text(
-                      'SIZE'.tr(),
-                    ),
+                      'FRAME'.tr(),
+                    )),
+                Container(
+                  //height: 40,
+                  padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.06),
+                  child: Text(
+                    'SIZE'.tr(),
                   ),
-                  Container(
-                    //height: 40,
-                    padding: EdgeInsets.symmetric(
-                        horizontal: MediaQuery.of(context).size.width * 0.06),
-                    child: Text(
-                      'SIGN'.tr(),
-                    ),
+                ),
+                Container(
+                  //height: 40,
+                  padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.06),
+                  child: Text(
+                    'SIGN'.tr(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (parentProvider.parentBarEnum == ParentBarEnum.FRAME)
+            Expanded(
+              flex: AppConfig.MAKE_FUNCTIONBAR_2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  ElevatedButton(
+                    child:
+                        Text('FRAME parentSize1'),
+                    onPressed: () {},
+                  ),
+                  ElevatedButton(
+                    child:
+                        Text('FRAME parentSize2'),
+                    onPressed: () {},
                   ),
                 ],
               ),
             ),
-            if (_makeParentEnum == MakeParentEnum.FRAME)
-              Expanded(
-                flex: AppConfig.MAKE_FUNCTIONBAR_2,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    ElevatedButton(
-                      child:
-                          Text('FRAME parentSize: ${makeProvider.parentSize}'),
-                      onPressed: () {},
-                    ),
-                    ElevatedButton(
-                      child:
-                          Text('FRAME parentSize: ${makeProvider.parentSize}'),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
+          if (parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
+            Expanded(
+              flex: AppConfig.MAKE_FUNCTIONBAR_2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: _onPressedSizeInit,
+                    child: Text('SIZE_INIT'.tr()),
+                  ),
+                  ElevatedButton(
+                    onPressed: _onPressedSizeSave,
+                    child: Text('SIZE_SAVE'.tr()),
+                  ),
+                ],
               ),
-            if (_makeParentEnum == MakeParentEnum.SIZE)
-              Expanded(
-                flex: AppConfig.MAKE_FUNCTIONBAR_2,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: _onPressedSizeInit,
-                      child: Text('SIZE_INIT'.tr()),
-                    ),
-                    ElevatedButton(
-                      onPressed: _onPressedSizeSave,
-                      child: Text('SIZE_SAVE'.tr()),
-                    ),
-                  ],
-                ),
-              ),
-            if (_makeParentEnum == MakeParentEnum.SIGN)
-              Expanded(
-                flex: AppConfig.MAKE_FUNCTIONBAR_2,
-                child: Row(
-                  //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    InkWell(
-                      onTap: _onTapNone,
-                      child: Container(
-                        width: whPreSign,
-                        height: whPreSign,
-                        //margin: const EdgeInsets.all(10),
-                        margin: const EdgeInsets.fromLTRB(20, 10, 10, 10),
-                        alignment: Alignment.center,
-                        color: Colors.black12,
-                        child: Text(
-                          'NONE'.tr(),
-                        ),
+            ),
+          if (parentProvider.parentBarEnum == ParentBarEnum.SIGN)
+            Expanded(
+              flex: AppConfig.MAKE_FUNCTIONBAR_2,
+              child: Row(
+                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  InkWell(
+                    onTap: _onTapNone,
+                    child: Container(
+                      width: whPreSign,
+                      height: whPreSign,
+                      //margin: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.fromLTRB(20, 10, 10, 10),
+                      alignment: Alignment.center,
+                      color: Colors.black12,
+                      child: Text(
+                        'NONE'.tr(),
                       ),
                     ),
-                    Expanded(
-                      child: Container(
-                        //color: Colors.yellow[50],
-                        //margin: const EdgeInsets.all(10),
-                        margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.all(10),
-                          shrinkWrap: true,
-                          scrollDirection: Axis.horizontal,
-                          itemCount: preSignList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Row(
-                              children: [
-                                InkWell(
-                                  onTap: () => _onTapPreSign(index),
-                                  child: Container(
-                                    width: whPreSign,
-                                    height: whPreSign,
-                                    color: Colors.amber[colorCodes[index]],
-                                    child: badges.Badge(
-                                      badgeContent: Text('${index + 1}'),
-                                      badgeStyle: badges.BadgeStyle(
-                                        badgeColor: AppColors.BLUE_LIGHT,
-                                      ),
-                                      child: Center(
-                                          child: Text('${preSignList[index]}')),
+                  ),
+                  Expanded(
+                    child: Container(
+                      color: Colors.yellow[50],
+                      //margin: const EdgeInsets.all(10),
+                      margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(10),
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: preSignList.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Row(
+                            children: [
+                              InkWell(
+                                onTap: () => _onTapPreSign(index),
+                                child: Container(
+                                  width: whPreSign,
+                                  height: whPreSign,
+                                  color: Colors.amber[colorCodes[index]],
+                                  child: badges.Badge(
+                                    badgeContent: Text('${index + 1}'),
+                                    badgeStyle: badges.BadgeStyle(
+                                      badgeColor: AppColors.BLUE_LIGHT,
                                     ),
+                                    child: Center(
+                                        child: Text('${preSignList[index]}')),
                                   ),
                                 ),
-                                Container(
-                                  width: 20,
-                                ),
-                              ],
-                            );
-                          },
-                          separatorBuilder: (BuildContext context, int index) =>
-                              const Divider(),
-                        ),
+                              ),
+                              Container(
+                                width: 20,
+                              ),
+                            ],
+                          );
+                        },
+                        separatorBuilder: (BuildContext context, int index) =>
+                            const Divider(),
                       ),
                     ),
-                    SizedBox.fromSize(
-                      size: const Size(AppConfig.SQUARE_BUTTON_SIZE,
-                          AppConfig.SQUARE_BUTTON_SIZE),
-                      child: ClipOval(
-                        child: Material(
-                          color: Colors.black38,
-                          child: InkWell(
-                            splashColor: Colors.grey,
-                            onTap: _onTapSignNew,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                const Icon(Icons.edit),
-                                Text('SIZE_SIGN_MAKE'.tr()),
-                              ],
-                            ),
+                  ),
+                  SizedBox.fromSize(
+                    size: const Size(AppConfig.SQUARE_BUTTON_SIZE,
+                        AppConfig.SQUARE_BUTTON_SIZE),
+                    child: ClipOval(
+                      child: Material(
+                        color: Colors.black38,
+                        child: InkWell(
+                          splashColor: Colors.grey,
+                          onTap: _onTapSignNew,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              const Icon(Icons.edit),
+                              Text('SIZE_SIGN_MAKE'.tr()),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: (hBarDetail - AppConfig.SQUARE_BUTTON_SIZE) / 2,
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(
+                    width: (hBarDetail - AppConfig.SQUARE_BUTTON_SIZE) / 2,
+                  ),
+                ],
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -296,9 +326,12 @@ class ParentBarState extends State<ParentBar> {
   /// 3. Sign 에서 선택 초기화 안함
 
   /// frame, size, sign 선택 + 세부 항목
+
+
+  // TODO : remove code and 미리 Provider 에 셋팅하는 것으로 변경
   void _loadPreferences(context) {
     dev.log('# ParentBar _loadPreferences START');
-
+/*
     SharedPreferences.getInstance().then((prefs) {
       //SharedPreferences prefs = SharedPreferences.getInstance();
       bool isChanged = false;
@@ -306,52 +339,52 @@ class ParentBarState extends State<ParentBar> {
       var retPrefs = prefs.getString('MakeParentEnum');
       if (retPrefs == null) {
         // 처음인 경우
-        _makeParentEnum = MakeParentEnum.FRAME;
+        makeProvider.parentBarEnum = ParentBarEnum.FRAME;
         prefs.setString(
             'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
       } else {
-        var retEnum = EnumToString.fromString(MakeParentEnum.values, retPrefs);
+        var retEnum = EnumToString.fromString(ParentBarEnum.values, retPrefs);
         if (retEnum == null) {
           // 에러 상황 (enum 에 없는 값이 저장된 경우)
-          _makeParentEnum = MakeParentEnum.FRAME;
+          makeProvider.parentBarEnum = ParentBarEnum.FRAME;
           prefs.setString(
               'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
         } else {
-          if (_makeParentEnum != retEnum) {
+          if (makeProvider.parentBarEnum != retEnum) {
             isChanged = true;
           }
-          _makeParentEnum = retEnum;
+          makeProvider.parentBarEnum = retEnum;
         }
       }
-      dev.log('_makeParentEnum: $_makeParentEnum');
+      dev.log('_makeParentEnum: ${}makeProvider.parentBarEnum}');
 
       toggleSelectList = [false, false, false];
       switch (_makeParentEnum) {
-        case MakeParentEnum.FRAME:
+        case ParentBarEnum.FRAME:
           dev.log('case MakeParentEnum.FRAME');
           toggleSelectList[0] = true;
 
           if (!mounted) return;
-          if (makeProvider.parentSize) {
-            makeProvider.setParentSize(false);
+          if (makeProvider.parentResize) {
+            makeProvider.setParentResize(false);
           }
           break;
-        case MakeParentEnum.SIZE:
+        case ParentBarEnum.RESIZE:
           dev.log('case MakeParentEnum.SIZE');
           toggleSelectList[1] = true;
 
           if (!mounted) return;
-          if (!makeProvider.parentSize) {
-            makeProvider.setParentSize(true);
+          if (!makeProvider.parentResize) {
+            makeProvider.setParentResize(true);
           }
           break;
-        case MakeParentEnum.SIGN:
+        case ParentBarEnum.SIGN:
           dev.log('case MakeParentEnum.SIGN');
           toggleSelectList[2] = true;
 
           if (!mounted) return;
-          if (makeProvider.parentSize) {
-            makeProvider.setParentSize(false);
+          if (makeProvider.parentResize) {
+            makeProvider.setParentResize(false);
           }
           break;
       }
@@ -359,79 +392,91 @@ class ParentBarState extends State<ParentBar> {
       if (isChanged) {
         setState(() {});
       }
-    });
 
+    });
+*/
     dev.log('# ParentBar _loadPreferences END');
     //ParentInfo.xyOffset = const Offset(0, 0);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  // fab close 처리
-  // 기존 이벤트는 그대로 처리
+  // MakePage 의 _onTapDownAll 에서 toggle 처리를 하므로, 아래 코드 사용하지 않음
   void _onTapDownAll(TapDownDetails tapDownDetails) async {
-    dev.log('_onTapDownAll');
+    dev.log('# ParentBar _onTapDownAll');
 
+    /*
     // fab close 처리 (provider 를 사용해서 닫기)
     if (makeProvider.fabOpen) {
       makeProvider.setFabOpen(false);
     }
+    */
   }
 
   void _toggleButtonsSelect(idx) {
     dev.log('# ParentBar _toggleButtonsSelect START');
+    dev.log('case idx: $idx');
 
     // for test
-    ParentInfo.printParent();
+    //ParentInfo.printParent();
 
     toggleSelectList = [false, false, false];
     switch (idx) {
       case 0:
         //if (makeParentEnum == MakeParentEnum.FRAME)  return;
-        _makeParentEnum = MakeParentEnum.FRAME;
+        //_makeParentEnum = ParentBarEnum.FRAME;
+        parentProvider.setParentBarEnum(ParentBarEnum.FRAME);
         toggleSelectList[0] = true;
         break;
       case 1:
         //if (makeParentEnum == MakeParentEnum.SIZE)  return;
-        _makeParentEnum = MakeParentEnum.SIZE;
+        //_makeParentEnum = ParentBarEnum.RESIZE;
+        parentProvider.setParentBarEnum(ParentBarEnum.RESIZE);
         toggleSelectList[1] = true;
+
+        InfoUtil.initParentInfoBracket();
         break;
       case 2:
         //if (makeParentEnum == MakeParentEnum.SIGN)  return;
-        _makeParentEnum = MakeParentEnum.SIGN;
+        //_makeParentEnum = ParentBarEnum.SIGN;
+        parentProvider.setParentBarEnum(ParentBarEnum.SIGN);
         toggleSelectList[2] = true;
         break;
     }
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setString(
-          'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
-    });
+    //SharedPreferences.getInstance().then((prefs) {
+    //  prefs.setString(
+    //      'MakeParentEnum', EnumToString.convertToString(_makeParentEnum));
+    //});
 
+    /*
     // TODO : impl
     switch (_makeParentEnum) {
-      case MakeParentEnum.FRAME:
-        if (makeProvider.parentSize) {
-          makeProvider.setParentSize(false);
+      case ParentBarEnum.FRAME:
+        if (makeProvider.parentResize) {
+          makeProvider.setParentResize(false);
         }
         //context.read<MakeProvider>().setParentSize(false);
         break;
-      case MakeParentEnum.SIZE:
-        dev.log('case MakeParentEnum.SIZE');
-        if (!makeProvider.parentSize) {
-          makeProvider.setParentSize(true);
+      case ParentBarEnum.RESIZE:
+        dev.log('case MakeParentEnum.RESIZE');
+        InfoUtil.initParentInfoBracket();
+
+        if (!makeProvider.parentResize) {
+          makeProvider.setParentResize(true);
         }
         //context.read<MakeProvider>().setParentSize(true);
         break;
-      case MakeParentEnum.SIGN:
-        if (makeProvider.parentSize) {
-          makeProvider.setParentSize(false);
+      case ParentBarEnum.SIGN:
+        if (makeProvider.parentResize) {
+          makeProvider.setParentResize(false);
         }
         //context.read<MakeProvider>().setParentSize(false);
         break;
     }
+     */
 
     //ParentInfo.xyOffset = const Offset(0, 0);
 
-    setState(() {});
+    //setState(() {});
   }
 
   void _onPressedSizeInit() {
@@ -445,7 +490,9 @@ class ParentBarState extends State<ParentBar> {
         ParentInfo.leftBottomOffset.dy - 10);
     ParentInfo.rightBottomOffset = Offset(ParentInfo.rightBottomOffset.dx - 10,
         ParentInfo.rightBottomOffset.dy - 10);
-    makeProvider.setParentSize(true);
+    //makeProvider.setParentResize(true);   <-- 잘못된 코드
+    parentProvider.setParentBarEnum(ParentBarEnum.RESIZE);    // for refresh
+    //setState(() {});
     //context.read<MakeProvider>().setParentSize(true);
 
     Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
@@ -453,7 +500,9 @@ class ParentBarState extends State<ParentBar> {
       InfoUtil.initParentInfoBracket();
 
       // 한번 더 refresh 해야 함
-      makeProvider.setParentSize(true);
+      //makeProvider.setParentResize(true);   <-- 잘못된 코드
+      parentProvider.setParentBarEnum(ParentBarEnum.RESIZE);    // for refresh
+      //setState(() {});
     });
   }
 
@@ -579,10 +628,10 @@ class ParentBarState extends State<ParentBar> {
         ////////////////////////////////////////////////////////////////////////////////
         // 화면 갱신
         await InfoUtil.setParentInfo(newImageFile.path);
-        ParentInfo.makeBringEnum = MakeBringEnum.RESIZE;
+        ParentInfo.makeBringEnum = MakePageBringEnum.RESIZE;
         ////////////////////////////////////////////////////////////////////////////////
 
-        makeProvider.setParentSize(true);
+        //makeProvider.setParentResize(true);   <-- 잘못된 코드
         dev.log('# ParentBar _onPressedSizeSave end');
         setState(() {});
       } else {
@@ -591,16 +640,28 @@ class ParentBarState extends State<ParentBar> {
     });
   }
 
-  void _onTapSignNew() {
+  void _onTapSignNew() async {
     dev.log('# ParentBar _onTabSignNew START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    signProvider.initLines();
-    signProvider.changeColorSize(Colors.blue, AppConfig.SIGN_WIDTH_DEFAULT);    // TODO : from prefs
+    parentProvider.initSignLines();
+    parentProvider.changeSignColorAndWidth(Colors.blue, AppConfig.SIGN_WIDTH_DEFAULT);    // TODO : from prefs
 
-    signProvider.initShapeBackground();
+    parentProvider.initShapeBackgroundUiImage();
     ////////////////////////////////////////////////////////////////////////////////
 
+/*
+    // tab_make 에서 미리 처리 (2023.05.19, KY.Jung)
+    ////////////////////////////////////////////////////////////////////////////////
+    // provider 데이터 넣기
+    dev.log('loadShapeInfoList ${DateTime.now()}');
+    List<ShapeInfo> shapeInfoList = await FileUtil.loadShapeInfoList();
+    dev.log('${DateTime.now()} getShapeInfoList: $shapeInfoList');
+    parentProvider.shapeInfoList = shapeInfoList;
+    ////////////////////////////////////////////////////////////////////////////////
+*/
+
+    /*
     showDialog(
         context: context,
         barrierDismissible: true, // 바깥 영역 터치시 창닫기
@@ -608,319 +669,19 @@ class ParentBarState extends State<ParentBar> {
           return const SignPopup();
         }
     );
-
-    /*
-    showDialog(
-        context: context,
-        barrierDismissible: true, // 바깥 영역 터치시 창닫기
-        //builder: (BuildContext context) => AlertDialog(
-        builder: (BuildContext context) {
-          return StatefulBuilder(builder: (context, setState) {
-            SignProvider sp = Provider.of<SignProvider>(context); // for rebuild
-            return AlertDialog(
-              title: Text('SIZE_SIGN_MAKE_TITLE'.tr()),
-              scrollable: true,
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onPanStart: (DragStartDetails d) {
-                      signProvider.drawStart(d.localPosition);
-                    },
-                    onPanUpdate: (DragUpdateDetails dragUpdateDetails) {
-                      //double? primaryDelta = dragUpdateDetails.primaryDelta;  // 항상 null
-                      Offset offset = dragUpdateDetails.delta;
-                      //dev.log('offset: $offset');
-                      double delta = math.sqrt(
-                          math.pow(offset.dx, 2) + math.pow(offset.dy, 2));
-                      //dev.log('delta: $delta');
-                      double newSize =
-                          signProvider.size - signProvider.size / 10 * delta;
-
-                      signProvider.drawing(
-                          dragUpdateDetails.localPosition, newSize);
-                      //dev.log('onPanUpdate: ${signProvider.lines}');
-                    },
-                    child: Container(
-                      decoration: AppColors.BOXDECO_YELLOW50,
-                      child: CustomPaint(
-                        size: Size(whSignBoard, whSignBoard),
-                        painter: MakeParentSignPainter(
-                            whSignBoard, whSignBoard, signProvider.lines),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    decoration: AppColors.BOXDECO_GREEN50,
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 1.0,
-                      height: hBarDetail,
-                      child: Row(
-                        children: <Widget>[
-                          InkWell(
-                            onTap: _onTapNone,
-                            child: Container(
-                              width: whPreSign,
-                              height: whPreSign,
-                              margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                              alignment: Alignment.center,
-                              color: Colors.black12,
-                              child: Text(
-                                'NONE'.tr(),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              color: Colors.yellow[50],
-                              margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
-                              child: ListView.separated(
-                                padding: const EdgeInsets.all(10),
-                                shrinkWrap: true,
-                                scrollDirection: Axis.horizontal,
-                                itemCount: preSignList.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return Row(
-                                    children: [
-                                      InkWell(
-                                        onTap: () => _onTapPreSign(index),
-                                        child: Container(
-                                          width: whPreSign,
-                                          height: whPreSign,
-                                          color:
-                                              Colors.amber[colorCodes[index]],
-                                          child: badges.Badge(
-                                            badgeContent: Text('${index + 1}'),
-                                            badgeStyle: badges.BadgeStyle(
-                                              badgeColor: AppColors.BLUE_LIGHT,
-                                            ),
-                                            child: Center(
-                                                child: Text(
-                                                    '${preSignList[index]}')),
-                                          ),
-                                        ),
-                                      ),
-                                      Container(
-                                        width: 20,
-                                      ),
-                                    ],
-                                  );
-                                },
-                                separatorBuilder:
-                                    (BuildContext context, int index) =>
-                                        const Divider(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-
-                  Container(
-                    decoration: AppColors.BOXDECO_GREEN50,
-                    width: MediaQuery.of(context).size.width * 1.0,
-                    height: hAppBar * 3,
-                    child: DefaultTabController(
-                      length: 3,
-                      child: Column(
-                        children: <Widget>[
-                          SizedBox(
-                            height: hAppBar * 0.5,
-                            child: TabBar(
-                              indicatorWeight: 3,
-                              labelColor: Colors.black,
-                              unselectedLabelColor: Colors.grey,
-                              labelStyle:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                              //unselectedLabelStyle: TextStyle(fontSize: 16),
-                              tabs: <Widget>[
-                                Tab(text: 'TEXT'.tr()),
-                                Tab(text: 'BACKGROUND'.tr()),
-                                Tab(text: 'SHAPE'.tr()),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: TabBarView(
-                              children: <Widget>[
-                                Container(
-                                  decoration: AppColors.BOXDECO_GREEN50,
-                                  child: Row(
-                                    children: <Widget>[
-                                      Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Container(
-                                            height: 8,
-                                          ),
-                                          Expanded(
-                                            child: Container(
-                                              alignment: Alignment.centerLeft,
-                                              padding: const EdgeInsets.all(10),
-                                              child: Text(
-                                                'COLOR'.tr(),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Container(
-                                              alignment: Alignment.centerLeft,
-                                              padding: const EdgeInsets.all(10),
-                                              child: Text(
-                                                'THICKNESS'.tr(),
-                                              ),
-                                            ),
-                                          ),
-                                          Container(
-                                            height: 8,
-                                          ),
-                                        ],
-                                      ),
-                                      Expanded(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: <Widget>[
-                                            Container(
-                                              height: 8,
-                                            ),
-                                            Expanded(
-                                              child: Container(
-                                                //color: Colors.yellow[50],
-                                                margin:
-                                                    const EdgeInsets.fromLTRB(
-                                                        0, 10, 10, 10),
-                                                child: ListView.separated(
-                                                  padding:
-                                                      const EdgeInsets.all(10),
-                                                  shrinkWrap: true,
-                                                  scrollDirection:
-                                                      Axis.horizontal,
-                                                  itemCount: preSignList.length,
-                                                  itemBuilder:
-                                                      (BuildContext context,
-                                                          int index) {
-                                                    return Row(
-                                                      children: [
-                                                        InkWell(
-                                                          onTap: () =>
-                                                              _onTapPreSign(
-                                                                  index),
-                                                          child: Container(
-                                                            width: whPreSign,
-                                                            height: whPreSign,
-                                                            color: Colors.amber[
-                                                                colorCodes[
-                                                                    index]],
-                                                            child: badges.Badge(
-                                                              badgeContent: Text(
-                                                                  '${index + 1}'),
-                                                              badgeStyle: badges
-                                                                  .BadgeStyle(
-                                                                badgeColor:
-                                                                    AppColors
-                                                                        .BLUE_LIGHT,
-                                                              ),
-                                                              child: Center(
-                                                                  child: Text(
-                                                                      '${preSignList[index]}')),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Container(
-                                                          width: 20,
-                                                        ),
-                                                      ],
-                                                    );
-                                                  },
-                                                  separatorBuilder:
-                                                      (BuildContext context,
-                                                              int index) =>
-                                                          const Divider(),
-                                                ),
-                                              ),
-                                            ),
-
-                                            Expanded(
-                                              child: Container(
-                                                alignment: Alignment.centerLeft,
-                                                padding:
-                                                    const EdgeInsets.all(10),
-                                                child: Slider(
-                                                  activeColor: Colors.white,
-                                                  inactiveColor: Colors.white,
-                                                  value: signProvider.size,
-                                                  onChanged: (size) {
-                                                    signProvider.changeSize(size);
-                                                  },
-                                                  min: 3,
-                                                  max: 30,
-                                                ),
-                                              ),
-                                            ),
-                                            Container(
-                                              height: 8,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  decoration: AppColors.BOXDECO_GREEN50,
-                                  child: Text(
-                                    'COLOR33'.tr(),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Container(
-                                  decoration: AppColors.BOXDECO_GREEN50,
-                                  child: SvgPicture.asset(
-                                    '${AppConstant.SHAPE_DIR}ic_baby_heart.svg',
-                                    width: 10,
-                                    height: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actionsAlignment: MainAxisAlignment.spaceEvenly,
-              actions: [
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(context, 'DELETE'),
-                    child: Text('DELETE'.tr())),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(context, 'CANCEL'),
-                    child: Text('CANCEL'.tr())),
-                ElevatedButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: Text('OK'.tr())),
-              ],
-            );
-          });
-        });
     */
+    if (!mounted) return;
+    showModalBottomSheet(
+        context: context,
+        // 없으면 overflowed 에러 발생
+        // A RenderFlex overflowed by 11 pixels on the bottom.
+        isScrollControlled: true,
+        enableDrag: false,    // sign 하기 위해 아래로 드래그할대 close 막기
+        //barrierDismissible: true, // 바깥 영역 터치시 창닫기
+        builder: (BuildContext context) {
+          return const SignMbs();
+        }
+    );
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -928,8 +689,8 @@ class ParentBarState extends State<ParentBar> {
   ////////////////////////////////////////////////////////////////////////////////
   void _onTapNone() {
     dev.log('# ParentBar _onTapNone START');
-    signProvider.initLines();
-    signProvider.initShapeBackground();
+    parentProvider.initSignLines();
+    parentProvider.initShapeBackgroundUiImage();
   }
 
   void _onTapPreSign(int index) {

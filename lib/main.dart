@@ -3,13 +3,14 @@ import 'dart:developer' as dev;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mc/provider/provider_make.dart';
-import 'package:mc/provider/provider_sign.dart';
-import 'package:mc/ui/screen_imageview.dart';
-import 'package:mc/ui/screen_index.dart';
-import 'package:mc/ui/screen_splash.dart';
+import 'package:mc/provider/provider_parent.dart';
+import 'package:mc/ui/page_imageview.dart';
+import 'package:mc/ui/page_index.dart';
+import 'package:mc/ui/page_splash.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized(); // for SharedPreferences
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -48,20 +49,20 @@ class MyApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
-        // MakeTap 에서 하면 이상하게 최상위로 올라가는 현상이 있어서 부득이 여기로 옴
+        // MakeTap 에서 pop 하면 최상위로 올라가는 현상이 있어서 부득이 여기로 옴
         ChangeNotifierProvider<MakeProvider>(
           create: (context) => MakeProvider(),
         ),
-        ChangeNotifierProvider<SignProvider>(
-          create: (context) => SignProvider(),
+        ChangeNotifierProvider<ParentProvider>(
+          create: (context) => ParentProvider(),
         ),
       ],
       child: MaterialApp(
         title: 'MC',
         routes: {
-          '/': (context) => const SplashScreen(),
-          '/index': (context) => const IndexScreen(),
-          '/imageview': (context) => const ImageViewScreen(),
+          '/': (context) => const SplashPage(),
+          '/index': (context) => const IndexPage(),
+          '/imageview': (context) => const ImageViewPage(),
         },
         initialRoute: '/',
         debugShowCheckedModeBanner: false,

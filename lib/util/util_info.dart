@@ -60,7 +60,10 @@ class InfoUtil {
     initParentInfoBracket();
   }
 
-  // bracket offset 초기화
+  /// bracket offset 초기화
+  /// 1. setParentInfo
+  /// 2. ParentBar 의 initState 에서 (다른 bar 로 갔다가 돌아온 경우 때문에)
+  /// 3. Size 버튼 누른 경우
   static void initParentInfoBracket() {
     // offset
     ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
