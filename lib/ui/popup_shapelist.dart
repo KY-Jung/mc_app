@@ -185,7 +185,7 @@ class ShapeListPopupState extends State<ShapeListPopup> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
 
-    // 같지 않으면 저장 + reordering
+    // 같지 않으면 prefs 저장 + reordering
     if (fileNameStr != prefsShapeInfoList) {
       // save prefs
       dev.log('save prefs');
@@ -194,7 +194,8 @@ class ShapeListPopupState extends State<ShapeListPopup> {
       // reordering
       dev.log('reordering');
       //dev.log('fileNameList: $fileNameList');
-      FileUtil.reorderingShapeInfoListWithFileNameList(parentProvider.shapeInfoList, fileNameList);
+      //FileUtil.reorderingShapeInfoListWithFileNameList(parentProvider.shapeInfoList, fileNameList);
+      parentProvider.reorderShapeInfoList(fileNameList);
     }
 
     if (!mounted) return;

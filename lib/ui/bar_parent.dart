@@ -644,10 +644,10 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar _onTabSignNew START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    parentProvider.initSignLines();
-    parentProvider.changeSignColorAndWidth(Colors.blue, AppConfig.SIGN_WIDTH_DEFAULT);    // TODO : from prefs
+    //parentProvider.initSignLines();
+    //parentProvider.changeSignColorAndWidth(Colors.blue, AppConfig.SIGN_WIDTH_DEFAULT);    // TODO : from prefs
 
-    parentProvider.initShapeBackgroundUiImage();
+    //parentProvider.initShapeBackgroundUiImage();
     ////////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -689,8 +689,8 @@ class ParentBarState extends State<ParentBar> {
   ////////////////////////////////////////////////////////////////////////////////
   void _onTapNone() {
     dev.log('# ParentBar _onTapNone START');
-    parentProvider.initSignLines();
-    parentProvider.initShapeBackgroundUiImage();
+    //parentProvider.initSignLines();
+    //parentProvider.initShapeBackgroundUiImage();
   }
 
   void _onTapPreSign(int index) {

@@ -81,6 +81,17 @@ class AppColors {
 
   ////////////////////////////////////////////////////////////////////////////////
   static List<Color> DEFAULT_COLOR_LIST = <Color>[
+    Colors.red,
+    Colors.orange,
+    Colors.yellow,
+    Colors.green,
+    Colors.blue,
+    Colors.purple,
+    Colors.black,
+    Colors.grey,
+    Colors.white
+  ];
+  static List<Color> DEFAULT_COLOR_LIST2 = <Color>[
     const Color(0xffff0000),
     const Color(0xffff8000),
     const Color(0xfffafc00),

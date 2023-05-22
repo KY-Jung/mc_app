@@ -19,18 +19,24 @@ import '../util/util_info.dart';
 class ParentProvider with ChangeNotifier {
 
   ////////////////////////////////////////////////////////////////////////////////
+  // Bar START
+  ////////////////////////////////////////////////////////////////////////////////
+  // RESIZE 화면인지 구분하는 용도
+  // (MakePage 에서 PARENT + RESIZE 상태인지 구분해서 처리하고 있음)
+
   // prefs 에 저장될 필요없음 (2023.05.18, KY.Jung)
-  var _parentBarEnum = ParentBarEnum.FRAME;
-  get parentBarEnum => _parentBarEnum;
+  ParentBarEnum parentBarEnum = ParentBarEnum.FRAME;
   void setParentBarEnum(var value) {
-    _parentBarEnum = value;
+    parentBarEnum = value;
     notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////
+  // Bar END
+  ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // for drawing
-
+  // drawing START
+  ////////////////////////////////////////////////////////////////////////////////
   List<List<DotInfo>> signLines = <List<DotInfo>>[];
   void drawSignLinesStart(Offset offset) {
     List<DotInfo> oneLine = <DotInfo>[];
@@ -46,30 +52,72 @@ class ParentProvider with ChangeNotifier {
     signLines.clear();
     if (notify)   notifyListeners();
   }
-
-  double _signWidth = 10;
-  double get signWidth => _signWidth;
-  void changeSignWidth(double size) {
-    _signWidth = size;
-    notifyListeners();
+  void undoSignLines({bool notify = true}) {
+    if (signLines.isNotEmpty) {
+      signLines.removeLast();
+      if (notify)   notifyListeners();
+    }
   }
+  ////////////////////////////////////////////////////////////////////////////////
+  // drawint END
+  ////////////////////////////////////////////////////////////////////////////////
 
-  Color _signColor = Colors.black;
-  Color get signColor => _signColor;
-  void changeSignColor(Color color) {
+  ////////////////////////////////////////////////////////////////////////////////
+  // sign width/color START
+  ////////////////////////////////////////////////////////////////////////////////
+  /*
+  Color? _signColor;
+  get signColor => _signColor;
+  void setSignColor(Color color) {
     _signColor = color;
     notifyListeners();
   }
-  void changeSignColorAndWidth(Color c, double s) {
-    _signColor = c;
-    _signWidth = s;
+  */
+  late Color signColor;
+  void setSignColor(Color color) {
+    signColor = color;
     notifyListeners();
   }
+  double signWidth = 10;
+  void setSignWidth(double size) {
+    signWidth = size;
+    notifyListeners();
+  }
+  void changeSignColorAndWidth(Color c, double s,{bool notify = true}) {
+    signColor = c;
+    signWidth = s;
+    if (notify)   notifyListeners();
+  }
+
+  Color? signBackgroundColor;
+  void setSignBackgroundColor(Color? color) {
+    signBackgroundColor = color;
+    notifyListeners();
+  }
+
+  Color? signShapeBorderColor;
+  void setSignShapeBorderColor(Color? color) {
+    signShapeBorderColor = color;
+    notifyListeners();
+  }
+  double signShapeBorderWidth = 10;
+  void setSignShapeBorderWidth(double size) {
+    signShapeBorderWidth = size;
+    notifyListeners();
+  }
+  void changeSignShapeBorderColorAndWidth(Color c, double s,{bool notify = true}) {
+    signShapeBorderColor = c;
+    signShapeBorderWidth = s;
+    if (notify)   notifyListeners();
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // sign width/color END
   ////////////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////////////
+  // background ui image START
   ////////////////////////////////////////////////////////////////////////////////
   // for shape
-
   ui.Image? shapeBackgroundUiImage;
   Future<void> loadShapeBackgroundUiImage(String path, double whSignBoard) async {
     dev.log('# ParentProvider loadShapeBackgroundUiImage START');
@@ -128,12 +176,71 @@ class ParentProvider with ChangeNotifier {
     shapeBackgroundUiImage = null;
     if (notify)   notifyListeners();
   }
+  ////////////////////////////////////////////////////////////////////////////////
+  // background ui image END
+  ////////////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////////////
+  // shapeinfo START
+  ////////////////////////////////////////////////////////////////////////////////
   List<ShapeInfo> shapeInfoList = [];
-  void initShapeInfoList() {
-    // 성능상의 이유로 실제 호출하지는 않음
-    shapeInfoList.clear();
+  void reorderShapeInfoList(List<String> fileNameList) {
+    FileUtil.reorderingShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
+    notifyListeners();
   }
+  ////////////////////////////////////////////////////////////////////////////////
+  // shapeinfo END
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // recent color START
+  ////////////////////////////////////////////////////////////////////////////////
+  List<Color> recentSignColorList = [];
+  void addRecentSignColor(Color color, int max, {bool notify = true}) {
+    recentSignColorList.insert(0, color);
+    for (int i = 1, j = recentSignColorList.length; i < j; i++) {
+      if (color.value == recentSignColorList[i].value) {
+        recentSignColorList.removeAt(i);
+        break;
+      }
+    }
+    if (recentSignColorList.length > max) {
+      recentSignColorList.removeLast();
+    }
+    if (notify)   notifyListeners();
+  }
+
+  List<Color> recentSignBackgroundColorList = [];
+  void addRecentSignBackgroundColor(Color color, int max, {bool notify = true}) {
+    recentSignBackgroundColorList.insert(0, color);
+    for (int i = 1, j = recentSignBackgroundColorList.length; i < j; i++) {
+      if (color.value == recentSignBackgroundColorList[i].value) {
+        recentSignBackgroundColorList.removeAt(i);
+        break;
+      }
+    }
+    if (recentSignBackgroundColorList.length > max) {
+      recentSignBackgroundColorList.removeLast();
+    }
+    if (notify)   notifyListeners();
+  }
+
+  List<Color> recentSignShapeBorderColorList = [];
+  void addRecentSignShapeBorderColor(Color color, int max, {bool notify = true}) {
+    recentSignShapeBorderColorList.insert(0, color);
+    for (int i = 1, j = recentSignShapeBorderColorList.length; i < j; i++) {
+      if (color.value == recentSignShapeBorderColorList[i].value) {
+        recentSignShapeBorderColorList.removeAt(i);
+        break;
+      }
+    }
+    if (recentSignShapeBorderColorList.length > max) {
+      recentSignShapeBorderColorList.removeLast();
+    }
+    if (notify)   notifyListeners();
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // recent color END
   ////////////////////////////////////////////////////////////////////////////////
 
 }

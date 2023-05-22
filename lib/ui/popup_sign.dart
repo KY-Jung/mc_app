@@ -367,7 +367,7 @@ class SignPopupState extends State<SignPopup> {
                                               inactiveColor: Colors.grey,
                                               value: parentProvider.signWidth,
                                               onChanged: (size) {
-                                                parentProvider.changeSignWidth(size);
+                                                parentProvider.setSignWidth(size);
                                                 dev.log('Slider size: $size');
                                               },
                                               min: 1,
@@ -654,7 +654,7 @@ class SignPopupState extends State<SignPopup> {
                                               inactiveColor: Colors.grey,
                                               value: parentProvider.signWidth,
                                             onChanged: (size) {
-                                              parentProvider.changeSignWidth(size);
+                                              parentProvider.setSignWidth(size);
                                               dev.log('Slider size: $size');
                                             },
                                             min: 1,

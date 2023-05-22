@@ -176,7 +176,7 @@ class ColorPickerPageState extends State<ColorPickerPage> {
   Future<bool> colorPickerDialog() async {
     return ColorPicker(
       // Use the dialogPickerColor as start color.
-      color: dialogPickerColor,
+      //color: dialogPickerColor,
       // Update the dialogPickerColor using the callback.
       onColorChanged: (Color color) => setState(() => dialogPickerColor = color),
       width: 40,
@@ -186,7 +186,7 @@ class ColorPickerPageState extends State<ColorPickerPage> {
       runSpacing: 5,
       wheelDiameter: 175,
       title: Text('COLOR_SELECT_TITLE'.tr()),
-      heading: Text(
+      heading: const Text(
         ' ',
         //style: Theme.of(context).textTheme.titleSmall,
       ),

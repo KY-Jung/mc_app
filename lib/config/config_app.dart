@@ -44,6 +44,9 @@ class AppConfig {
 
   // sign save max
   static const int SIGN_SAVE_MAX = 10;
+
+  // color save max
+  static const int SIGNCOLOR_SAVE_MAX = 6;
   ////////////////////////////////////////////////////////////////////////////////
 
 
