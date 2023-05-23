@@ -167,7 +167,8 @@ class FileUtil {
   }
   static ShapeInfo? findShapeInfoWithFileName(List<ShapeInfo> shapeInfoList, {String? fileName, Key? key}) {
     fileName ??= (key as ValueKey).value;
-    for (ShapeInfo shapeInfo in shapeInfoList) {
+    ShapeInfo shapeInfo;
+    for (shapeInfo in shapeInfoList) {
       if (shapeInfo.fileName == fileName) {
         return shapeInfo;
       }
@@ -218,6 +219,8 @@ class FileUtil {
         }
       }
     }
+    // fileNameList 에 없는 것 지우기
+    shapeInfoList.removeRange(fileNameList.length, shapeInfoList.length);
   }
 
   ////////////////////////////////////////////////////////////////////////////////

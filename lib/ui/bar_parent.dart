@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
-import 'package:mc/ui/popup_sign.dart';
 import 'package:mc/ui/page_make.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';

@@ -55,6 +55,20 @@ class AppColors {
     ],
     border: Border.all(color: Colors.grey),
   );
+  static BoxDecoration BOXDECO_YELLOW50_GREY6_BORDER = BoxDecoration(
+    color: Colors.yellow[50],
+    border: Border.all(
+      width: 6,
+      color: Colors.grey,
+    ),
+  );
+  static BoxDecoration BOXDECO_YELLOW50_BLACK2_BORDER = BoxDecoration(
+    color: Colors.yellow[50],
+    border: Border.all(
+      width: 2,
+      color: Colors.black,
+    ),
+  );
   static BoxDecoration BOXDECO_GREEN50_BORDER = BoxDecoration(
     color: Colors.green[50],
     boxShadow: [
@@ -76,6 +90,13 @@ class AppColors {
       ),
     ],
     border: Border.all(color: Colors.grey),
+  );
+  static BoxDecoration BOXDECO_GREEN100_GREY6_BORDER = BoxDecoration(
+    color: Colors.green[100],
+    border: Border.all(
+      width: 6,
+      color: Colors.grey,
+    ),
   );
   ////////////////////////////////////////////////////////////////////////////////
 

@@ -102,7 +102,7 @@ class MakeParentSignPainter extends CustomPainter {
       dotInfo0 = oneLine.elementAt(0);
       signPaint.color = dotInfo0.color!;
       size = dotInfo0.size;
-
+//dev.log('--size: $size');
       for (DotInfo dotInfo in oneLine) {
         if (rect.contains(dotInfo.offset)) {
           if (dotInfo.size.toInt() == size.toInt()) {
@@ -118,6 +118,7 @@ class MakeParentSignPainter extends CustomPainter {
             offsetList.clear();
             offsetList.add(dotInfo.offset);
             size = dotInfo.size;
+//dev.log('==size: $size');
           }
         } else {
           // 화면을 벗어난 경우
@@ -135,6 +136,7 @@ class MakeParentSignPainter extends CustomPainter {
       path = Path();
       path.addPolygon(offsetList, false);
       signPaint.strokeWidth = size;
+//dev.log('~~~size: $size');
       canvas.drawPath(path, signPaint);
 
       offsetList.clear();

@@ -52,6 +52,8 @@ class SignMbsState extends State<SignMbs> {
   late double whPreSign;
   late double hAppBar;
 
+  /// shapelist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
+  final ScrollController _preShapeController = ScrollController();
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +61,12 @@ class SignMbsState extends State<SignMbs> {
   void initState() {
     dev.log('# SignMbs initState START');
     super.initState();
+
+    ////////////////////////////////////////////////////////////////////////////////
+    /// build 이후 실행
+    /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
+    WidgetsBinding.instance.addPostFrameCallback((_) => _afterBuild(context));
+    ////////////////////////////////////////////////////////////////////////////////
 
     dev.log('# SignMbs initState END');
   }
@@ -115,6 +123,7 @@ class SignMbsState extends State<SignMbs> {
           // 맨 위 확인 버튼
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            ElevatedButton(onPressed: _onPressedOk, child: Text('CLEAR'.tr())),
             ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
             ElevatedButton(onPressed: _onPressedOk, child: Text('OK'.tr())),
           ],
@@ -133,9 +142,15 @@ class SignMbsState extends State<SignMbs> {
           // sign board
           behavior: HitTestBehavior.translucent,
           onPanStart: (DragStartDetails d) {
+            if (parentProvider.signWidth == 0) {
+              return;
+            }
             parentProvider.drawSignLinesStart(d.localPosition);
           },
           onPanUpdate: (DragUpdateDetails dragUpdateDetails) {
+            if (parentProvider.signWidth == 0) {
+              return;
+            }
             //double? primaryDelta = dragUpdateDetails.primaryDelta;  // 항상 null
             Offset offset = dragUpdateDetails.delta;
             //dev.log('offset: $offset');
@@ -271,6 +286,10 @@ class SignMbsState extends State<SignMbs> {
                 SizedBox(
                   height: hAppBar * 0.8,
                   child: TabBar(
+                    onTap: (idx) {
+                      dev.log('TabBar onTap: $idx');
+                      //_afterBuild(context);
+                    },
                     indicatorWeight: 3,
                     labelColor: Colors.black,
                     unselectedLabelColor: Colors.grey,
@@ -750,17 +769,17 @@ class SignMbsState extends State<SignMbs> {
                               child: Row(
                                 children: <Widget>[
                                   InkWell(
-                                    onTap: _onTapNone,
+                                    onTap: () {
+                                      parentProvider.setSelectedShapeInfoIdx(-1);
+                                    },
                                     child: Container(
                                       width: whPreSign,
                                       height: whPreSign,
                                       margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                       alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey),
-                                        //color: Colors.grey,
-                                        //border: Border.all(color: Colors.black),
-                                      ),
+                                      decoration: (parentProvider.selectedShapeInfoIdx == -1)
+                                          ? BoxDecoration(color: Colors.grey, border: Border.all(color: Colors.black))
+                                          : BoxDecoration(border: Border.all(color: Colors.grey)),
                                       child: Text('NONE'.tr()),
                                     ),
                                   ),
@@ -769,6 +788,7 @@ class SignMbsState extends State<SignMbs> {
                                       color: Colors.yellow[50],
                                       margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
                                       child: ListView.separated(
+                                        controller: _preShapeController,
                                         padding: const EdgeInsets.all(10),
                                         shrinkWrap: true,
                                         scrollDirection: Axis.horizontal,
@@ -777,14 +797,15 @@ class SignMbsState extends State<SignMbs> {
                                           return Row(
                                             children: [
                                               InkWell(
-                                                onTap: () => _onTapPreSign(index),
+                                                onTap: () => _onTapPreShape(index),
                                                 child: Container(
                                                   width: whPreSign,
                                                   height: whPreSign,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey[200],
-                                                    border: Border.all(color: Colors.black),
-                                                  ),
+                                                  decoration: (parentProvider.selectedShapeInfoIdx == index)
+                                                      ? BoxDecoration(
+                                                          color: Colors.grey[200],
+                                                          border: Border.all(color: Colors.black))
+                                                      : const BoxDecoration(),
                                                   child: parentProvider.shapeInfoList[index].svgPicture,
                                                 ),
                                               ),
@@ -884,36 +905,6 @@ class SignMbsState extends State<SignMbs> {
                                           : const Text(''),
                                     ),
                                   ),
-                                  /*
-                                  Expanded(
-                                    child: Container(
-                                      alignment: Alignment.center,
-                                      child: ListView.separated(
-                                        padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                                        shrinkWrap: true,
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: 8,
-                                        itemBuilder: (BuildContext context, int index) {
-                                          return Row(
-                                            children: [
-                                              InkWell(
-                                                onTap: () => _onTapPreSign(index),
-                                                child: Container(
-                                                  width: whPreSign,
-                                                  height: whPreSign,
-                                                  color: AppColors.DEFAULT_COLOR_LIST[index],
-                                                  alignment: Alignment.center,
-                                                  child: const Text('✔', style: TextStyle(color: Colors.white)),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                        separatorBuilder: (BuildContext context, int index) => const Divider(),
-                                      ),
-                                    ),
-                                  ),
-                                  */
                                   Expanded(
                                     child: Container(
                                       alignment: Alignment.center,
@@ -938,15 +929,15 @@ class SignMbsState extends State<SignMbs> {
                                                   color: AppColors.DEFAULT_COLOR_LIST[index],
                                                   alignment: Alignment.center,
                                                   child: (AppColors.DEFAULT_COLOR_LIST[index].value ==
-                                                      parentProvider.signShapeBorderColor?.value)
+                                                          parentProvider.signShapeBorderColor?.value)
                                                       ? Text(
-                                                    '✔',
-                                                    style: TextStyle(
-                                                        color: (AppColors.DEFAULT_COLOR_LIST[index].value ==
-                                                            Colors.black.value)
-                                                            ? Colors.white
-                                                            : Colors.black),
-                                                  )
+                                                          '✔',
+                                                          style: TextStyle(
+                                                              color: (AppColors.DEFAULT_COLOR_LIST[index].value ==
+                                                                      Colors.black.value)
+                                                                  ? Colors.white
+                                                                  : Colors.black),
+                                                        )
                                                       : const Text(''),
                                                 ),
                                               ),
@@ -972,8 +963,10 @@ class SignMbsState extends State<SignMbs> {
                                     child: InkWell(
                                       //onTap: _onTapColorPicker,
                                       onTap: () {
-                                        _onTapColorPicker(parentProvider.signShapeBorderColor,
-                                            parentProvider.recentSignShapeBorderColorList, _callbackSignShapeBorderColor);
+                                        _onTapColorPicker(
+                                            parentProvider.signShapeBorderColor,
+                                            parentProvider.recentSignShapeBorderColorList,
+                                            _callbackSignShapeBorderColor);
                                       },
                                       child: GridView.builder(
                                         itemCount: AppColors.DEFAULT_COLOR_LIST.length, //item 개수
@@ -1031,14 +1024,17 @@ class SignMbsState extends State<SignMbs> {
                                         showValueIndicator: ShowValueIndicator.always,
                                       ),
                                       child: Slider(
-                                        value: parentProvider.signShapeBorderWidth,
+                                        value: (parentProvider.signShapeBorderColor == null)
+                                            ? 0
+                                            : parentProvider.signShapeBorderWidth,
                                         min: 0,
                                         max: AppConfig.SIGN_WIDTH_MAX,
                                         divisions: AppConfig.SIGN_WIDTH_MAX.toInt() - 1,
                                         label:
                                             '${parentProvider.signShapeBorderWidth.toInt()} / ${AppConfig.SIGN_WIDTH_MAX.toInt()}',
                                         onChangeStart: (newValue) {
-                                          dev.log('- Slider ParentProvider.size: ${parentProvider.signShapeBorderWidth}');
+                                          dev.log(
+                                              '- Slider ParentProvider.size: ${parentProvider.signShapeBorderWidth}');
                                         },
                                         onChanged: (newValue) {
                                           parentProvider.setSignShapeBorderWidth(newValue);
@@ -1105,6 +1101,14 @@ class SignMbsState extends State<SignMbs> {
     );
   }
 
+  /// build 이후에 실행
+  void _afterBuild(context) {
+    dev.log('# SignMbs _afterBuild START');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -1115,11 +1119,15 @@ class SignMbsState extends State<SignMbs> {
     dev.log('----------');
     dev.log('parentProvider.recentSignColorList: ${parentProvider.recentSignColorList}');
     dev.log('parentProvider.signColor: ${parentProvider.signColor}');
+    dev.log('parentProvider.signWidth: ${parentProvider.signWidth}');
     dev.log('parentProvider.recentSignBackgroundColorList: ${parentProvider.recentSignBackgroundColorList}');
     dev.log('parentProvider.signBackgroundColor: ${parentProvider.signBackgroundColor}');
     dev.log('parentProvider.recentSignShapeBorderColorList: ${parentProvider.recentSignShapeBorderColorList}');
     dev.log('parentProvider.signShapeBorderColor: ${parentProvider.signShapeBorderColor}');
     dev.log('----------');
+    dev.log('parentProvider.signLines: ${parentProvider.signLines}');
+    dev.log('parentProvider.selectedShapeInfoIdx: ${parentProvider.selectedShapeInfoIdx}');
+    dev.log('whPreSign: $whPreSign');
   }
 
   void _onTapColorPicker(Color? color, List<Color> colorList, var callback) async {
@@ -1127,7 +1135,7 @@ class SignMbsState extends State<SignMbs> {
 
     // color picker 에서 초기 color 는 null 일 수 없음
     color ??= Colors.blue;
-    
+
     //List<Color> listColor = List.from(parentProvider.recentSignColorList);
     //ColorUtil.insertAndSet(listColor, parentProvider.signColor, AppConfig.SIGNCOLOR_SAVE_MAX);
     final Color colorBeforeDialog = color;
@@ -1146,6 +1154,7 @@ class SignMbsState extends State<SignMbs> {
       callback(null, recent: true);
     }
   }
+
   void _callbackSignColor(Color? color, {bool recent = false}) {
     color ??= parentProvider.signColor;
     if (recent) {
@@ -1153,6 +1162,7 @@ class SignMbsState extends State<SignMbs> {
     }
     parentProvider.setSignColor(color);
   }
+
   void _callbackSignBackgroundColor(Color? color, {bool recent = false}) {
     color ??= parentProvider.signBackgroundColor;
     if (recent && color != null) {
@@ -1160,6 +1170,7 @@ class SignMbsState extends State<SignMbs> {
     }
     parentProvider.setSignBackgroundColor(color);
   }
+
   void _callbackSignShapeBorderColor(Color? color, {bool recent = false}) {
     color ??= parentProvider.signShapeBorderColor;
     if (recent && color != null) {
@@ -1168,19 +1179,43 @@ class SignMbsState extends State<SignMbs> {
     parentProvider.setSignShapeBorderColor(color);
   }
 
-  void _onTapPreSign(int index) {
-    dev.log('# SignMbs _onTapPreSign START index: $index');
+  void _onTapPreSign(int idx) {
+    dev.log('# SignMbs _onTapPreSign START idx: $idx');
+  }
+
+  void _onTapPreShape(int idx) {
+    dev.log('# SignMbs _onTapPreShape START idx: $idx');
+    parentProvider.setSelectedShapeInfoIdx(idx);
   }
 
   void _onTapShapeList() {
     dev.log('# SignMbs _onTapShapeList START');
 
+    /*
     showDialog(
         context: context,
         barrierDismissible: true, // 바깥 영역 터치시 창닫기
         builder: (BuildContext context) {
           return const ShapeListPopup();
         });
+     */
+    showDialog(
+        context: context,
+        barrierDismissible: true, // 바깥 영역 터치시 창닫기
+        builder: (BuildContext context) {
+          return const ShapeListPopup();
+        }).then((ret) {
+      dev.log('_onTapShapeList ret: $ret');
+      if (ret == 'OK') {
+        dev.log('_onTapShapeList OK');
+
+        _preShapeController.animateTo(
+          parentProvider.selectedShapeInfoIdx * (whPreSign + 10),
+          duration: const Duration(milliseconds: 20),
+          curve: Curves.fastOutSlowIn,
+        );
+      }
+    });
   }
 
   void _bringSignPressed(MakePageBringEnum type, double whSignBoard) async {

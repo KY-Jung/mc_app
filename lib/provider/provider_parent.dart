@@ -188,6 +188,11 @@ class ParentProvider with ChangeNotifier {
     FileUtil.reorderingShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
     notifyListeners();
   }
+  int selectedShapeInfoIdx = -1;
+  void setSelectedShapeInfoIdx(int idx) {
+    selectedShapeInfoIdx = idx;
+    notifyListeners();
+  }
   ////////////////////////////////////////////////////////////////////////////////
   // shapeinfo END
   ////////////////////////////////////////////////////////////////////////////////
