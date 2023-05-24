@@ -51,9 +51,11 @@ class SignMbsState extends State<SignMbs> {
   late double hBarDetail;
   late double whPreSign;
   late double hAppBar;
+  late double wScreen;
 
   /// shapelist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
   final ScrollController _preShapeController = ScrollController();
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +105,8 @@ class SignMbsState extends State<SignMbs> {
     whPreSign = hBarDetail - 20 * 2;
 
     hAppBar = AppBar().preferredSize.height;
+
+    wScreen = MediaQuery.of(context).size.width;
 
     dev.log('whSignBoard: ${whSignBoard}, hBarDetail: ${hBarDetail}, whPreSign: ${whPreSign}, hAppBar: ${hAppBar}');
     ////////////////////////////////////////////////////////////////////////////////
@@ -1209,11 +1213,17 @@ class SignMbsState extends State<SignMbs> {
       if (ret == 'OK') {
         dev.log('_onTapShapeList OK');
 
-        _preShapeController.animateTo(
-          parentProvider.selectedShapeInfoIdx * (whPreSign + 10),
-          duration: const Duration(milliseconds: 20),
-          curve: Curves.fastOutSlowIn,
-        );
+        if (parentProvider.selectedShapeInfoIdx != -1) {
+          double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
+          double cntPreSign = listWidth / (whPreSign + 10);
+          dev.log('cntPreSign: $cntPreSign');
+
+          _preShapeController.animateTo(
+            parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.fastOutSlowIn,
+          );
+        }
       }
     });
   }
