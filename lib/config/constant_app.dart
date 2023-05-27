@@ -24,11 +24,17 @@ class AppConstant {
 
   ////////////////////////////////////////////////////////////////////////////////
   // prefs
-  static const String PREFS_SHAPEINFOLIST = 'PREFS_SHAPEINFOLIST';
-  static const String PREFS_RECENTSIGNCOLOR = 'PREFS_RECENTSIGNCOLOR';
-  static const String PREFS_RECENTSIGNBACKGROUNDCOLOR = 'PREFS_RECENTSIGNBACKGROUNDCOLOR';
-  static const String PREFS_RECENTSHAPEBORDERCOLOR = 'PREFS_RECENTSHAPEBORDERCOLOR';
   static const String PREFS_DELIM = ',';
+
+  static const String PREFS_RECENTSIGNCOLOR = 'PREFS_RECENTSIGNCOLOR';
+  static const String PREFS_SIGNWIDTH = 'PREFS_SIGNWIDTH';
+
+  static const String PREFS_RECENTSIGNBACKGROUNDCOLOR = 'PREFS_RECENTSIGNBACKGROUNDCOLOR';
+
+  static const String PREFS_SHAPEINFOLIST = 'PREFS_SHAPEINFOLIST';
+  static const String PREFS_RECENTSHAPEBORDERCOLOR = 'PREFS_RECENTSHAPEBORDERCOLOR';
+  static const String PREFS_SHAPEBORDERWIDTH = 'PREFS_SHAPEBORDERWIDTH';
+
   ////////////////////////////////////////////////////////////////////////////////
 
 }

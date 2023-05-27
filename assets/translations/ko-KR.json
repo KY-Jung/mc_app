@@ -52,6 +52,8 @@
   "LONGCLICK_FOR_REORDERING": "* 순서를 바꾸려면 길게 꾹 눌러서 이동하십시요.",
   "SING_UNDO": "그리기 취소",
   "SIGN_CLEAR": "지우기",
+  "SIGN_INIT_ALL": "사인 초기화",
+
 
 
   "IMAGE_VIEW": "이미지 보기",

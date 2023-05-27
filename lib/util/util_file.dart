@@ -10,6 +10,7 @@ import 'package:image/image.dart' as IMG;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
+import 'package:path_drawing/path_drawing.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:svg_path_parser/svg_path_parser.dart';
 import 'package:xml/xml.dart';
@@ -96,54 +97,101 @@ class FileUtil {
 
     List<String> svgList = manifestMap.keys
         .where((String key) => key.contains('svg/'))
-        .where((String key) => key.contains('/ic_baby_'))
+        //.where((String key) => key.contains('/ic_baby_'))
         .where((String key) => key.contains('.svg'))
-        .where((String key) => !key.contains('_all'))
+        //.where((String key) => !key.contains('_all'))
         .toList();
     //print('svg list: $svgList');
 
     return svgList;
   }
-  //static Future<List<ShapeInfo>> getShapInfoList(List<String> assetList) async {
+  /*
   static Future<List<ShapeInfo>> loadShapeInfoList() async {
     // 약 1초 소요
     List<String> assetList = await readShapeFileList();
 
     List<ShapeInfo> shapeInfoList = [];
-
+    int cnt = 0;
     for (String file in assetList) {
-      ShapeInfo shapeInfo = ShapeInfo();
-      shapeInfo.fileName = file;
-      shapeInfo.svgPicture = SvgPicture.asset(file);
-      //SvgPicture svgPicture = SvgPicture.asset(file);
-      //shapeInfo.widget = SvgPicture.asset(file, width: 240, height: 240);
+      try {
+        ShapeInfo shapeInfo = ShapeInfo();
+        shapeInfo.fileName = file;
+        shapeInfo.svgPicture = SvgPicture.asset(file);
+        //dev.log('fileName: $file');
 
-      //dev.log('fileName: $file');
-
-      String xmlString = await rootBundle.loadString(file);
-      //print('xmlString: ${xmlString}');
-      //print('--------------');
-      XmlDocument xmlDocument = XmlDocument.parse(xmlString);
-      Iterable<XmlElement> xmlElementIterable = xmlDocument.findAllElements('path');
-      List<XmlElement> xmlElementist = xmlElementIterable.toList();
-      //print('xmlElementist: $xmlElementist');
-      for (XmlElement xmlElement in xmlElementist) {
-
-        String? strFill = xmlElement.getAttribute('fill');
-        if (strFill == null) {
-          Path path = parseSvgPath(xmlElement.getAttribute('d')!);
-          shapeInfo.path = path;
-          //print('strFill11: ${xmlElement.getAttribute('d')}');
-        } else {
-          //print('strFill22: null');
+        String xmlString = await rootBundle.loadString(file);
+        //print('xmlString: ${xmlString}');
+        //print('--------------');
+        XmlDocument xmlDocument = XmlDocument.parse(xmlString);
+        Iterable<XmlElement> xmlElementIterable = xmlDocument.findAllElements('path');
+        List<XmlElement> xmlElementist = xmlElementIterable.toList();
+        //print('xmlElementist: $xmlElementist');
+        for (XmlElement xmlElement in xmlElementist) {
+          String? strFill = xmlElement.getAttribute('fill');
+          if (strFill == null) {
+            Path path = parseSvgPath(xmlElement.getAttribute('d')!);
+            shapeInfo.path = path;
+            //print('strFill11: ${xmlElement.getAttribute('d')}');
+          } else {
+            //print('strFill22: null');
+          }
+          //print('strFill: ${strFill}');
+          //print('============= : ${pathElement.toString()}');
         }
-        //print('strFill: ${strFill}');
-        //print('============= : ${pathElement.toString()}');
-      }
 
-      //print('${pathElement?.value}');
-      //print('###########');
-      shapeInfoList.add(shapeInfo);
+        //print('${pathElement?.value}');
+        //print('###########');
+        shapeInfoList.add(shapeInfo);
+      } catch (e) {
+        dev.log('loadShapeInfoList exception $cnt [$file]: $e');
+      }
+      cnt++;
+    }
+
+    return shapeInfoList;
+  }
+  */
+  static Future<List<ShapeInfo>> loadShapeInfoList() async {
+    // 약 1초 소요
+    List<String> assetList = await readShapeFileList();
+
+    List<ShapeInfo> shapeInfoList = [];
+    int cnt = 0;
+    for (String file in assetList) {
+      try {
+        ShapeInfo shapeInfo = ShapeInfo();
+        shapeInfo.fileName = file;
+        shapeInfo.svgPicture = SvgPicture.asset(file);
+        //dev.log('fileName: $file');
+
+        String xmlString = await rootBundle.loadString(file);
+        //print('xmlString: ${xmlString}');
+        //print('--------------');
+        XmlDocument xmlDocument = XmlDocument.parse(xmlString);
+        Iterable<XmlElement> xmlElementIterable = xmlDocument.findAllElements('path');
+        List<XmlElement> xmlElementist = xmlElementIterable.toList();
+        //print('xmlElementist: $xmlElementist');
+        for (XmlElement xmlElement in xmlElementist) {
+          String? strFill = xmlElement.getAttribute('fill');
+          if (strFill == null) {
+            //Path path = parseSvgPath(xmlElement.getAttribute('d')!);
+            Path path = parseSvgPathData(xmlElement.getAttribute('d')!);
+            shapeInfo.path = path;
+            //print('strFill11: ${xmlElement.getAttribute('d')}');
+          } else {
+            //print('strFill22: null');
+          }
+          //print('strFill: ${strFill}');
+          //print('============= : ${pathElement.toString()}');
+        }
+
+        //print('${pathElement?.value}');
+        //print('###########');
+        shapeInfoList.add(shapeInfo);
+      } catch (e) {
+        dev.log('loadShapeInfoList exception $cnt [$file]: $e');
+      }
+      cnt++;
     }
 
     return shapeInfoList;
@@ -201,13 +249,13 @@ class FileUtil {
     }
   }
   */
+  // shapeInfoList 의 순서를 조정
+  /*
   static void reorderingShapeInfoListWithFileNameList(List<ShapeInfo> shapeInfoList, List<String> fileNameList) {
     //dev.log('shapeInfoList: ${shapeInfoList.length}, fileNameList: ${fileNameList.length}');
-    //for (String fileName in fileNameList) {
     for (int fileIdx = 0, j = fileNameList.length; fileIdx < j; fileIdx++) {
       for (int infoIdx = fileIdx, m = shapeInfoList.length; infoIdx < m; infoIdx++) {
-      //for (int i = listIdx, j = shapeInfoList.length; i < j; i++) {
-        //for (ShapeInfo shapeInfo in shapeInfoList) {
+
         ShapeInfo shapeInfo = shapeInfoList[infoIdx];
         if (shapeInfo.fileName == fileNameList[fileIdx]) {
           if (fileIdx == infoIdx) {
@@ -222,7 +270,23 @@ class FileUtil {
     // fileNameList 에 없는 것 지우기
     shapeInfoList.removeRange(fileNameList.length, shapeInfoList.length);
   }
+  */
+  static void reorderShapeInfoListWithFileNameList(List<ShapeInfo> shapeInfoList, List<String> fileNameList) {
+    //dev.log('shapeInfoList: ${shapeInfoList.length}, fileNameList: ${fileNameList.length}');
+    int newIdx = 0;
+    for (int fileIdx = 0, j = fileNameList.length; fileIdx < j; fileIdx++) {
+      for (int infoIdx = newIdx, m = shapeInfoList.length; infoIdx < m; infoIdx++) {
 
+        ShapeInfo shapeInfo = shapeInfoList[infoIdx];
+        if (shapeInfo.fileName == fileNameList[fileIdx]) {
+          ShapeInfo findShapeInfo = shapeInfoList.removeAt(infoIdx);
+          shapeInfoList.insert(newIdx, findShapeInfo);
+          newIdx++;
+          break;
+        }
+      }
+    }
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
 }

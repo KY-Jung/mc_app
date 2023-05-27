@@ -26,8 +26,6 @@ class MakeTab extends StatefulWidget {
 }
 
 class MakeTabState extends State<MakeTab> {
-  // initState 에서 build 후에 임시로 이동하기 위해 사용
-  //final MakeScreen _makeScreen = const MakeScreen();
 
   ////////////////////////////////////////////////////////////////////////////////
   late MakeProvider makeProvider;
@@ -45,7 +43,7 @@ class MakeTabState extends State<MakeTab> {
     // TODO : 임시 사용, 초기 화면 지정
     WidgetsBinding.instance.addPostFrameCallback((_) => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => _makeScreen),
+          MaterialPageRoute(builder: (context) => const MakeScreen()),
         ));
     // ######################################################################## //
     */
@@ -129,47 +127,10 @@ class MakeTabState extends State<MakeTab> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     ////////////////////////////////////////////////////////////////////////////////
-    // shape
-    dev.log('shapeInfoList START');
-    if (parentProvider.shapeInfoList.isNotEmpty) {
-      // 이미 초기화되어 있으므로, 있는 것 사용
-      dev.log('이미 초기화되어 있으므로, 있는 것 사용');
-    } else {
-      // load
-      dev.log('SVG 로딩 START: ${DateTime.now()}');
-      List<ShapeInfo> shapeInfoList = await FileUtil.loadShapeInfoList();
-      dev.log('SVG 로딩 END: ${DateTime.now()}');
-      parentProvider.shapeInfoList = shapeInfoList;
-
-      // prefs 읽기
-      String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
-      if (prefsShapeInfoList == null || prefsShapeInfoList.isEmpty) {
-        // 최초인 경우
-        dev.log('shapeInfoList 최초인 경우');
-
-        // save prefs
-        List<String> fileNameList = FileUtil.extractFileNameFromShapeInfoList(shapeInfoList);
-        String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
-        //dev.log('fileNameStr: $fileNameStr');
-        await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
-      } else {
-        dev.log('prefsShapeInfoList parsing');
-
-        // 파싱하여 사용
-        List<String> fileNameList = prefsShapeInfoList!.split(AppConstant.PREFS_DELIM);
-        dev.log('split fileNameList: $fileNameList');
-
-        // reordering
-        FileUtil.reorderingShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
-      }
-    }
-    parentProvider.selectedShapeInfoIdx = -1;
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
     // line - color
-    dev.log('recentSignColorList START');
     String? prefsRecentSignColor = prefs.getString(AppConstant.PREFS_RECENTSIGNCOLOR);
+
+    // recent color list
     if (prefsRecentSignColor == null || prefsRecentSignColor.isEmpty) {
     } else {
       List<Color> recentSignColorList = [];
@@ -180,18 +141,28 @@ class MakeTabState extends State<MakeTab> {
       }
       parentProvider.recentSignColorList = recentSignColorList;
     }
-    // 초기값 지정
+    dev.log('initMakePage recentSignColorList: ${parentProvider.recentSignColorList}');
+
+    // sign color
     if (parentProvider.recentSignColorList.isEmpty) {
       parentProvider.signColor = Colors.blue;
     } else {
       parentProvider.signColor = parentProvider.recentSignColorList.elementAt(0);
     }
-    parentProvider.signWidth = 10;
+    dev.log('initMakePage signColor: ${parentProvider.signColor}');
+
+    // sign width
+    double? prefsSignWidth = prefs.getDouble(AppConstant.PREFS_SIGNWIDTH);
+    if (prefsSignWidth == null) {
+      parentProvider.signWidth = 10;
+    } else {
+      parentProvider.signWidth = prefsSignWidth;
+    }
+    dev.log('initMakePage signWidth: ${parentProvider.signWidth}');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // background - color
-    dev.log('recentSignBackgroundColorList START');
     String? prefsSignBackgroundColor = prefs.getString(AppConstant.PREFS_RECENTSIGNBACKGROUNDCOLOR);
     if (prefsSignBackgroundColor == null || prefsSignBackgroundColor.isEmpty) {
     } else {
@@ -203,13 +174,65 @@ class MakeTabState extends State<MakeTab> {
       }
       parentProvider.recentSignBackgroundColorList = recentSignBackgroundColorList;
     }
-    // 초기값 지정 안함
-    //if (parentProvider.recentSignBackgroundColorList.isEmpty)   parentProvider.signColor = Colors.yellow[50];
+    dev.log('initMakePage recentSignBackgroundColorList: ${parentProvider.recentSignBackgroundColorList}');
+    parentProvider.signBackgroundColor = null;
+    dev.log('initMakePage signBackgroundColor: ${parentProvider.signBackgroundColor}');
+    parentProvider.shapeBackgroundUiImage = null;
+    dev.log('initMakePage shapeBackgroundUiImage: ${parentProvider.shapeBackgroundUiImage}');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
+    // shape
+    if (parentProvider.shapeInfoList.isNotEmpty) {
+      // 이미 초기화되어 있으므로, 있는 것 사용
+      dev.log('이미 shapeInfoList 초기화되어 있으므로, 재사용');
+    } else {
+      // load
+      dev.log('SVG 로딩 START: ${DateTime.now()}');
+      List<ShapeInfo> shapeInfoList = await FileUtil.loadShapeInfoList();
+      dev.log('SVG 로딩 END: ${DateTime.now()}');
+      parentProvider.shapeInfoList = shapeInfoList;
+
+      // prefs 읽기
+      String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
+      if (prefsShapeInfoList == null || prefsShapeInfoList.isEmpty) {
+        // 최초인 경우 prefs 에 목록 저장
+        dev.log('shapeInfoList 최초인 경우 prefs 에 목록 저장');
+
+        // save prefs
+        List<String> fileNameList = FileUtil.extractFileNameFromShapeInfoList(shapeInfoList);
+        String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+        await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
+      } else {
+        dev.log('prefsShapeInfoList parsing');
+
+        // 목록이 재배포되었다면 다시 저장
+        List<String> fileNameList = FileUtil.extractFileNameFromShapeInfoList(shapeInfoList);
+        String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+
+        if (prefsShapeInfoList != fileNameStr) {
+          dev.log('!!! load 파일 목록과 prefs 목록이 다르므로 순서 조정');
+          // 파싱하여 사용
+          fileNameList = prefsShapeInfoList!.split(AppConstant.PREFS_DELIM);
+          dev.log('split fileNameList: $fileNameList');
+
+          // reordering
+          FileUtil.reorderShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
+
+          // 다시 저장
+          fileNameList = FileUtil.extractFileNameFromShapeInfoList(shapeInfoList);
+          fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+          await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
+        } else {
+          dev.log('load 파일 목록과 prefs 목록 동일');
+        }
+      }
+    }
+
+    // selected idx
+    parentProvider.selectedShapeInfoIdx = -1;
+
     // shape - border color
-    dev.log('recentSignShapeBorderColorList START');
     String? prefsRecentSignShapeBorderColor = prefs.getString(AppConstant.PREFS_RECENTSHAPEBORDERCOLOR);
     if (prefsRecentSignShapeBorderColor == null || prefsRecentSignShapeBorderColor.isEmpty) {
     } else {
@@ -221,9 +244,17 @@ class MakeTabState extends State<MakeTab> {
       }
       parentProvider.recentSignShapeBorderColorList = recentSignShapeBorderColorList;
     }
-    // 초기값 지정 안함
-    //if (parentProvider.recentSignShapeBorderColorList.isEmpty)   parentProvider.signShapeBorderColor = Colors.orange;
-    parentProvider.signShapeBorderWidth = 10;
+    parentProvider.signShapeBorderColor = null;
+    dev.log('initMakePage signShapeBorderColor: ${parentProvider.signShapeBorderColor}');
+
+    // border width
+    double? prefsShapeBorderWidth = prefs.getDouble(AppConstant.PREFS_SHAPEBORDERWIDTH);
+    if (prefsShapeBorderWidth == null) {
+      parentProvider.signShapeBorderWidth = 10;
+    } else {
+      parentProvider.signShapeBorderWidth = prefsShapeBorderWidth;
+    }
+    dev.log('initMakePage signShapeBorderWidth: ${parentProvider.signShapeBorderWidth}');
     ////////////////////////////////////////////////////////////////////////////////
 
   }
@@ -234,21 +265,36 @@ class MakeTabState extends State<MakeTab> {
     // PREFS_SHAPEINFOLIST 초기화
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    await prefs.remove(AppConstant.PREFS_SHAPEINFOLIST);
-    parentProvider.shapeInfoList.clear();
+    ////////////////////////////////////////////////////////////////////////////////
+    // line
+    parentProvider.signLines.clear();
 
     await prefs.remove(AppConstant.PREFS_RECENTSIGNCOLOR);
     parentProvider.recentSignColorList.clear();
+    parentProvider.signColor = Colors.blue;
+    await prefs.remove(AppConstant.PREFS_SIGNWIDTH);
+    parentProvider.signWidth = 10;
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // background
     await prefs.remove(AppConstant.PREFS_RECENTSIGNBACKGROUNDCOLOR);
     parentProvider.recentSignBackgroundColorList.clear();
+    parentProvider.signBackgroundColor = null;
+    parentProvider.shapeBackgroundUiImage = null;
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // shape
+    await prefs.remove(AppConstant.PREFS_SHAPEINFOLIST);
+    parentProvider.shapeInfoList.clear();
+    parentProvider.selectedShapeInfoIdx = -1;
     await prefs.remove(AppConstant.PREFS_RECENTSHAPEBORDERCOLOR);
     parentProvider.recentSignShapeBorderColorList.clear();
-
-    parentProvider.signBackgroundColor = null;
     parentProvider.signShapeBorderColor = null;
-    parentProvider.signWidth = 10;
+    await prefs.remove(AppConstant.PREFS_SHAPEBORDERWIDTH);
     parentProvider.signShapeBorderWidth = 10;
-
+    ////////////////////////////////////////////////////////////////////////////////
 
     setState(() {});
 

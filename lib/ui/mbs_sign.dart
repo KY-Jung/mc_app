@@ -54,8 +54,7 @@ class SignMbsState extends State<SignMbs> {
   late double wScreen;
 
   /// shapelist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
-  final ScrollController _preShapeController = ScrollController();
-
+  late ScrollController _preShapeController;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +110,13 @@ class SignMbsState extends State<SignMbs> {
     dev.log('whSignBoard: ${whSignBoard}, hBarDetail: ${hBarDetail}, whPreSign: ${whPreSign}, hAppBar: ${hAppBar}');
     ////////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////////
+    double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
+    double cntPreSign = listWidth / (whPreSign + 10);
+    dev.log('cntPreSign: $cntPreSign');
+    _preShapeController = ScrollController(initialScrollOffset: parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+    ////////////////////////////////////////////////////////////////////////////////
+
     // for test
     List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4', '가', '나', '다', '1', '2', '3', '4'];
     List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100, 600, 500, 400, 600, 500, 400, 300];
@@ -127,7 +133,7 @@ class SignMbsState extends State<SignMbs> {
           // 맨 위 확인 버튼
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            ElevatedButton(onPressed: _onPressedOk, child: Text('CLEAR'.tr())),
+            ElevatedButton(onPressed: _onPresseClearAll, child: Text('SIGN_INIT_ALL'.tr())),
             ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
             ElevatedButton(onPressed: _onPressedOk, child: Text('OK'.tr())),
           ],
@@ -179,7 +185,18 @@ class SignMbsState extends State<SignMbs> {
                   child: CustomPaint(
                     size: Size(whSignBoard, whSignBoard),
                     painter: MakeParentSignPainter(
-                        whSignBoard, whSignBoard, parentProvider.signLines, parentProvider.shapeBackgroundUiImage),
+                        whSignBoard,
+                        whSignBoard,
+                        parentProvider.signLines,
+                        parentProvider.signColor,
+                        parentProvider.signWidth,
+                        parentProvider.signBackgroundColor,
+                        parentProvider.shapeBackgroundUiImage,
+                        (parentProvider.selectedShapeInfoIdx == -1)
+                            ? null
+                            : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
+                        parentProvider.signShapeBorderColor,
+                        parentProvider.signShapeBorderWidth),
                   ),
                 ),
               ),
@@ -729,6 +746,16 @@ class SignMbsState extends State<SignMbs> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: <Widget>[
+                                  SizedBox(
+                                    child: OutlinedButton(
+                                        style: TextButton.styleFrom(
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        onPressed: () {
+                                          parentProvider.initShapeBackgroundUiImage(notify: true);
+                                        },
+                                        child: Text('SIGN_CLEAR'.tr())),
+                                  ),
                                   ElevatedButton.icon(
                                       icon: const Icon(
                                         Icons.photo,
@@ -1041,8 +1068,10 @@ class SignMbsState extends State<SignMbs> {
                                               '- Slider ParentProvider.size: ${parentProvider.signShapeBorderWidth}');
                                         },
                                         onChanged: (newValue) {
-                                          parentProvider.setSignShapeBorderWidth(newValue);
-                                          dev.log('- Slider onChanged size: $newValue');
+                                          if (parentProvider.signShapeBorderColor != null) {
+                                            parentProvider.setSignShapeBorderWidth(newValue);
+                                            dev.log('- Slider onChanged size: $newValue');
+                                          }
                                         },
                                       ),
                                     ),
@@ -1128,6 +1157,7 @@ class SignMbsState extends State<SignMbs> {
     dev.log('parentProvider.signBackgroundColor: ${parentProvider.signBackgroundColor}');
     dev.log('parentProvider.recentSignShapeBorderColorList: ${parentProvider.recentSignShapeBorderColorList}');
     dev.log('parentProvider.signShapeBorderColor: ${parentProvider.signShapeBorderColor}');
+    dev.log('parentProvider.signShapeBorderWidth: ${parentProvider.signShapeBorderWidth}');
     dev.log('----------');
     dev.log('parentProvider.signLines: ${parentProvider.signLines}');
     dev.log('parentProvider.selectedShapeInfoIdx: ${parentProvider.selectedShapeInfoIdx}');
@@ -1243,6 +1273,52 @@ class SignMbsState extends State<SignMbs> {
     await parentProvider.loadShapeBackgroundUiImage(xFile!.path, whSignBoard);
 
     dev.log('# SignMbs _bringSignPressed END');
+  }
+
+  void _onPresseClearAll() async {
+    dev.log('# SignMbs _onPresseClearAll START');
+
+    PopupUtil.popupAlertOkCancel(context, 'INFO'.tr(), 'SIGN_INIT_ALL'.tr())
+        .then((ret) {
+      dev.log('popupAlertOkCancel: $ret');
+
+      // example
+      if (ret == null) {
+        // 팝업 바깥 영역을 클릭한 경우
+        return;
+      }
+      if (ret == AppConstant.OK) {
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // line
+        parentProvider.signLines.clear();
+
+        if (parentProvider.recentSignColorList.isNotEmpty) {
+          parentProvider.signColor = parentProvider.recentSignColorList[0];
+        }
+        parentProvider.signWidth = 10;
+        ////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // background
+        parentProvider.signBackgroundColor = null;
+        parentProvider.shapeBackgroundUiImage = null;
+        ////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // shape
+        parentProvider.selectedShapeInfoIdx = -1;
+        if (parentProvider.recentSignShapeBorderColorList.isNotEmpty) {
+          parentProvider.signShapeBorderColor = parentProvider.recentSignShapeBorderColorList[0];
+        }
+        parentProvider.signShapeBorderColor = null;
+        parentProvider.signShapeBorderWidth = 10;
+        ////////////////////////////////////////////////////////////////////////////////
+
+        setState(() {});
+      }
+    });
+
   }
 
   void _onPressedOk() async {
