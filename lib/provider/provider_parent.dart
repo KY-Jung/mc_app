@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import '../config/constant_app.dart';
 import '../dto/info_dot.dart';
 import '../dto/info_shape.dart';
+import '../dto/info_sign.dart';
 import '../painter/clipper_sign.dart';
 import '../ui/bar_parent.dart';
 import '../util/util_file.dart';
@@ -32,6 +33,61 @@ class ParentProvider with ChangeNotifier {
   }
   ////////////////////////////////////////////////////////////////////////////////
   // Bar END
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // init START
+  ////////////////////////////////////////////////////////////////////////////////
+  void initAll({bool notify = true}) {
+    // sign
+    selectedSignInfoIdx = -1;
+
+    // line
+    signLines.clear();
+    //if (recentSignColorList.isEmpty) {
+    //  signColor = Colors.blue;
+    //} else {
+    //  signColor = recentSignColorList[0];
+    //}
+    signWidth = 10;
+
+    // background
+    signBackgroundColor = null;
+    signBackgroundUiImage?.dispose();
+    signBackgroundUiImage = null;
+
+    // shape
+    selectedShapeInfoIdx = -1;
+    signShapeBorderColor = null;
+    signShapeBorderWidth = 10;
+
+    if (notify)   notifyListeners();
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // init END
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // signInfoList START
+  ////////////////////////////////////////////////////////////////////////////////
+  // sign info list
+  List<SignInfo> signInfoList = [];
+  void addSignInfoList(SignInfo signInfo, int max, {bool notify = true}) {
+    signInfoList.insert(0, signInfo);
+    if (signInfoList.length > max) {
+      signInfoList.removeLast();
+    }
+
+    if (notify)   notifyListeners();
+  }
+  // shape info idx
+  int selectedSignInfoIdx = -1;
+  void setSelectedSignInfoIdx(int idx) {
+    selectedSignInfoIdx = idx;
+    notifyListeners();
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // signInfoList END
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -126,9 +182,9 @@ class ParentProvider with ChangeNotifier {
     notifyListeners();
   }
   // background image
-  ui.Image? shapeBackgroundUiImage;
-  Future<void> loadShapeBackgroundUiImage(String path, double whSignBoard) async {
-    dev.log('# ParentProvider loadShapeBackgroundUiImage START');
+  ui.Image? signBackgroundUiImage;
+  Future<void> loadSignBackgroundUiImage(String path, double whSignBoard) async {
+    dev.log('# ParentProvider loadSignBackgroundUiImage START');
 
     InfoUtil.loadUiImageFromPath(path).then((image) async {
       dev.log('loadUiImageFromPath START');
@@ -137,51 +193,22 @@ class ParentProvider with ChangeNotifier {
       double scaleNew = InfoUtil.calcFitRatioOut(whSignBoard, whSignBoard, image.width, image.height);
       dev.log('scaleNew: $scaleNew');
 
-      /*
-      // 이전 파일 지우고 신규 파일명 구하기
-      Directory appDir = await getApplicationDocumentsDirectory();
-      dev.log('getApplicationDocumentsDirectory: $appDir');
-      String newPath = '${appDir.path}/${AppConstant.SIGN_SHAPEBACKGROUND_DIR}';
-      dev.log('newPath: $newPath');
-      File newPathFile = File(newPath);
-      bool f = await newPathFile.exists(); // 항상 false --> ?
-      try {
-        if (f) {
-          dev.log('newPathFile.exists: true');
-          newPathFile.deleteSync(recursive: true);
-        }
-        newPathFile.deleteSync(recursive: true);
-      } catch (e) {
-        print(e);
-      }
-      String fileName = '${appDir.path}/${AppConstant.SIGN_SHAPEBACKGROUND_DIR}/'
-          '${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.jpg';
-      */
       File newImageFile = await FileUtil.initTempDirAndFile(AppConstant.SIGN_SHAPEBACKGROUND_DIR, 'jpg');
       dev.log('newImageFile.path: ${newImageFile.path}');
 
-      /*
-      // resize 하여 저장
-      final cmd = IMG.Command()
-        ..decodeImageFile(path)
-        ..copyResize(width: (image.width * scaleNew).toInt(), height: (image.height * scaleNew).toInt())
-        ..writeToFile(newImageFile.path);
-      await cmd.executeThread();
-      */
       await FileUtil.resizeJpgWithFile(path, newImageFile.path, (image.width * scaleNew).toInt(), (image.height * scaleNew).toInt());
 
       InfoUtil.loadUiImageFromPath(newImageFile.path).then((imageNew) {
-        shapeBackgroundUiImage = imageNew;
-        dev.log(
-            'loadUiImageFromPath2 w: ${imageNew.width}, h: ${imageNew.height}');
+        signBackgroundUiImage = imageNew;
+        dev.log('loadUiImageFromPath2 w: ${imageNew.width}, h: ${imageNew.height}');
 
         notifyListeners();
       });
     });
   }
-  void initShapeBackgroundUiImage({bool notify = true}) {
-    shapeBackgroundUiImage?.dispose();
-    shapeBackgroundUiImage = null;
+  void initSignBackgroundUiImage({bool notify = true}) {
+    signBackgroundUiImage?.dispose();
+    signBackgroundUiImage = null;
     if (notify)   notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////
@@ -193,10 +220,13 @@ class ParentProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
   // shape info list
   List<ShapeInfo> shapeInfoList = [];
+  /*
   void reorderShapeInfoList(List<String> fileNameList) {
-    FileUtil.reorderShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
+    //FileUtil.reorderShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
+    FileUtil.reorderInfoListWithFileNameList(shapeInfoList, fileNameList);
     notifyListeners();
   }
+  */
   // shape info idx
   int selectedShapeInfoIdx = -1;
   void setSelectedShapeInfoIdx(int idx) {

@@ -167,6 +167,7 @@ class ShapeListPopupState extends State<ShapeListPopup> {
       height: whShape,
       child: badges.Badge(
         showBadge: true,
+        //showBadge: false,
         ignorePointer: false,
         badgeStyle: badges.BadgeStyle(
           shape: badges.BadgeShape.circle,
@@ -177,8 +178,7 @@ class ShapeListPopupState extends State<ShapeListPopup> {
         badgeContent: const Text(' X '),
         onTap: () {
           dev.log('badge onTap');
-          // TODO : impl
-          setState(() {});
+          //setState(() {});
         },
         child: Container(
           decoration: boxDecoration,
@@ -189,7 +189,7 @@ class ShapeListPopupState extends State<ShapeListPopup> {
               dev.log('svg onTap ${shapeInfo.fileName}');
               _onTapShape(shapeInfo.fileName);
             },
-            child: shapeInfo.svgPicture,
+            child: shapeInfo.image,
           ),
         ),
       ),
@@ -275,7 +275,7 @@ class ShapeListPopupState extends State<ShapeListPopup> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // 현재 파일명 목록 구하기
-    List<String> fileNameList = FileUtil.extractFileNameFromShapeContainerList(shapeContainerList);
+    List<String> fileNameList = FileUtil.extractFileNameFromContainerList(shapeContainerList);
     String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -295,8 +295,8 @@ class ShapeListPopupState extends State<ShapeListPopup> {
       // reordering
       dev.log('reordering');
       //dev.log('fileNameList: $fileNameList');
-      //FileUtil.reorderingShapeInfoListWithFileNameList(parentProvider.shapeInfoList, fileNameList);
-      parentProvider.reorderShapeInfoList(fileNameList);
+      //parentProvider.reorderShapeInfoList(fileNameList);
+      FileUtil.reorderInfoListWithFileNameList(parentProvider.shapeInfoList, fileNameList);
     }
     ////////////////////////////////////////////////////////////////////////////////
 

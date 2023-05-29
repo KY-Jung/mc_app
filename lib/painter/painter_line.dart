@@ -53,7 +53,10 @@ class LinePainter extends CustomPainter {
       //dev.log('$i - p1: $p1 $i - p2: $p2');
 
       linePaint.strokeWidth = strokeWidth;
-      canvas.drawLine(p1, p2, linePaint);
+      //dev.log('== ${linePaint.strokeWidth}');
+      if (strokeWidth != 0) {
+        canvas.drawLine(p1, p2, linePaint);
+      }
 
       return;
     }
@@ -65,6 +68,7 @@ class LinePainter extends CustomPainter {
       //dev.log('$i - p1: $p1 $i - p2: $p2');
 
       linePaint.strokeWidth = (i + 1).toDouble();
+      //dev.log('==$i - linePaint.strokeWidth');
       canvas.drawLine(p1, p2, linePaint);
     }
 

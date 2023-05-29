@@ -36,78 +36,76 @@ import '../provider/provider_parent.dart';
 import '../util/util_file.dart';
 import '../util/util_info.dart';
 
-class SignListPopup extends StatefulWidget {
-  const SignListPopup({super.key});
+class ReorderListPopup extends StatefulWidget {
+  //const ReorderListPopup({super.key});
+  ReorderListPopup({Key? key, required this.selectedIdx, required this.infoList, required this.whShape, required this.title,
+      required this.badge, required this.delete, required this.heightRatio})
+      : super(key: key);
+
+  ////////////////////////////////////////////////////////////////////////////////
+  List<dynamic> infoList;
+  int selectedIdx; // 선택한 idx
+  final double whShape;
+  String title;
+  bool badge;
+  bool delete;
+  double heightRatio;
+
+  List<Container> reorderContainerList = [];
+  List<String> reorderList = []; // 이전 파일명 저장
+  String? firstFileName; // 처음 선택된 파일명
+  ////////////////////////////////////////////////////////////////////////////////
 
   @override
-  State<SignListPopup> createState() => SignListPopupState();
+  State<ReorderListPopup> createState() => ReorderListPopupState();
 }
 
-class SignListPopupState extends State<SignListPopup> {
-  ////////////////////////////////////////////////////////////////////////////////
-  late ParentProvider parentProvider;
-
-  List<Container> shapeContainerList = [];
-  List<String> reorderedList = [];    // 이전 파일명 저장
-  int selectedIdx = -1;   // 선택한 idx
-  String? firstFileName;    // 처음 선택된 파일명
-
-  late double whShape;
-  ////////////////////////////////////////////////////////////////////////////////
-
+class ReorderListPopupState extends State<ReorderListPopup> {
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
-    dev.log('# SignListPopup initState START');
+    dev.log('# ReorderListPopup initState START');
     super.initState();
 
-    dev.log('# SignListPopup initState END');
+    dev.log('# ReorderListPopup initState END');
   }
 
   @override
   void dispose() {
-    dev.log('# SignListPopup dispose START');
+    dev.log('# ReorderListPopup dispose START');
     super.dispose();
 
-    shapeContainerList.clear();
-    reorderedList.clear();
+    widget.reorderContainerList.clear();
+    widget.reorderList.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    dev.log('# SignListPopup build START');
-
-    ////////////////////////////////////////////////////////////////////////////////
-    parentProvider = Provider.of<ParentProvider>(context);
-    ////////////////////////////////////////////////////////////////////////////////
+    dev.log('# ReorderListPopup build START');
 
     ////////////////////////////////////////////////////////////////////////////////
     // 처음에만 provider 에서 읽어와서 넣음
     // (cancel 한 경우에는 parentProvider.shapeInfoList 도 다시 초기화하는 것이 번거롭기 때문)
-    if (shapeContainerList.isEmpty) {
-      dev.log('shapeContainerList 생성');
+    if (widget.reorderContainerList.isEmpty) {
+      dev.log('reorderContainerList 생성');
 
-      // list 조정하기 (ReorderableWrap 에서 못하는 기능들)
-      whShape = MediaQuery.of(context).size.width / 7;
-
-      selectedIdx = parentProvider.selectedShapeInfoIdx;
-      dev.log('selectedIdx: $selectedIdx');
-      if (selectedIdx != -1) {
-        firstFileName = parentProvider.shapeInfoList[selectedIdx].fileName;
+      dev.log('selectedIdx: ${widget.selectedIdx}');
+      if (widget.selectedIdx != -1) {
+        widget.firstFileName = widget.infoList[widget.selectedIdx].fileName;
       }
 
       // 최초 생성
       int idx = 0;
-      for (ShapeInfo shapeInfo in parentProvider.shapeInfoList) {
+      for (var info in widget.infoList) {
         Container container;
-        if (idx == selectedIdx) {
+        if (idx == widget.selectedIdx) {
           // 이미 선택된 것
-          container = makeShapeContainer(shapeInfo, AppColors.BOXDECO_GREEN100_GREY6_BORDER);
+          container = makeContainer(info, AppColors.BOXDECO_GREEN100_GREY6_BORDER);
         } else {
           // 나머지 것들
-          container = makeShapeContainer(shapeInfo, AppColors.BOXDECO_YELLOW50_BORDER);
+          container = makeContainer(info, AppColors.BOXDECO_YELLOW50_BORDER);
         }
-        shapeContainerList.add(container);
+        widget.reorderContainerList.add(container);
 
         idx++;
       }
@@ -115,10 +113,10 @@ class SignListPopupState extends State<SignListPopup> {
     ////////////////////////////////////////////////////////////////////////////////
 
     return AlertDialog(
-      title: Text('SHAPE'.tr()),
+      title: Text(widget.title),
       content: SizedBox(
         //width: MediaQuery.of(context).size.width * 0.8,
-        //height: MediaQuery.of(context).size.height * 0.6,   // 여기서 안하면 길쭉하게 됨
+        height: MediaQuery.of(context).size.height * widget.heightRatio,   // 여기서 안하면 길쭉하게 됨
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -144,7 +142,7 @@ class SignListPopupState extends State<SignListPopup> {
                   //this callback is optional
                   debugPrint('${DateTime.now().toString().substring(5, 22)} reorder started: index:$index');
                 },
-                children: shapeContainerList,
+                children: widget.reorderContainerList,
               ),
             ),
           ],
@@ -152,6 +150,7 @@ class SignListPopupState extends State<SignListPopup> {
       ),
       actionsAlignment: MainAxisAlignment.spaceEvenly,
       actions: [
+        (widget.delete) ? ElevatedButton(onPressed: _onPressedDelete, child: Text('DELETE'.tr())) : const SizedBox(),
         ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
         ElevatedButton(onPressed: _onPressedOk, child: Text('OK'.tr())),
       ],
@@ -159,14 +158,14 @@ class SignListPopupState extends State<SignListPopup> {
   }
 
   /// shapeInfo 는 fileName, svgPicture 를 구하기 위해 필요
-  Container makeShapeContainer(ShapeInfo shapeInfo, BoxDecoration boxDecoration) {
+  Container makeContainer(var info, BoxDecoration boxDecoration) {
     Container container = Container(
-      key: Key(shapeInfo.fileName),
+      key: Key(info.fileName),
       padding: const EdgeInsets.all(0),
-      width: whShape,
-      height: whShape,
+      width: widget.whShape,
+      height: widget.whShape,
       child: badges.Badge(
-        showBadge: true,
+        showBadge: (widget.badge) ? true : false,
         ignorePointer: false,
         badgeStyle: badges.BadgeStyle(
           shape: badges.BadgeShape.circle,
@@ -177,25 +176,25 @@ class SignListPopupState extends State<SignListPopup> {
         badgeContent: const Text(' X '),
         onTap: () {
           dev.log('badge onTap');
-          // TODO : impl
-          setState(() {});
         },
         child: Container(
           decoration: boxDecoration,
-          width: whShape,
-          height: whShape,
-          child: InkWell(   // GestureDetector 는 reorderble widget 에서 사용하고 있으므로 InkWell 을 사용해야 함
+          width: widget.whShape,
+          height: widget.whShape,
+          child: InkWell(
+            // GestureDetector 는 reorderble widget 에서 사용하고 있으므로 InkWell 을 사용해야 함
             onTap: () {
-              dev.log('svg onTap ${shapeInfo.fileName}');
-              _onTapShape(shapeInfo.fileName);
+              dev.log('svg onTap ${info.fileName}');
+              _onTapShape(info.fileName);
             },
-            child: shapeInfo.svgPicture,
+            child: info.image,
           ),
         ),
       ),
     );
     return container;
   }
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -203,12 +202,12 @@ class SignListPopupState extends State<SignListPopup> {
   ////////////////////////////////////////////////////////////////////////////////
   // 동일한 idx 를 클릭해도 다시 호출되는 문제 있음
   void _onTapShape(String fileNameNew) {
-    dev.log('# SignListPopup _onTapShape START');
+    dev.log('# ReorderListPopup _onTapShape START');
 
     ////////////////////////////////////////////////////////////////////////////////
     // newIdx 구하기
     int newIdx = 0;
-    for (Container container in shapeContainerList) {
+    for (Container container in widget.reorderContainerList) {
       if ((container.key as ValueKey).value == fileNameNew) {
         break;
       }
@@ -216,7 +215,7 @@ class SignListPopupState extends State<SignListPopup> {
     }
     dev.log('newIdx: $newIdx');
     // 동일하면 return
-    if (newIdx == selectedIdx) {
+    if (newIdx == widget.selectedIdx) {
       dev.log('_onTapShape same idx and return');
       return;
     }
@@ -224,58 +223,59 @@ class SignListPopupState extends State<SignListPopup> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // old 원복
-    if (selectedIdx != -1) {
-      Container containerOld = shapeContainerList[selectedIdx];
+    if (widget.selectedIdx != -1) {
+      Container containerOld = widget.reorderContainerList[widget.selectedIdx];
       String fileNameOld = (containerOld.key as ValueKey).value;
-      ShapeInfo? shapeInfoOld = FileUtil.findShapeInfoWithFileName(parentProvider.shapeInfoList, fileName: fileNameOld);
-      if (shapeInfoOld == null) {
-        PopupUtil.popupAlertOk(context, 'NOT FOUND _onTapShape shapeInfoOld', fileNameOld);
+      var infoOld = FileUtil.findInfoWithFileName(widget.infoList, fileName: fileNameOld);
+      if (infoOld == null) {
+        PopupUtil.popupAlertOk(context, 'NOT FOUND _onTapShape infoOld', fileNameOld);
         return;
       }
 
-      if (fileNameOld == firstFileName) {
+      if (fileNameOld == widget.firstFileName) {
         dev.log('firstFileName');
-        containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_GREEN100_BORDER);
-      } else if (reorderedList.contains(fileNameOld)) {
+        containerOld = makeContainer(infoOld, AppColors.BOXDECO_GREEN100_BORDER);
+      } else if (widget.reorderList.contains(fileNameOld)) {
         dev.log('reorderedList contains');
-        containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_YELLOW50_BLACK2_BORDER);
+        containerOld = makeContainer(infoOld, AppColors.BOXDECO_YELLOW50_BLACK2_BORDER);
       } else {
-        containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_YELLOW50_BORDER);
+        containerOld = makeContainer(infoOld, AppColors.BOXDECO_YELLOW50_BORDER);
       }
-      shapeContainerList[selectedIdx] = containerOld;
+      widget.reorderContainerList[widget.selectedIdx] = containerOld;
     }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // new 설정
-    ShapeInfo? shapeInfoNew = FileUtil.findShapeInfoWithFileName(parentProvider.shapeInfoList, fileName: fileNameNew);
-    if (shapeInfoNew == null) {
-      PopupUtil.popupAlertOk(context, 'NOT FOUND _onTapShape shapeInfoNew', fileNameNew);
+    var infoNew = FileUtil.findInfoWithFileName(widget.infoList, fileName: fileNameNew);
+    if (infoNew == null) {
+      PopupUtil.popupAlertOk(context, 'NOT FOUND _onTapShape infoNew', fileNameNew);
       return;
     }
 
     Container containerNew;
-    if (fileNameNew == firstFileName) {
+    if (fileNameNew == widget.firstFileName) {
       dev.log('firstFileName');
-      containerNew = makeShapeContainer(shapeInfoNew, AppColors.BOXDECO_GREEN100_GREY6_BORDER);
+      containerNew = makeContainer(infoNew, AppColors.BOXDECO_GREEN100_GREY6_BORDER);
     } else {
-      containerNew = makeShapeContainer(shapeInfoNew, AppColors.BOXDECO_YELLOW50_GREY6_BORDER);
+      containerNew = makeContainer(infoNew, AppColors.BOXDECO_YELLOW50_GREY6_BORDER);
     }
-    shapeContainerList[newIdx] = containerNew;
+    widget.reorderContainerList[newIdx] = containerNew;
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    selectedIdx = newIdx;
+    widget.selectedIdx = newIdx;
     setState(() {});
     ////////////////////////////////////////////////////////////////////////////////
   }
 
   void _onPressedOk() async {
-    dev.log('# SignListPopup _onPressedOk START');
+    dev.log('# ReorderListPopup _onPressedOk START');
 
+    /*
     ////////////////////////////////////////////////////////////////////////////////
     // 현재 파일명 목록 구하기
-    List<String> fileNameList = FileUtil.extractFileNameFromShapeContainerList(shapeContainerList);
+    List<String> fileNameList = FileUtil.extractFileNameFromShapeContainerList(widget.reorderContainerList);
     String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -295,75 +295,92 @@ class SignListPopupState extends State<SignListPopup> {
       // reordering
       dev.log('reordering');
       //dev.log('fileNameList: $fileNameList');
-      //FileUtil.reorderingShapeInfoListWithFileNameList(parentProvider.shapeInfoList, fileNameList);
-      parentProvider.reorderShapeInfoList(fileNameList);
+      FileUtil.reorderInfoListWithFileNameList(widget.infoList, fileNameList);
     }
     ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    parentProvider.setSelectedShapeInfoIdx(selectedIdx);
-    ////////////////////////////////////////////////////////////////////////////////
+    */
+    // 팝업에서는 목록만 수정하고, mbs 에서 목록을 가지고 다시 prefs 저장
+    //if (widget.selectedIdx != -1) {
+      List<String> fileNameList = FileUtil.extractFileNameFromContainerList(widget.reorderContainerList);
+      FileUtil.reorderInfoListWithFileNameList(widget.infoList, fileNameList);
+    //}
 
     if (!mounted) return;
-    Navigator.pop(context, 'OK');
+    Navigator.pop(context, widget.selectedIdx);
   }
 
   void _onReorder(int oldIdx, int newIdx) {
-    dev.log('# SignListPopup _onReorder START');
+    dev.log('# ReorderListPopup _onReorder START');
     dev.log('oldIdx: $oldIdx, newIdx: $newIdx');
 
     ////////////////////////////////////////////////////////////////////////////////
     // 이전에 선택된 것 원복
-    Container containerOld = shapeContainerList[selectedIdx];
-    String fileNameOld = (containerOld.key as ValueKey).value;
-    ShapeInfo? shapeInfoOld = FileUtil.findShapeInfoWithFileName(parentProvider.shapeInfoList, fileName: fileNameOld);
-    if (shapeInfoOld == null) {
-      PopupUtil.popupAlertOk(context, 'NOT FOUND _onReorder shapeInfoOld', fileNameOld);
-      return;
-    }
+    if (widget.selectedIdx != -1) {
+      Container containerOld = widget.reorderContainerList[widget.selectedIdx];
+      String fileNameOld = (containerOld.key as ValueKey).value;
+      var infoOld = FileUtil.findInfoWithFileName(widget.infoList, fileName: fileNameOld);
+      if (infoOld == null) {
+        PopupUtil.popupAlertOk(context, 'NOT FOUND _onReorder infoOld', fileNameOld);
+        return;
+      }
 
-    if (fileNameOld == firstFileName) {
-      dev.log('firstFileName');
-      containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_GREEN100_BORDER);
-    } else if (reorderedList.contains(fileNameOld)) {
-      dev.log('reorderedIdxList contains');
-      containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_YELLOW50_BLACK2_BORDER);
-    } else {
-      containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_YELLOW50_BORDER);
+      if (fileNameOld == widget.firstFileName) {
+        dev.log('firstFileName');
+        containerOld = makeContainer(infoOld, AppColors.BOXDECO_GREEN100_BORDER);
+      } else if (widget.reorderList.contains(fileNameOld)) {
+        dev.log('reorderedIdxList contains');
+        containerOld = makeContainer(infoOld, AppColors.BOXDECO_YELLOW50_BLACK2_BORDER);
+      } else {
+        containerOld = makeContainer(infoOld, AppColors.BOXDECO_YELLOW50_BORDER);
+      }
+      //containerOld = makeShapeContainer(infoOld, AppColors.BOXDECO_YELLOW50_BLACK2_BORDER);
+      widget.reorderContainerList[widget.selectedIdx] = containerOld;
     }
-    //containerOld = makeShapeContainer(shapeInfoOld, AppColors.BOXDECO_YELLOW50_BLACK2_BORDER);
-    shapeContainerList[selectedIdx] = containerOld;
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // 교체하기
-    Container containerNew = shapeContainerList.removeAt(oldIdx);
+    Container containerNew = widget.reorderContainerList.removeAt(oldIdx);
     String fileNameNew = (containerNew.key as ValueKey).value;
-    ShapeInfo? shapeInfoNew = FileUtil.findShapeInfoWithFileName(parentProvider.shapeInfoList, fileName: fileNameNew);
-    if (shapeInfoNew == null) {
-      PopupUtil.popupAlertOk(context, 'NOT FOUND _onReorder shapeInfoNew', fileNameNew);
+    var infoNew = FileUtil.findInfoWithFileName(widget.infoList, fileName: fileNameNew);
+    if (infoNew == null) {
+      PopupUtil.popupAlertOk(context, 'NOT FOUND _onReorder infoNew', fileNameNew);
       return;
     }
-    if (fileNameNew == firstFileName) {
+    if (fileNameNew == widget.firstFileName) {
       dev.log('firstFileName');
-      containerNew = makeShapeContainer(shapeInfoNew, AppColors.BOXDECO_GREEN100_GREY6_BORDER);
+      containerNew = makeContainer(infoNew, AppColors.BOXDECO_GREEN100_GREY6_BORDER);
     } else {
-      containerNew = makeShapeContainer(shapeInfoNew, AppColors.BOXDECO_YELLOW50_GREY6_BORDER);
+      containerNew = makeContainer(infoNew, AppColors.BOXDECO_YELLOW50_GREY6_BORDER);
     }
-    shapeContainerList.insert(newIdx, containerNew);
+    widget.reorderContainerList.insert(newIdx, containerNew);
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    selectedIdx = newIdx;
-    if (!reorderedList.contains(fileNameNew)) {
-      reorderedList.add(fileNameNew);
+    widget.selectedIdx = newIdx;
+    if (!widget.reorderList.contains(fileNameNew)) {
+      widget.reorderList.add(fileNameNew);
     }
 
-    setState(() { });
+    setState(() {});
     ////////////////////////////////////////////////////////////////////////////////
+  }
+
+  void _onPressedDelete() async {
+    dev.log('# ReorderListPopup _onPressedDelete START');
+
+    if (widget.selectedIdx == -1) {
+      dev.log('widget.selectedIdx == -1, return');
+      return;
+    }
+
+    widget.reorderContainerList.removeAt(widget.selectedIdx);
+    widget.infoList.removeAt(widget.selectedIdx);
+    widget.selectedIdx = -1;
+    dev.log('widget.reorderContainerList: ${widget.reorderContainerList}');
+    setState(() {});
   }
 ////////////////////////////////////////////////////////////////////////////////
 // Event END
 ////////////////////////////////////////////////////////////////////////////////
-
 }

@@ -15,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
 import 'package:mc/ui/page_make.dart';
+import 'package:mc/ui/popup_reorderlist.dart';
 import 'package:mc/ui/popup_shapelist.dart';
 import 'package:mc/util/util_popup.dart';
 import 'package:path_provider/path_provider.dart';
@@ -26,6 +27,7 @@ import 'package:svg_path_parser/svg_path_parser.dart';
 import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../dto/info_parent.dart';
+import '../dto/info_sign.dart';
 import '../painter/clipper_sign.dart';
 import '../painter/painter_line.dart';
 import '../painter/painter_make_parent_sign.dart';
@@ -55,6 +57,8 @@ class SignMbsState extends State<SignMbs> {
 
   /// shapelist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
   late ScrollController _preShapeController;
+  /// signlist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
+  late ScrollController _preSignController;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -79,8 +83,11 @@ class SignMbsState extends State<SignMbs> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // 다시 사용안하는 데이터 지우기
-    parentProvider.initSignLines(notify: false);
-    parentProvider.initShapeBackgroundUiImage(notify: false);
+    // 나머지는 유지하고 initAll 에서만 모두 지우기
+    // --> Sign 을 설정하는 기능을 위해 나갈때 모두 초기화로 변경 (2023.05.28, KY.Jung)
+    //parentProvider.initSignLines(notify: false);
+    //parentProvider.initSignBackgroundUiImage(notify: false);
+    parentProvider.initAll(notify: false);
     ////////////////////////////////////////////////////////////////////////////////
   }
 
@@ -114,7 +121,13 @@ class SignMbsState extends State<SignMbs> {
     double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
     double cntPreSign = listWidth / (whPreSign + 10);
     dev.log('cntPreSign: $cntPreSign');
-    _preShapeController = ScrollController(initialScrollOffset: parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+    _preShapeController = ScrollController(
+        initialScrollOffset:
+            parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+
+    _preSignController = ScrollController(
+        initialScrollOffset:
+        parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
     ////////////////////////////////////////////////////////////////////////////////
 
     // for test
@@ -191,7 +204,7 @@ class SignMbsState extends State<SignMbs> {
                         parentProvider.signColor,
                         parentProvider.signWidth,
                         parentProvider.signBackgroundColor,
-                        parentProvider.shapeBackgroundUiImage,
+                        parentProvider.signBackgroundUiImage,
                         (parentProvider.selectedShapeInfoIdx == -1)
                             ? null
                             : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
@@ -215,17 +228,17 @@ class SignMbsState extends State<SignMbs> {
             child: Row(
               children: <Widget>[
                 InkWell(
-                  onTap: _onTapNone,
+                  onTap: () {
+                    parentProvider.setSelectedSignInfoIdx(-1);
+                  },
                   child: Container(
                     width: whPreSign,
                     height: whPreSign,
                     margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      //border: Border.all(color: Colors.grey),
-                      color: Colors.grey,
-                      border: Border.all(color: Colors.black),
-                    ),
+                    decoration: (parentProvider.selectedSignInfoIdx == -1)
+                        ? BoxDecoration(color: Colors.grey, border: Border.all(color: Colors.black))
+                        : BoxDecoration(border: Border.all(color: Colors.grey)),
                     child: Text('NONE'.tr()),
                   ),
                 ),
@@ -234,19 +247,20 @@ class SignMbsState extends State<SignMbs> {
                     color: Colors.yellow[50],
                     margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
                     child: ListView.separated(
+                      controller: _preSignController,
                       padding: const EdgeInsets.all(10),
                       shrinkWrap: true,
                       scrollDirection: Axis.horizontal,
-                      itemCount: preSignList.length,
+                      itemCount: parentProvider.signInfoList.length,
                       itemBuilder: (BuildContext context, int index) {
                         return Row(
                           children: [
                             InkWell(
                               onTap: () => _onTapPreSign(index),
-                              child: Container(
+                              child: SizedBox(
                                 width: whPreSign,
                                 height: whPreSign,
-                                color: Colors.amber[colorCodes[index]],
+                                //color: Colors.amber[100],
                                 child: badges.Badge(
                                   badgeContent: Text('${index + 1}'),
                                   badgeStyle: badges.BadgeStyle(
@@ -256,16 +270,18 @@ class SignMbsState extends State<SignMbs> {
                                     alignment: Alignment.center,
                                     width: whPreSign,
                                     height: whPreSign,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.black),
-                                    ),
-                                    child: Text(preSignList[index]),
+                                    decoration: (parentProvider.selectedSignInfoIdx == index)
+                                        ? BoxDecoration(
+                                        color: Colors.grey[200],
+                                        border: Border.all(color: Colors.black))
+                                        : const BoxDecoration(),
+                                    child: parentProvider.signInfoList[index].image,
                                   ),
                                 ),
                               ),
                             ),
                             Container(
-                              width: 20,
+                              width: 10,
                             ),
                           ],
                         );
@@ -275,7 +291,7 @@ class SignMbsState extends State<SignMbs> {
                   ),
                 ),
                 InkWell(
-                  onTap: _onTapNone,
+                  onTap: _onTapSignList,
                   child: Container(
                     width: whPreSign,
                     height: whPreSign,
@@ -752,7 +768,7 @@ class SignMbsState extends State<SignMbs> {
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
                                         onPressed: () {
-                                          parentProvider.initShapeBackgroundUiImage(notify: true);
+                                          parentProvider.initSignBackgroundUiImage(notify: true);
                                         },
                                         child: Text('SIGN_CLEAR'.tr())),
                                   ),
@@ -837,7 +853,7 @@ class SignMbsState extends State<SignMbs> {
                                                           color: Colors.grey[200],
                                                           border: Border.all(color: Colors.black))
                                                       : const BoxDecoration(),
-                                                  child: parentProvider.shapeInfoList[index].svgPicture,
+                                                  child: parentProvider.shapeInfoList[index].image,
                                                 ),
                                               ),
                                               Container(
@@ -1215,6 +1231,7 @@ class SignMbsState extends State<SignMbs> {
 
   void _onTapPreSign(int idx) {
     dev.log('# SignMbs _onTapPreSign START idx: $idx');
+    parentProvider.setSelectedSignInfoIdx(idx);
   }
 
   void _onTapPreShape(int idx) {
@@ -1225,24 +1242,38 @@ class SignMbsState extends State<SignMbs> {
   void _onTapShapeList() {
     dev.log('# SignMbs _onTapShapeList START');
 
-    /*
+    double whShape = MediaQuery.of(context).size.width / 7;
     showDialog(
         context: context,
         barrierDismissible: true, // 바깥 영역 터치시 창닫기
         builder: (BuildContext context) {
-          return const ShapeListPopup();
-        });
-     */
-    showDialog(
-        context: context,
-        barrierDismissible: true, // 바깥 영역 터치시 창닫기
-        builder: (BuildContext context) {
-          return const ShapeListPopup();
-        }).then((ret) {
+          return ReorderListPopup(selectedIdx: parentProvider.selectedShapeInfoIdx,
+              infoList: parentProvider.shapeInfoList, whShape: whShape, title: 'SHAPE_LIST'.tr(), badge: false, delete: false, heightRatio: 1.0);
+        }).then((ret) async {
       dev.log('_onTapShapeList ret: $ret');
-      if (ret == 'OK') {
-        dev.log('_onTapShapeList OK');
+      if (ret == null || ret == 'CANCEL') {
+      } else {
+        dev.log('_onTapShapeList idx: $ret');
+        parentProvider.selectedShapeInfoIdx = ret;
 
+        ////////////////////////////////////////////////////////////////////////////////
+        // 현재 파일명 목록 구하기
+        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(parentProvider.shapeInfoList);
+        String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+
+        // prefs 의 파일명 목록 구하기
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
+
+        // 같지 않으면 prefs 저장
+        if (fileNameStr != prefsShapeInfoList) {
+          // save prefs
+          dev.log('save prefs');
+          await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
+        }
+        ////////////////////////////////////////////////////////////////////////////////
+
+        // 위치 조정
         if (parentProvider.selectedShapeInfoIdx != -1) {
           double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
           double cntPreSign = listWidth / (whPreSign + 10);
@@ -1255,6 +1286,61 @@ class SignMbsState extends State<SignMbs> {
           );
         }
       }
+      setState(() { });
+    });
+  }
+  void _onTapSignList() {
+    dev.log('# SignMbs _onTapSignList START');
+
+    double whShape = MediaQuery.of(context).size.width / 7;
+    showDialog(
+        context: context,
+        barrierDismissible: true, // 바깥 영역 터치시 창닫기
+        builder: (BuildContext context) {
+          return ReorderListPopup(selectedIdx: parentProvider.selectedSignInfoIdx,
+              infoList: parentProvider.signInfoList, whShape: whShape, title: 'SIGN_LIST'.tr(), badge: true, delete: true, heightRatio: 0.4);
+        }).then((ret) async {
+      dev.log('_onTapSignList ret: $ret');
+      if (ret == null || ret == 'CANCEL') {
+      } else {
+        dev.log('_onTapSignList idx: $ret');
+        parentProvider.selectedSignInfoIdx = ret;
+
+        ////////////////////////////////////////////////////////////////////////////////
+        // 현재 파일명 목록 구하기
+        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(parentProvider.signInfoList);
+        String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+        dev.log('fileNameList: $fileNameList');
+        dev.log('fileNameStr: $fileNameStr');
+
+
+        // prefs 의 파일명 목록 구하기
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? prefsSignInfoList = prefs.getString(AppConstant.PREFS_SIGNINFOLIST);
+        dev.log('prefsSignInfoList: $prefsSignInfoList');
+
+        // 같지 않으면 prefs 저장
+        if (fileNameStr != prefsSignInfoList) {
+          // save prefs
+          dev.log('save prefs');
+          await prefs.setString(AppConstant.PREFS_SIGNINFOLIST, fileNameStr);
+        }
+        ////////////////////////////////////////////////////////////////////////////////
+
+        // 위치 조정
+        if (parentProvider.selectedSignInfoIdx != -1) {
+          double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
+          double cntPreSign = listWidth / (whPreSign + 10);
+          dev.log('cntPreSign: $cntPreSign');
+
+          _preSignController.animateTo(
+            parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.fastOutSlowIn,
+          );
+        }
+      }
+      setState(() { });
     });
   }
 
@@ -1270,7 +1356,7 @@ class SignMbsState extends State<SignMbs> {
     dev.log('file: ${xFile?.path}');
     if (xFile == null) return; // 취소한 경우
 
-    await parentProvider.loadShapeBackgroundUiImage(xFile!.path, whSignBoard);
+    await parentProvider.loadSignBackgroundUiImage(xFile!.path, whSignBoard);
 
     dev.log('# SignMbs _bringSignPressed END');
   }
@@ -1278,8 +1364,7 @@ class SignMbsState extends State<SignMbs> {
   void _onPresseClearAll() async {
     dev.log('# SignMbs _onPresseClearAll START');
 
-    PopupUtil.popupAlertOkCancel(context, 'INFO'.tr(), 'SIGN_INIT_ALL'.tr())
-        .then((ret) {
+    PopupUtil.popupAlertOkCancel(context, 'INFO'.tr(), 'SIGN_INIT_ALL'.tr()).then((ret) {
       dev.log('popupAlertOkCancel: $ret');
 
       // example
@@ -1288,108 +1373,91 @@ class SignMbsState extends State<SignMbs> {
         return;
       }
       if (ret == AppConstant.OK) {
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // line
-        parentProvider.signLines.clear();
-
-        if (parentProvider.recentSignColorList.isNotEmpty) {
-          parentProvider.signColor = parentProvider.recentSignColorList[0];
-        }
-        parentProvider.signWidth = 10;
-        ////////////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // background
-        parentProvider.signBackgroundColor = null;
-        parentProvider.shapeBackgroundUiImage = null;
-        ////////////////////////////////////////////////////////////////////////////////
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // shape
-        parentProvider.selectedShapeInfoIdx = -1;
-        if (parentProvider.recentSignShapeBorderColorList.isNotEmpty) {
-          parentProvider.signShapeBorderColor = parentProvider.recentSignShapeBorderColorList[0];
-        }
-        parentProvider.signShapeBorderColor = null;
-        parentProvider.signShapeBorderWidth = 10;
-        ////////////////////////////////////////////////////////////////////////////////
-
-        setState(() {});
+        parentProvider.initAll();
       }
     });
-
   }
 
   void _onPressedOk() async {
     dev.log('# SignMbs _onPressedOk START');
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // 저장 영역
     Rect dstRect = const Offset(0, 0) & Size(whSignBoard, whSignBoard);
 
+    // PictureRecorder, Canvas 생성
     ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     Canvas canvas = Canvas(pictureRecorder, dstRect);
 
-    Path svgPath = parseSvgPath(
-        'm12 23.1-1.45-1.608C5.4 15.804 2 12.052 2 7.45 2 3.698 4.42.75 7.5.75c1.74 0 3.41.987 4.5 2.546C13.09 1.736 14.76.75 16.5.75c3.08 0 5.5 2.948 5.5 6.699 0 4.604-3.4 8.355-8.55 14.055L12 23.1z');
+    // canvas 전달해서 그리기 요청
+    MakeParentSignPainter makeParentSignPainter = MakeParentSignPainter(
+        whSignBoard,
+        whSignBoard,
+        parentProvider.signLines,
+        parentProvider.signColor,
+        parentProvider.signWidth,
+        parentProvider.signBackgroundColor,
+        parentProvider.signBackgroundUiImage,
+        (parentProvider.selectedShapeInfoIdx == -1)
+            ? null
+            : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
+        parentProvider.signShapeBorderColor,
+        parentProvider.signShapeBorderWidth,
+        grid: false);
+    makeParentSignPainter.paint(canvas, Size(whSignBoard, whSignBoard));
 
-    // org
-    Float64List shapeMatrix = Float64List.fromList(
-        [whSignBoard / AppConfig.SVG_WH, 0, 0, 0, 0, whSignBoard / AppConfig.SVG_WH, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
-    Path shapePath = svgPath.transform(shapeMatrix);
+    //PopupUtil.popupImageOkCancel(context, 'INFO'.tr(), 'SIGN_SAVE'.tr(),
+    //    CustomPaint(painter: makeParentSignPainter), whSignBoard, whSignBoard)
+    PopupUtil.popupImage2OkCancel(
+        context,
+        'INFO'.tr(),
+        'SIGN_SAVE'.tr(),
+        CustomPaint(painter: makeParentSignPainter),
+        whSignBoard,
+        whSignBoard,
+        (parentProvider.signInfoList.length >= AppConfig.SIGN_SAVE_MAX) ? parentProvider.signInfoList.last.image : null,
+        'SIGN_SAVE_DELETE'.tr(args: [AppConfig.SIGN_SAVE_MAX.toString()])).then((ret) async {
+      dev.log('popupAlertOkCancel: $ret');
 
-    //canvas.clipPath(shapePath);   // path 영역에서만 그리기가 동작함
+      // example
+      if (ret == null) {
+        // 팝업 바깥 영역을 클릭한 경우
+        return;
+      }
+      if (ret == AppConstant.OK) {
+        // 그린 이미지 가져오기
+        ui.Image newImage = await pictureRecorder
+            .endRecording()
+            .toImage(dstRect.width.toInt(), dstRect.height.toInt()); // 여기서 scaling 안됨
 
-    Paint borderPaint = Paint()
-      ..color = Colors.green
-      //..color = Colors.black12
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1;
-    canvas.drawPath(shapePath, borderPaint);
-    dev.log('org width / AppConfig.SVG_WH: ${whSignBoard / AppConfig.SVG_WH}');
+        // 파일 저장
+        File newImageFile = await FileUtil.createFile(AppConstant.SIGN_DIR, 'png');
+        dev.log('newImageFile.path: ${newImageFile.path}');
+        await FileUtil.saveUiImageToPng(newImage, newImageFile);
+        dev.log('saveUiImageToPng end');
 
-    // border
-    Float64List borderMatrix = Float64List.fromList([
-      (whSignBoard - 20) / AppConfig.SVG_WH,
-      0,
-      0,
-      0,
-      0,
-      (whSignBoard - 20) / AppConfig.SVG_WH,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-      10,
-      10,
-      0,
-      1
-    ]);
-    Path borderPath = svgPath.transform(borderMatrix);
-    dev.log('border (width - 20) / AppConfig.SVG_WH: ${(whSignBoard - 20) / AppConfig.SVG_WH}');
+        // signInfoList 에 추가
+        SignInfo signInfo = SignInfo(newImageFile.path, Image.file(newImageFile));
+        parentProvider.addSignInfoList(signInfo, AppConfig.SIGN_SAVE_MAX, notify: false);
 
-    canvas.clipPath(borderPath); // path 영역에서만 그리기가 동작함
+        // prefs 에 반영
+        List<String> fileNameList =
+            FileUtil.extractFileNameAndCntFromSignInfoList(parentProvider.signInfoList, AppConstant.PREFS_DELIM2);
+        String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString(AppConstant.PREFS_SIGNINFOLIST, fileNameStr);
 
-    if (parentProvider.shapeBackgroundUiImage != null)
-      canvas.drawImage(parentProvider.shapeBackgroundUiImage!, Offset(0, -68 / 2), Paint());
+        ////////////////////////////////////////////////////////////////////////////////
+        // 아래는 dispose 에서 처리함
+        //parentProvider.initSignLines(notify: false);
+        //parentProvider.initSignBackgroundUiImage(notify: false);
+        ////////////////////////////////////////////////////////////////////////////////
 
-    ui.Image newImage =
-        await pictureRecorder.endRecording().toImage(dstRect.width.toInt(), dstRect.height.toInt()); // 여기서 scaling 안됨
-
-    File newImageFile = await FileUtil.initTempDirAndFile(AppConstant.SIGN_DIR, 'png');
-    dev.log('newImageFile.path: ${newImageFile.path}');
-
-    /*
-    ByteData? jpgByte = await newImage.toByteData(format: ui.ImageByteFormat.png);
-    // byte 저장
-    newImageFile.writeAsBytesSync(jpgByte!.buffer.asUint8List(),
-        flush: true, mode: FileMode.write);
-    */
-    await FileUtil.saveUiImageToPng(newImage, newImageFile);
-    dev.log('writeAsBytesSync end');
-
-    //Navigator.pop(context, 'OK');
+        if (!mounted) return;
+        Navigator.pop(context, 'OK');
+      }
+    });
+    ////////////////////////////////////////////////////////////////////////////////
   }
 ////////////////////////////////////////////////////////////////////////////////
 // Event Start //

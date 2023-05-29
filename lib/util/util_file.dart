@@ -18,10 +18,34 @@ import 'package:xml/xml.dart';
 import '../config/constant_app.dart';
 import '../dto/info_parent.dart';
 import '../dto/info_shape.dart';
+import '../dto/info_sign.dart';
 
 class FileUtil {
 
   ////////////////////////////////////////////////////////////////////////////////
+  static Future<List<String>> loadFileNameList(String dir) async {
+    List<String> fileNameList = [];
+
+    Directory appDir = await getApplicationDocumentsDirectory();
+    dev.log('getApplicationDocumentsDirectory: $appDir');
+    Directory directory = Directory('${appDir.path}/$dir/');
+    List<FileSystemEntity> fileSystemEntityList = directory.listSync(recursive: true, followLinks: false);
+    for (FileSystemEntity fileSystemEntity in fileSystemEntityList) {
+      fileNameList.add(fileSystemEntity.path);
+    }
+
+    return fileNameList;
+  }
+  static Future<File> createFile(String dir, String ext) async {
+    Directory appDir = await getApplicationDocumentsDirectory();
+    dev.log('getApplicationDocumentsDirectory: $appDir');
+    String fileName = '${appDir.path}/$dir/'
+        '${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}.$ext';
+    File newImageFile = File(fileName);
+    newImageFile.createSync(recursive: true);
+
+    return newImageFile;
+  }
   // 디렉토리 삭제
   // 디렉토리 생성
   // 파일 생성
@@ -94,9 +118,10 @@ class FileUtil {
   static Future<List<String>> readShapeFileList() async {
     String manifestContent = await rootBundle.loadString('AssetManifest.json');
     Map<String, dynamic> manifestMap = json.decode(manifestContent);
+    //print('manifestMap list: $manifestMap');
 
     List<String> svgList = manifestMap.keys
-        .where((String key) => key.contains('svg/'))
+        .where((String key) => key.contains('shape/'))
         //.where((String key) => key.contains('/ic_baby_'))
         .where((String key) => key.contains('.svg'))
         //.where((String key) => !key.contains('_all'))
@@ -156,15 +181,15 @@ class FileUtil {
     List<String> assetList = await readShapeFileList();
 
     List<ShapeInfo> shapeInfoList = [];
-    int cnt = 0;
-    for (String file in assetList) {
+    int idx = 0;
+    for (String fileName in assetList) {
       try {
         ShapeInfo shapeInfo = ShapeInfo();
-        shapeInfo.fileName = file;
-        shapeInfo.svgPicture = SvgPicture.asset(file);
+        shapeInfo.fileName = fileName;
+        shapeInfo.image = SvgPicture.asset(fileName);
         //dev.log('fileName: $file');
 
-        String xmlString = await rootBundle.loadString(file);
+        String xmlString = await rootBundle.loadString(fileName);
         //print('xmlString: ${xmlString}');
         //print('--------------');
         XmlDocument xmlDocument = XmlDocument.parse(xmlString);
@@ -189,30 +214,32 @@ class FileUtil {
         //print('###########');
         shapeInfoList.add(shapeInfo);
       } catch (e) {
-        dev.log('loadShapeInfoList exception $cnt [$file]: $e');
+        dev.log('loadShapeInfoList exception $idx [$fileName]: $e');
       }
-      cnt++;
+      idx++;
     }
 
     return shapeInfoList;
   }
-  static List<String> extractFileNameFromShapeInfoList(List<ShapeInfo> shapeInfoList) {
+  static List<String> extractFileNameFromInfoList(List<dynamic> infoList) {
     List<String> fileNameList = [];
-    for (ShapeInfo shapeInfo in shapeInfoList) {
-      fileNameList.add(shapeInfo.fileName);
+    for (var info in infoList) {
+      fileNameList.add(info.fileName);
     }
 
     return fileNameList;
   }
-  static List<String> extractFileNameFromShapeContainerList(List<Container> shapeContainerList) {
+  static List<String> extractFileNameFromContainerList(List<Container> containerList) {
     List<String> fileNameList = [];
-    for (Container container in shapeContainerList) {
+    for (Container container in containerList) {
       String fileName = (container.key as ValueKey).value;
       fileNameList.add(fileName);
     }
 
     return fileNameList;
   }
+
+  // TODO : 주석으로 막기 (popup_shapelist.dar 를 없애야 함)
   static ShapeInfo? findShapeInfoWithFileName(List<ShapeInfo> shapeInfoList, {String? fileName, Key? key}) {
     fileName ??= (key as ValueKey).value;
     ShapeInfo shapeInfo;
@@ -224,53 +251,78 @@ class FileUtil {
 
     return null;
   }
-  /*
-  static void reorderingShapeInfoListWithFileNameList(List<ShapeInfo> shapeInfoList, List<String> fileNameList) {
-    //dev.log('shapeInfoList: ${shapeInfoList.length}, fileNameList: ${fileNameList.length}');
-    int listIdx = 0;
-    int findIdx = 0;
-    for (String fileName in fileNameList) {
-      findIdx = listIdx;
-      for (int i = findIdx, j = shapeInfoList.length; i < j; i++) {
-      //for (ShapeInfo shapeInfo in shapeInfoList) {
-        ShapeInfo shapeInfo = shapeInfoList[i];
-        if (shapeInfo.fileName == fileName) {
-          if (findIdx == listIdx) {
-            listIdx++;
-            break;
-          }
-          ShapeInfo findShapeInfo = shapeInfoList.removeAt(findIdx);
-          shapeInfoList.insert(listIdx, findShapeInfo);
-          listIdx++;
-          break;
-        }
-        findIdx++;
+
+  static dynamic findInfoWithFileName(List<dynamic> infoList, {String? fileName, Key? key}) {
+    fileName ??= (key as ValueKey).value;
+    for (var info in infoList) {
+      if (info.fileName == fileName) {
+        return info;
       }
     }
+
+    return null;
   }
-  */
-  // shapeInfoList 의 순서를 조정
-  /*
-  static void reorderingShapeInfoListWithFileNameList(List<ShapeInfo> shapeInfoList, List<String> fileNameList) {
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  static List<String> extractFileNameAndCntFromSignInfoList(List<SignInfo> signInfoList, String delim2) {
+    List<String> fileNameList = [];
+    for (SignInfo signInfo in signInfoList) {
+      String str = '${signInfo.fileName}$delim2${signInfo.cnt}';
+      fileNameList.add(str);
+    }
+
+    return fileNameList;
+  }
+  static Future<List<SignInfo>> loadSignInfoList(String signDir) async {
+    // 파일 목록 구하기
+    List<String> fileNameList = await loadFileNameList(signDir);
+
+    List<SignInfo> signInfoList = [];
+    int idx = 0;
+    for (String fileName in fileNameList) {
+      try {
+        SignInfo signInfo = SignInfo(fileName, Image.file(File(fileName)));
+        //signInfo.fileName = fileName;
+        //signInfo.image = Image.file(File(fileName));
+        //dev.log('fileName: $file');
+
+        signInfoList.add(signInfo);
+      } catch (e) {
+        dev.log('loadSignInfoList exception $idx [$fileName]: $e');
+      }
+      idx++;
+    }
+
+    return signInfoList;
+  }
+  /// fileNameList 에 없는 것은 반환하지 않음
+  static List<SignInfo> reorderSignInfoListWithFileNameList(List<SignInfo> signInfoList, List<String> fileNameList, String delim2) {
+    List<SignInfo> signInfoListNew = [];
+
     //dev.log('shapeInfoList: ${shapeInfoList.length}, fileNameList: ${fileNameList.length}');
     for (int fileIdx = 0, j = fileNameList.length; fileIdx < j; fileIdx++) {
-      for (int infoIdx = fileIdx, m = shapeInfoList.length; infoIdx < m; infoIdx++) {
+      List<String> fileNameCntList = fileNameList[fileIdx].split(delim2);
+      String fileName = fileNameCntList[0];
+      String cnt = fileNameCntList[1];
 
-        ShapeInfo shapeInfo = shapeInfoList[infoIdx];
-        if (shapeInfo.fileName == fileNameList[fileIdx]) {
-          if (fileIdx == infoIdx) {
-            break;
-          }
-          ShapeInfo findShapeInfo = shapeInfoList.removeAt(infoIdx);
-          shapeInfoList.insert(fileIdx, findShapeInfo);
+      for (int infoIdx = 0, m = signInfoList.length; infoIdx < m; infoIdx++) {
+        SignInfo signInfo = signInfoList[infoIdx];
+
+        if (signInfo.fileName == fileName) {
+          signInfo.cnt = int.parse(cnt);
+          signInfoListNew.add(signInfo);
           break;
         }
       }
     }
-    // fileNameList 에 없는 것 지우기
-    shapeInfoList.removeRange(fileNameList.length, shapeInfoList.length);
+
+    return signInfoListNew;
   }
-  */
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /*
   static void reorderShapeInfoListWithFileNameList(List<ShapeInfo> shapeInfoList, List<String> fileNameList) {
     //dev.log('shapeInfoList: ${shapeInfoList.length}, fileNameList: ${fileNameList.length}');
     int newIdx = 0;
@@ -281,6 +333,22 @@ class FileUtil {
         if (shapeInfo.fileName == fileNameList[fileIdx]) {
           ShapeInfo findShapeInfo = shapeInfoList.removeAt(infoIdx);
           shapeInfoList.insert(newIdx, findShapeInfo);
+          newIdx++;
+          break;
+        }
+      }
+    }
+  }
+  */
+  /// fileNameList 에 없는 것은 맨 마지막으로 밀려남
+  static void reorderInfoListWithFileNameList(List<dynamic> infoList, List<String> fileNameList) {
+    int newIdx = 0;
+    for (int fileIdx = 0, j = fileNameList.length; fileIdx < j; fileIdx++) {
+      for (int infoIdx = 0, m = infoList.length; infoIdx < m; infoIdx++) {
+        var info = infoList[infoIdx];
+        if (info.fileName == fileNameList[fileIdx]) {
+          var findInfo = infoList.removeAt(infoIdx);
+          infoList.insert(newIdx, findInfo);
           newIdx++;
           break;
         }

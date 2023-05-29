@@ -2,6 +2,7 @@ import 'dart:developer' as dev;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class PopupUtil {
@@ -32,12 +33,8 @@ class PopupUtil {
         title: Text(title),
         content: Text(msg),
         actions: [
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'CANCEL'),
-              child: Text('CANCEL'.tr())),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'OK'),
-              child: Text('OK'.tr())),
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'OK'), child: Text('OK'.tr())),
         ],
       ),
     );
@@ -72,8 +69,7 @@ class PopupUtil {
     );
   }
    */
-  static Future<dynamic> popupImageOkCancel(
-      context, title, msg, Widget imageWidget, wPopup, hPopup) {
+  static Future<dynamic> popupImageOkCancel(context, title, msg, Widget imageWidget, wPopup, hPopup) {
     return showDialog(
       context: context,
       barrierDismissible: true, // 바깥 영역 터치시 창닫기
@@ -87,16 +83,63 @@ class PopupUtil {
               width: wPopup,
               child: imageWidget,
             ),
+            const SizedBox(height: 20),
             Text(msg),
           ],
         ),
         actions: [
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'CANCEL'),
-              child: Text('CANCEL'.tr())),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, 'OK'),
-              child: Text('OK'.tr())),
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'OK'), child: Text('OK'.tr())),
+        ],
+      ),
+    );
+  }
+
+  // for Sign save and delete
+  static Future<dynamic> popupImage2OkCancel(
+      context, title, msg, Widget imageWidget, wPopup, hPopup, imageWidget2, msg2) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            SizedBox(
+              height: hPopup,
+              width: wPopup,
+              child: imageWidget,
+            ),
+            Text(msg),
+            const SizedBox(height: 10),
+            const Divider(
+              height: 0,
+              thickness: 1,
+            ),
+            (imageWidget2 == null)
+                ? const SizedBox(height: 0)
+                : Stack(
+                    children: <Widget>[
+                      SizedBox(
+                        height: hPopup,
+                        width: wPopup,
+                        child: imageWidget2,
+                      ),
+                      SizedBox(
+                        height: hPopup,
+                        width: wPopup,
+                        child: SvgPicture.asset('assets/svg/drag_handle_black_24dp.svg', fit: BoxFit.cover),
+                      ),
+                    ],
+                  ),
+            (imageWidget2 == null) ? const SizedBox(height: 0) : Text(msg2),
+          ],
+        ),
+        actions: [
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'OK'), child: Text('OK'.tr())),
         ],
       ),
     );
@@ -106,7 +149,6 @@ class PopupUtil {
 
   ////////////////////////////////////////////////////////////////////////////////
   static void toastMsgShort(String msg) {
-
     Fluttertoast.showToast(
       msg: msg,
       toastLength: Toast.LENGTH_SHORT,
@@ -117,8 +159,8 @@ class PopupUtil {
       fontSize: 16.0,
     );
   }
-  static void toastMsgLong(String msg) {
 
+  static void toastMsgLong(String msg) {
     Fluttertoast.showToast(
       msg: msg,
       toastLength: Toast.LENGTH_LONG,
