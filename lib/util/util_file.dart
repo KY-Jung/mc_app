@@ -97,9 +97,6 @@ class FileUtil {
 
     return true;
   }
-  ////////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////////
   static Future<bool> resizeJpgWithFile(String oldPath, String newPath, int w, int h) async {
 
     // resize 하여 저장
@@ -130,52 +127,6 @@ class FileUtil {
 
     return svgList;
   }
-  /*
-  static Future<List<ShapeInfo>> loadShapeInfoList() async {
-    // 약 1초 소요
-    List<String> assetList = await readShapeFileList();
-
-    List<ShapeInfo> shapeInfoList = [];
-    int cnt = 0;
-    for (String file in assetList) {
-      try {
-        ShapeInfo shapeInfo = ShapeInfo();
-        shapeInfo.fileName = file;
-        shapeInfo.svgPicture = SvgPicture.asset(file);
-        //dev.log('fileName: $file');
-
-        String xmlString = await rootBundle.loadString(file);
-        //print('xmlString: ${xmlString}');
-        //print('--------------');
-        XmlDocument xmlDocument = XmlDocument.parse(xmlString);
-        Iterable<XmlElement> xmlElementIterable = xmlDocument.findAllElements('path');
-        List<XmlElement> xmlElementist = xmlElementIterable.toList();
-        //print('xmlElementist: $xmlElementist');
-        for (XmlElement xmlElement in xmlElementist) {
-          String? strFill = xmlElement.getAttribute('fill');
-          if (strFill == null) {
-            Path path = parseSvgPath(xmlElement.getAttribute('d')!);
-            shapeInfo.path = path;
-            //print('strFill11: ${xmlElement.getAttribute('d')}');
-          } else {
-            //print('strFill22: null');
-          }
-          //print('strFill: ${strFill}');
-          //print('============= : ${pathElement.toString()}');
-        }
-
-        //print('${pathElement?.value}');
-        //print('###########');
-        shapeInfoList.add(shapeInfo);
-      } catch (e) {
-        dev.log('loadShapeInfoList exception $cnt [$file]: $e');
-      }
-      cnt++;
-    }
-
-    return shapeInfoList;
-  }
-  */
   static Future<List<ShapeInfo>> loadShapeInfoList() async {
     // 약 1초 소요
     List<String> assetList = await readShapeFileList();
@@ -221,6 +172,9 @@ class FileUtil {
 
     return shapeInfoList;
   }
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
   static List<String> extractFileNameFromInfoList(List<dynamic> infoList) {
     List<String> fileNameList = [];
     for (var info in infoList) {
@@ -251,7 +205,6 @@ class FileUtil {
 
     return null;
   }
-
   static dynamic findInfoWithFileName(List<dynamic> infoList, {String? fileName, Key? key}) {
     fileName ??= (key as ValueKey).value;
     for (var info in infoList) {
@@ -322,24 +275,6 @@ class FileUtil {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  /*
-  static void reorderShapeInfoListWithFileNameList(List<ShapeInfo> shapeInfoList, List<String> fileNameList) {
-    //dev.log('shapeInfoList: ${shapeInfoList.length}, fileNameList: ${fileNameList.length}');
-    int newIdx = 0;
-    for (int fileIdx = 0, j = fileNameList.length; fileIdx < j; fileIdx++) {
-      for (int infoIdx = newIdx, m = shapeInfoList.length; infoIdx < m; infoIdx++) {
-
-        ShapeInfo shapeInfo = shapeInfoList[infoIdx];
-        if (shapeInfo.fileName == fileNameList[fileIdx]) {
-          ShapeInfo findShapeInfo = shapeInfoList.removeAt(infoIdx);
-          shapeInfoList.insert(newIdx, findShapeInfo);
-          newIdx++;
-          break;
-        }
-      }
-    }
-  }
-  */
   /// fileNameList 에 없는 것은 맨 마지막으로 밀려남
   static void reorderInfoListWithFileNameList(List<dynamic> infoList, List<String> fileNameList) {
     int newIdx = 0;
@@ -358,4 +293,3 @@ class FileUtil {
   ////////////////////////////////////////////////////////////////////////////////
 
 }
-

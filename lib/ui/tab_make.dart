@@ -303,6 +303,9 @@ class MakeTabState extends State<MakeTab> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     ////////////////////////////////////////////////////////////////////////////////
+    // sign
+    await prefs.remove(AppConstant.PREFS_SIGNINFOLIST);
+
     // line
     await prefs.remove(AppConstant.PREFS_RECENTSIGNCOLOR);
     await prefs.remove(AppConstant.PREFS_SIGNWIDTH);

@@ -38,8 +38,15 @@ import '../util/util_info.dart';
 
 class ReorderListPopup extends StatefulWidget {
   //const ReorderListPopup({super.key});
-  ReorderListPopup({Key? key, required this.selectedIdx, required this.infoList, required this.whShape, required this.title,
-      required this.badge, required this.delete, required this.heightRatio})
+  ReorderListPopup(
+      {Key? key,
+      required this.selectedIdx,
+      required this.infoList,
+      required this.whShape,
+      required this.title,
+      required this.badge,
+      required this.delete,
+      required this.heightRatio})
       : super(key: key);
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +123,7 @@ class ReorderListPopupState extends State<ReorderListPopup> {
       title: Text(widget.title),
       content: SizedBox(
         //width: MediaQuery.of(context).size.width * 0.8,
-        height: MediaQuery.of(context).size.height * widget.heightRatio,   // 여기서 안하면 길쭉하게 됨
+        height: MediaQuery.of(context).size.height * widget.heightRatio, // 여기서 안하면 길쭉하게 됨
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -173,7 +180,8 @@ class ReorderListPopupState extends State<ReorderListPopup> {
           padding: const EdgeInsets.all(2),
           borderRadius: BorderRadius.circular(10),
         ),
-        badgeContent: const Text(' X '),
+        //badgeContent: const Text(' X '),
+        badgeContent: (widget.badge) ? Text(' ${info.cnt} ') : const Text(''),
         onTap: () {
           dev.log('badge onTap');
         },
@@ -301,8 +309,8 @@ class ReorderListPopupState extends State<ReorderListPopup> {
     */
     // 팝업에서는 목록만 수정하고, mbs 에서 목록을 가지고 다시 prefs 저장
     //if (widget.selectedIdx != -1) {
-      List<String> fileNameList = FileUtil.extractFileNameFromContainerList(widget.reorderContainerList);
-      FileUtil.reorderInfoListWithFileNameList(widget.infoList, fileNameList);
+    List<String> fileNameList = FileUtil.extractFileNameFromContainerList(widget.reorderContainerList);
+    FileUtil.reorderInfoListWithFileNameList(widget.infoList, fileNameList);
     //}
 
     if (!mounted) return;

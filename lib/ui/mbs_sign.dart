@@ -262,7 +262,7 @@ class SignMbsState extends State<SignMbs> {
                                 height: whPreSign,
                                 //color: Colors.amber[100],
                                 child: badges.Badge(
-                                  badgeContent: Text('${index + 1}'),
+                                  badgeContent: Text('${parentProvider.signInfoList[index].cnt}'),
                                   badgeStyle: badges.BadgeStyle(
                                     badgeColor: AppColors.BLUE_LIGHT,
                                   ),
@@ -1323,6 +1323,11 @@ class SignMbsState extends State<SignMbs> {
         if (fileNameStr != prefsSignInfoList) {
           // save prefs
           dev.log('save prefs');
+
+          List<String> fileNameList =
+            FileUtil.extractFileNameAndCntFromSignInfoList(parentProvider.signInfoList, AppConstant.PREFS_DELIM2);
+          fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+
           await prefs.setString(AppConstant.PREFS_SIGNINFOLIST, fileNameStr);
         }
         ////////////////////////////////////////////////////////////////////////////////
