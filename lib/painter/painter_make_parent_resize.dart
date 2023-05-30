@@ -56,48 +56,6 @@ class MakeParentResizePainter extends CustomPainter {
     //    yBlank, AppConfig.SIZE_GRID_RATIO, gridPaint);
     InfoUtil.drawGrid(canvas, wScreen, hScreen, xBlank, yBlank,
         AppConfig.SIZE_GRID_RATIO, gridPaint);
-    /*
-    Paint gridPaint = Paint()
-      ..color = Colors.white30
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 1;
-    Offset startOffset = Offset(xBlank, yBlank);
-    Offset endOffset = Offset(wScreen - xBlank, yBlank);
-    // 가로 줄
-    for (int i = 0, j = 9; i < j; i++) {
-      startOffset = Offset(
-          startOffset.dx,
-          startOffset.dy +
-              hImage *
-                  ((inScale < 1.0) ? inScale : 1.0) *
-                  AppConfig.SIZE_GRID_RATIO);
-      endOffset = Offset(
-          endOffset.dx,
-          endOffset.dy +
-              hImage *
-                  ((inScale < 1.0) ? inScale : 1.0) *
-                  AppConfig.SIZE_GRID_RATIO);
-      canvas.drawLine(startOffset, endOffset, gridPaint);
-    }
-    startOffset = Offset(xBlank, yBlank);
-    endOffset = Offset(xBlank, hScreen - yBlank);
-    // 세로 줄
-    for (int i = 0, j = 9; i < j; i++) {
-      startOffset = Offset(
-          startOffset.dx +
-              wImage *
-                  ((inScale < 1.0) ? inScale : 1.0) *
-                  AppConfig.SIZE_GRID_RATIO,
-          startOffset.dy);
-      endOffset = Offset(
-          endOffset.dx +
-              wImage *
-                  ((inScale < 1.0) ? inScale : 1.0) *
-                  AppConfig.SIZE_GRID_RATIO,
-          endOffset.dy);
-      canvas.drawLine(startOffset, endOffset, gridPaint);
-    }
-    */
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +145,6 @@ class MakeParentResizePainter extends CustomPainter {
     canvas.drawRect(bottomRect, unselectedPaint);
     ////////////////////////////////////////////////////////////////////////////////
 
-
     /*
     ////////////////////////////////////////////////////////////////////////////////
     // for test
@@ -255,5 +212,6 @@ class MakeParentResizePainter extends CustomPainter {
     leftBottomOffset = ParentInfo.leftBottomOffset;
     rightBottomOffset = ParentInfo.rightBottomOffset;
   }
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
 }

@@ -50,6 +50,13 @@ class ParentBarState extends State<ParentBar> {
 
   late MakeProvider makeProvider;
   late ParentProvider parentProvider;
+
+  late double hBarDetail;
+  late double whPreSign;
+  late double wScreen;
+
+  /// signlist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
+  late ScrollController _preSignController;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +108,8 @@ class ParentBarState extends State<ParentBar> {
     //InfoUtil.initParentInfoBracket();
     //makeProvider.setParentResize(false);
     //makeProvider.setParentResizeWithNoNotify(false);
+
+    _preSignController.dispose();
   }
 
   @override
@@ -111,7 +120,6 @@ class ParentBarState extends State<ParentBar> {
     makeProvider = Provider.of<MakeProvider>(context);
     parentProvider = Provider.of<ParentProvider>(context);
     ////////////////////////////////////////////////////////////////////////////////
-
 
     ////////////////////////////////////////////////////////////////////////////////
     //toggleSelectList = [false, false, false];
@@ -133,14 +141,26 @@ class ParentBarState extends State<ParentBar> {
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    double hBarDetail = AppBar().preferredSize.height *
+    hBarDetail = AppBar().preferredSize.height *
         AppConfig.FUNCTIONBAR_HEIGHT *
         AppConfig.MAKE_FUNCTIONBAR_2 /
         (AppConfig.MAKE_FUNCTIONBAR_1 + AppConfig.MAKE_FUNCTIONBAR_2);
-    double whPreSign = hBarDetail - 20 * 2;
+    whPreSign = hBarDetail - 20 * 2;
+
+    wScreen = MediaQuery.of(context).size.width;
 
     List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4'];
     List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100];
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
+    double cntPreSign = listWidth / (whPreSign + 10);
+    dev.log('cntPreSign: $cntPreSign');
+
+    _preSignController = ScrollController(
+        initialScrollOffset:
+        parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
     ////////////////////////////////////////////////////////////////////////////////
 
     return Scaffold(
@@ -233,12 +253,13 @@ class ParentBarState extends State<ParentBar> {
               child: Row(
                 //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
+
+                  /*
                   InkWell(
                     onTap: _onTapNone,
                     child: Container(
                       width: whPreSign,
                       height: whPreSign,
-                      //margin: const EdgeInsets.all(10),
                       margin: const EdgeInsets.fromLTRB(20, 10, 10, 10),
                       alignment: Alignment.center,
                       color: Colors.black12,
@@ -250,7 +271,6 @@ class ParentBarState extends State<ParentBar> {
                   Expanded(
                     child: Container(
                       color: Colors.yellow[50],
-                      //margin: const EdgeInsets.all(10),
                       margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
                       child: ListView.separated(
                         padding: const EdgeInsets.all(10),
@@ -310,6 +330,87 @@ class ParentBarState extends State<ParentBar> {
                   SizedBox(
                     width: (hBarDetail - AppConfig.SQUARE_BUTTON_SIZE) / 2,
                   ),
+                  */
+                  InkWell(
+                    onTap: () {
+                      parentProvider.setParentSignInfoIdx(-1);
+                    },
+                    child: Container(
+                      width: whPreSign,
+                      height: whPreSign,
+                      margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                      alignment: Alignment.center,
+                      decoration: (parentProvider.parentSignInfoIdx == -1)
+                          ? BoxDecoration(color: Colors.grey, border: Border.all(color: Colors.black))
+                          : BoxDecoration(border: Border.all(color: Colors.grey)),
+                      child: Text('NONE'.tr()),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      color: Colors.yellow[50],
+                      //margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                      margin: const EdgeInsets.fromLTRB(0, 15, 10, 15),
+                      child: ListView.separated(
+                        controller: _preSignController,
+                        //padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: parentProvider.signInfoList.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Row(
+                            children: [
+                              InkWell(
+                                onTap: () => _onTapPreSign(index),
+                                child: SizedBox(
+                                  width: whPreSign,
+                                  height: whPreSign,
+                                  child: badges.Badge(
+                                    badgeContent: Text('${parentProvider.signInfoList[index].cnt}'),
+                                    badgeStyle: badges.BadgeStyle(
+                                      badgeColor: AppColors.BLUE_LIGHT,
+                                    ),
+                                    child: Container(
+                                      alignment: Alignment.center,
+                                      width: whPreSign,
+                                      height: whPreSign,
+                                      decoration: (parentProvider.parentSignInfoIdx == index)
+                                          ? BoxDecoration(
+                                          color: Colors.grey[200],
+                                          border: Border.all(color: Colors.black))
+                                          : const BoxDecoration(),
+                                      child: parentProvider.signInfoList[index].image,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                width: 10,
+                              ),
+                            ],
+                          );
+                        },
+                        separatorBuilder: (BuildContext context, int index) => const Divider(),
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _onTapSignNew,
+                    child: Container(
+                      width: whPreSign,
+                      height: whPreSign,
+                      margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                      alignment: Alignment.center,
+                      color: Colors.black12,
+                      child: const Icon(
+                        Icons.miscellaneous_services,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+
+
                 ],
               ),
             ),
@@ -555,7 +656,7 @@ class ParentBarState extends State<ParentBar> {
     Rect dstRect = const Offset(0, 0) & Size(srcRect.width, srcRect.height);
 
     // 그리기
-    ui.Image uiImage = await InfoUtil.loadUiImageFromPath(ParentInfo.path);
+    ui.Image uiImage = await FileUtil.loadUiImageFromPath(ParentInfo.path);
     ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     Canvas canvas = Canvas(pictureRecorder, dstRect);
     canvas.drawImageRect(uiImage, srcRect, dstRect, Paint());
@@ -642,34 +743,8 @@ class ParentBarState extends State<ParentBar> {
   void _onTapSignNew() async {
     dev.log('# ParentBar _onTabSignNew START');
 
-    ////////////////////////////////////////////////////////////////////////////////
-    //parentProvider.initSignLines();
-    //parentProvider.changeSignColorAndWidth(Colors.blue, AppConfig.SIGN_WIDTH_DEFAULT);    // TODO : from prefs
-
-    //parentProvider.initShapeBackgroundUiImage();
-    ////////////////////////////////////////////////////////////////////////////////
-
-/*
-    // tab_make 에서 미리 처리 (2023.05.19, KY.Jung)
-    ////////////////////////////////////////////////////////////////////////////////
-    // provider 데이터 넣기
-    dev.log('loadShapeInfoList ${DateTime.now()}');
-    List<ShapeInfo> shapeInfoList = await FileUtil.loadShapeInfoList();
-    dev.log('${DateTime.now()} getShapeInfoList: $shapeInfoList');
-    parentProvider.shapeInfoList = shapeInfoList;
-    ////////////////////////////////////////////////////////////////////////////////
-*/
-
-    /*
-    showDialog(
-        context: context,
-        barrierDismissible: true, // 바깥 영역 터치시 창닫기
-        builder: (BuildContext context) {
-          return const SignPopup();
-        }
-    );
-    */
     if (!mounted) return;
+
     showModalBottomSheet(
         context: context,
         // 없으면 overflowed 에러 발생
@@ -680,7 +755,24 @@ class ParentBarState extends State<ParentBar> {
         builder: (BuildContext context) {
           return const SignMbs();
         }
-    );
+    ).then((ret) {
+      dev.log('_onTapSignNew idx: $ret');
+      if (ret == null || ret == 'CANCEL') {
+      } else {
+        // 위치 조정
+        if (ret != -1) {
+          double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
+          double cntPreSign = listWidth / (whPreSign + 10);
+          dev.log('cntPreSign: $cntPreSign');
+
+          _preSignController.animateTo(
+            ret * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.fastOutSlowIn,
+          );
+        }
+      }
+    });
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -692,10 +784,18 @@ class ParentBarState extends State<ParentBar> {
     //parentProvider.initShapeBackgroundUiImage();
   }
 
-  void _onTapPreSign(int index) {
-    dev.log('# ParentBar _onTapPreSign START index: $index');
+  void _onTapPreSign(int idx) {
+    dev.log('# ParentBar _onTapPreSign START index: $idx');
+
+    if (idx == parentProvider.parentSignInfoIdx) {
+      return;
+    }
+    parentProvider.parentSignInfoIdx = idx;
+
+    setState(() { });
   }
 ////////////////////////////////////////////////////////////////////////////////
 // Event Start //
 ////////////////////////////////////////////////////////////////////////////////
+
 }

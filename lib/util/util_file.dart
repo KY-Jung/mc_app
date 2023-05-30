@@ -23,6 +23,58 @@ import '../dto/info_sign.dart';
 class FileUtil {
 
   ////////////////////////////////////////////////////////////////////////////////
+  // 이미지 읽어들이기 START
+  ////////////////////////////////////////////////////////////////////////////////
+  // asset/media 모두 사용
+  static Future<ui.Image> loadUiImageFromPath(String path) async {
+    Image image = Image.file(File(path));
+
+    return changeImageToUiImage(image);
+  }
+  static Future<ui.Image> changeImageToUiImage(Image image) async {
+    //final Image image = Image(image: AssetImage('assets/images/jeju.jpg'));
+    Completer<ui.Image> completer = Completer<ui.Image>();
+    image.image
+        .resolve(const ImageConfiguration())
+        .addListener(ImageStreamListener((ImageInfo image, bool _) {
+      completer.complete(image.image);
+    }));
+    ui.Image uiImage = await completer.future;
+
+    return uiImage;
+  }
+  static Future<ui.Image> changeImageToUiImageSize(Image image, double width, double height) async {
+    //final Image image = Image(image: AssetImage('assets/images/jeju.jpg'));
+    Completer<ui.Image> completer = Completer<ui.Image>();
+    image.image
+        .resolve(ImageConfiguration(size: Size(width, height)))   // <-- size 지정해도 효과없음
+        .addListener(ImageStreamListener((ImageInfo image, bool _) {
+      completer.complete(image.image);
+    }));
+    ui.Image uiImage = await completer.future;
+
+    return uiImage;
+  }
+  // 아래 함수는 asset 에서만 동작함
+  // The asset does not exist or has empty data.
+  static Future<ui.Image> loadUiImageFromAsset(String imageAssetPath, {int height = 0, int width = 0}) async {
+    final ByteData assetImageByteData = await rootBundle.load(imageAssetPath);
+    final codec = await ui.instantiateImageCodec(
+      assetImageByteData.buffer.asUint8List(),
+      targetHeight: (height == 0) ? null : height,
+      targetWidth: (width == 0) ? null : width,
+    );
+    final image = (await codec.getNextFrame()).image;
+
+    return image;
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // 이미지 읽어들이기 END
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // 파일, 디렉토리 START
+  ////////////////////////////////////////////////////////////////////////////////
   static Future<List<String>> loadFileNameList(String dir) async {
     List<String> fileNameList = [];
 
@@ -74,7 +126,11 @@ class FileUtil {
     return newImageFile;
   }
   ////////////////////////////////////////////////////////////////////////////////
+  // 파일, 디렉토리 END
+  ////////////////////////////////////////////////////////////////////////////////
 
+  ////////////////////////////////////////////////////////////////////////////////
+  // JPG, PNG START
   ////////////////////////////////////////////////////////////////////////////////
   static Future<bool> saveUiImageToJpg(ui.Image newImage, File newImageFile) async {
 
@@ -109,24 +165,12 @@ class FileUtil {
     return true;
   }
   ////////////////////////////////////////////////////////////////////////////////
+  // JPG, PNG END
+  ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  //static List<String>? SHAPE_LIST = null;
-  static Future<List<String>> readShapeFileList() async {
-    String manifestContent = await rootBundle.loadString('AssetManifest.json');
-    Map<String, dynamic> manifestMap = json.decode(manifestContent);
-    //print('manifestMap list: $manifestMap');
-
-    List<String> svgList = manifestMap.keys
-        .where((String key) => key.contains('shape/'))
-        //.where((String key) => key.contains('/ic_baby_'))
-        .where((String key) => key.contains('.svg'))
-        //.where((String key) => !key.contains('_all'))
-        .toList();
-    //print('svg list: $svgList');
-
-    return svgList;
-  }
+  // Shape START
+  ////////////////////////////////////////////////////////////////////////////////
   static Future<List<ShapeInfo>> loadShapeInfoList() async {
     // 약 1초 소요
     List<String> assetList = await readShapeFileList();
@@ -172,51 +216,27 @@ class FileUtil {
 
     return shapeInfoList;
   }
+  static Future<List<String>> readShapeFileList() async {
+    String manifestContent = await rootBundle.loadString('AssetManifest.json');
+    Map<String, dynamic> manifestMap = json.decode(manifestContent);
+    //print('manifestMap list: $manifestMap');
+
+    List<String> svgList = manifestMap.keys
+        .where((String key) => key.contains('shape/'))
+    //.where((String key) => key.contains('/ic_baby_'))
+        .where((String key) => key.contains('.svg'))
+    //.where((String key) => !key.contains('_all'))
+        .toList();
+    //print('svg list: $svgList');
+
+    return svgList;
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // Shape END
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  static List<String> extractFileNameFromInfoList(List<dynamic> infoList) {
-    List<String> fileNameList = [];
-    for (var info in infoList) {
-      fileNameList.add(info.fileName);
-    }
-
-    return fileNameList;
-  }
-  static List<String> extractFileNameFromContainerList(List<Container> containerList) {
-    List<String> fileNameList = [];
-    for (Container container in containerList) {
-      String fileName = (container.key as ValueKey).value;
-      fileNameList.add(fileName);
-    }
-
-    return fileNameList;
-  }
-
-  // TODO : 주석으로 막기 (popup_shapelist.dar 를 없애야 함)
-  static ShapeInfo? findShapeInfoWithFileName(List<ShapeInfo> shapeInfoList, {String? fileName, Key? key}) {
-    fileName ??= (key as ValueKey).value;
-    ShapeInfo shapeInfo;
-    for (shapeInfo in shapeInfoList) {
-      if (shapeInfo.fileName == fileName) {
-        return shapeInfo;
-      }
-    }
-
-    return null;
-  }
-  static dynamic findInfoWithFileName(List<dynamic> infoList, {String? fileName, Key? key}) {
-    fileName ??= (key as ValueKey).value;
-    for (var info in infoList) {
-      if (info.fileName == fileName) {
-        return info;
-      }
-    }
-
-    return null;
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-
+  // Sign START
   ////////////////////////////////////////////////////////////////////////////////
   static List<String> extractFileNameAndCntFromSignInfoList(List<SignInfo> signInfoList, String delim2) {
     List<String> fileNameList = [];
@@ -273,8 +293,51 @@ class FileUtil {
     return signInfoListNew;
   }
   ////////////////////////////////////////////////////////////////////////////////
+  // Sign END
+  ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
+  // Shape/Sign START
+  ////////////////////////////////////////////////////////////////////////////////
+  static List<String> extractFileNameFromInfoList(List<dynamic> infoList) {
+    List<String> fileNameList = [];
+    for (var info in infoList) {
+      fileNameList.add(info.fileName);
+    }
+
+    return fileNameList;
+  }
+  static List<String> extractFileNameFromContainerList(List<Container> containerList) {
+    List<String> fileNameList = [];
+    for (Container container in containerList) {
+      String fileName = (container.key as ValueKey).value;
+      fileNameList.add(fileName);
+    }
+
+    return fileNameList;
+  }
+  static dynamic findInfoWithFileName(List<dynamic> infoList, {String? fileName, Key? key}) {
+    fileName ??= (key as ValueKey).value;
+    for (var info in infoList) {
+      if (info.fileName == fileName) {
+        return info;
+      }
+    }
+
+    return null;
+  }
+  // TODO : 주석으로 막기 (popup_shapelist.dar 를 없애야 함)
+  static ShapeInfo? findShapeInfoWithFileName(List<ShapeInfo> shapeInfoList, {String? fileName, Key? key}) {
+    fileName ??= (key as ValueKey).value;
+    ShapeInfo shapeInfo;
+    for (shapeInfo in shapeInfoList) {
+      if (shapeInfo.fileName == fileName) {
+        return shapeInfo;
+      }
+    }
+
+    return null;
+  }
   /// fileNameList 에 없는 것은 맨 마지막으로 밀려남
   static void reorderInfoListWithFileNameList(List<dynamic> infoList, List<String> fileNameList) {
     int newIdx = 0;
@@ -290,6 +353,8 @@ class FileUtil {
       }
     }
   }
+  ////////////////////////////////////////////////////////////////////////////////
+  // Shape/Sign END
   ////////////////////////////////////////////////////////////////////////////////
 
 }

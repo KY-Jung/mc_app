@@ -59,6 +59,9 @@ class SignMbsState extends State<SignMbs> {
   late ScrollController _preShapeController;
   /// signlist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
   late ScrollController _preSignController;
+
+  /// signInfo 를 최초에는 mbs 의 parentSignInfoIdx 값을 보고 scroll 하기 위해 사용
+  bool first = true;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +91,9 @@ class SignMbsState extends State<SignMbs> {
     //parentProvider.initSignLines(notify: false);
     //parentProvider.initSignBackgroundUiImage(notify: false);
     parentProvider.initAll(notify: false);
+
+    _preShapeController.dispose();
+    _preSignController.dispose();
     ////////////////////////////////////////////////////////////////////////////////
   }
 
@@ -125,9 +131,17 @@ class SignMbsState extends State<SignMbs> {
         initialScrollOffset:
             parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
 
-    _preSignController = ScrollController(
-        initialScrollOffset:
-        parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+    // 처음위치는 parentSignInfoIdx 를 사용
+    if (first) {
+      _preSignController = ScrollController(
+          initialScrollOffset:
+          parentProvider.parentSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+      first = false;
+    } else {
+      _preSignController = ScrollController(
+          initialScrollOffset:
+          parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+    }
     ////////////////////////////////////////////////////////////////////////////////
 
     // for test
@@ -192,6 +206,7 @@ class SignMbsState extends State<SignMbs> {
                 width: whSignBoard,
                 height: whSignBoard,
                 //child: Image.asset('assets/images/jeju.jpg', fit: BoxFit.cover),
+                //child:
               ),
               IgnorePointer(
                 child: RepaintBoundary(
@@ -209,7 +224,9 @@ class SignMbsState extends State<SignMbs> {
                             ? null
                             : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
                         parentProvider.signShapeBorderColor,
-                        parentProvider.signShapeBorderWidth),
+                        parentProvider.signShapeBorderWidth,
+                        parentProvider.signUiImage,
+                    ),
                   ),
                 ),
               ),
@@ -227,9 +244,14 @@ class SignMbsState extends State<SignMbs> {
             height: hBarDetail,
             child: Row(
               children: <Widget>[
+
+
                 InkWell(
                   onTap: () {
-                    parentProvider.setSelectedSignInfoIdx(-1);
+                    if (parentProvider.selectedSignInfoIdx != -1) {
+                      parentProvider.setSelectedSignInfoIdx(-1, notify: false);
+                      parentProvider.initSignUiImage();
+                    }
                   },
                   child: Container(
                     width: whPreSign,
@@ -245,10 +267,12 @@ class SignMbsState extends State<SignMbs> {
                 Expanded(
                   child: Container(
                     color: Colors.yellow[50],
-                    margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                    //margin: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                    margin: const EdgeInsets.fromLTRB(0, 15, 10, 15),
                     child: ListView.separated(
                       controller: _preSignController,
-                      padding: const EdgeInsets.all(10),
+                      //padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                       shrinkWrap: true,
                       scrollDirection: Axis.horizontal,
                       itemCount: parentProvider.signInfoList.length,
@@ -260,7 +284,6 @@ class SignMbsState extends State<SignMbs> {
                               child: SizedBox(
                                 width: whPreSign,
                                 height: whPreSign,
-                                //color: Colors.amber[100],
                                 child: badges.Badge(
                                   badgeContent: Text('${parentProvider.signInfoList[index].cnt}'),
                                   badgeStyle: badges.BadgeStyle(
@@ -304,6 +327,8 @@ class SignMbsState extends State<SignMbs> {
                     ),
                   ),
                 ),
+
+
               ],
             ),
           ),
@@ -768,7 +793,9 @@ class SignMbsState extends State<SignMbs> {
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
                                         onPressed: () {
-                                          parentProvider.initSignBackgroundUiImage(notify: true);
+                                          if (parentProvider.signBackgroundUiImage != null) {
+                                            parentProvider.initSignBackgroundUiImage(notify: true);
+                                          }
                                         },
                                         child: Text('SIGN_CLEAR'.tr())),
                                   ),
@@ -1229,13 +1256,28 @@ class SignMbsState extends State<SignMbs> {
     parentProvider.setSignShapeBorderColor(color);
   }
 
-  void _onTapPreSign(int idx) {
+  void _onTapPreSign(int idx) async {
     dev.log('# SignMbs _onTapPreSign START idx: $idx');
-    parentProvider.setSelectedSignInfoIdx(idx);
+    //parentProvider.setSelectedSignInfoIdx(idx);
+
+    if (idx == parentProvider.selectedSignInfoIdx) {
+      return;
+    }
+    parentProvider.selectedSignInfoIdx = idx;
+
+    // 지우고 시작
+    parentProvider.initSignUiImage(notify: false);
+    ui.Image? signUiImage = await FileUtil.changeImageToUiImage(parentProvider.signInfoList[idx].image);
+    parentProvider.setSignUiImage(signUiImage);
   }
 
   void _onTapPreShape(int idx) {
     dev.log('# SignMbs _onTapPreShape START idx: $idx');
+
+    if (idx == parentProvider.selectedShapeInfoIdx) {
+      return;
+    }
+
     parentProvider.setSelectedShapeInfoIdx(idx);
   }
 
@@ -1249,12 +1291,11 @@ class SignMbsState extends State<SignMbs> {
         builder: (BuildContext context) {
           return ReorderListPopup(selectedIdx: parentProvider.selectedShapeInfoIdx,
               infoList: parentProvider.shapeInfoList, whShape: whShape, title: 'SHAPE_LIST'.tr(), badge: false, delete: false, heightRatio: 1.0);
-        }).then((ret) async {
-      dev.log('_onTapShapeList ret: $ret');
-      if (ret == null || ret == 'CANCEL') {
+        }).then((idx) async {
+      dev.log('_onTapShapeList ret: $idx');
+      if (idx == null || idx == 'CANCEL') {
       } else {
-        dev.log('_onTapShapeList idx: $ret');
-        parentProvider.selectedShapeInfoIdx = ret;
+        parentProvider.selectedShapeInfoIdx = idx;
 
         ////////////////////////////////////////////////////////////////////////////////
         // 현재 파일명 목록 구하기
@@ -1299,20 +1340,19 @@ class SignMbsState extends State<SignMbs> {
         builder: (BuildContext context) {
           return ReorderListPopup(selectedIdx: parentProvider.selectedSignInfoIdx,
               infoList: parentProvider.signInfoList, whShape: whShape, title: 'SIGN_LIST'.tr(), badge: true, delete: true, heightRatio: 0.4);
-        }).then((ret) async {
-      dev.log('_onTapSignList ret: $ret');
-      if (ret == null || ret == 'CANCEL') {
+        }).then((idx) async {
+      dev.log('_onTapSignList idx: $idx');
+      if (idx == null || idx == 'CANCEL') {
       } else {
-        dev.log('_onTapSignList idx: $ret');
-        parentProvider.selectedSignInfoIdx = ret;
+        parentProvider.selectedSignInfoIdx = idx;
 
         ////////////////////////////////////////////////////////////////////////////////
         // 현재 파일명 목록 구하기
-        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(parentProvider.signInfoList);
+        //List<String> fileNameList = FileUtil.extractFileNameFromInfoList(parentProvider.signInfoList);
+        List<String> fileNameList = FileUtil.extractFileNameAndCntFromSignInfoList(parentProvider.signInfoList, AppConstant.PREFS_DELIM2);
         String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
         dev.log('fileNameList: $fileNameList');
         dev.log('fileNameStr: $fileNameStr');
-
 
         // prefs 의 파일명 목록 구하기
         SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -1344,6 +1384,11 @@ class SignMbsState extends State<SignMbs> {
             curve: Curves.fastOutSlowIn,
           );
         }
+
+        // 지우고 시작
+        parentProvider.initSignUiImage(notify: false);
+        ui.Image? signUiImage = await FileUtil.changeImageToUiImage(parentProvider.signInfoList[idx].image);
+        parentProvider.setSignUiImage(signUiImage);
       }
       setState(() { });
     });
@@ -1386,6 +1431,44 @@ class SignMbsState extends State<SignMbs> {
   void _onPressedOk() async {
     dev.log('# SignMbs _onPressedOk START');
 
+    int statusSign;
+    ////////////////////////////////////////////////////////////////////////////////
+    // 상태 결정
+    if (parentProvider.signLines.isEmpty && parentProvider.signBackgroundColor == null
+      && parentProvider.signBackgroundUiImage == null && parentProvider.selectedShapeInfoIdx == -1) {
+      if (parentProvider.selectedSignInfoIdx == -1) {
+        // 아무 작업도 없음
+        statusSign = 0;
+      } else {
+        // sign 만 있는 경우
+        statusSign = 1;
+      }
+    } else {
+      // 작업이 있는 경우
+      statusSign = 2;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    if (statusSign == 0) {
+      dev.log('# SignMbs _onPressedOk 변경사항 없음');
+
+      if (!mounted) return;
+      Navigator.pop(context, 'CANCEL');
+
+      return;
+    }
+
+    if (statusSign == 1) {
+      dev.log('# SignMbs _onPressedOk 사인만 선택됨');
+
+      if (!mounted) return;
+      Navigator.pop(context, parentProvider.selectedSignInfoIdx);
+
+      return;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
     ////////////////////////////////////////////////////////////////////////////////
     // 저장 영역
     Rect dstRect = const Offset(0, 0) & Size(whSignBoard, whSignBoard);
@@ -1408,6 +1491,7 @@ class SignMbsState extends State<SignMbs> {
             : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
         parentProvider.signShapeBorderColor,
         parentProvider.signShapeBorderWidth,
+        parentProvider.signUiImage,
         grid: false);
     makeParentSignPainter.paint(canvas, Size(whSignBoard, whSignBoard));
 
@@ -1422,7 +1506,7 @@ class SignMbsState extends State<SignMbs> {
         whSignBoard,
         (parentProvider.signInfoList.length >= AppConfig.SIGN_SAVE_MAX) ? parentProvider.signInfoList.last.image : null,
         'SIGN_SAVE_DELETE'.tr(args: [AppConfig.SIGN_SAVE_MAX.toString()])).then((ret) async {
-      dev.log('popupAlertOkCancel: $ret');
+      dev.log('popupImage2OkCancel: $ret');
 
       // example
       if (ret == null) {
@@ -1443,7 +1527,7 @@ class SignMbsState extends State<SignMbs> {
 
         // signInfoList 에 추가
         SignInfo signInfo = SignInfo(newImageFile.path, Image.file(newImageFile));
-        parentProvider.addSignInfoList(signInfo, AppConfig.SIGN_SAVE_MAX, notify: false);
+        parentProvider.addSignInfoList(signInfo, AppConfig.SIGN_SAVE_MAX, notify: true);
 
         // prefs 에 반영
         List<String> fileNameList =
@@ -1459,7 +1543,7 @@ class SignMbsState extends State<SignMbs> {
         ////////////////////////////////////////////////////////////////////////////////
 
         if (!mounted) return;
-        Navigator.pop(context, 'OK');
+        Navigator.pop(context, parentProvider.selectedSignInfoIdx);   // 0 idx
       }
     });
     ////////////////////////////////////////////////////////////////////////////////

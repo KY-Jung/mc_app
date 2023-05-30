@@ -241,6 +241,9 @@ class MakePageState extends State<MakePage> {
                           ),
                         ),
                       ),
+                    if (_makePageEnum != MakePageEnum.BLANK)
+                      for (int i = 0, j = 2; i < j; i++)
+                        Text('$i Text===========\nafdafjkl;j;alfj;ds\njfdalfjs;dalk\nfdalkfj;l'),
                     if (_makePageEnum == MakePageEnum.BLANK)
                       Row(
                         key: _screenGlobalKey,
@@ -651,6 +654,11 @@ class MakePageState extends State<MakePage> {
   void _onDoubleTap() async {
     //dev.log('_onDoubleTap localPosition: ${_tapDownDetails.localPosition}');
     //dev.log('_transformationController.value: ${_transformationController.value}');
+
+    // for has not been initialized
+    if (_tapDownDetails == null) {
+      return;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // for debug

@@ -49,6 +49,7 @@ class MakeParentSignPainter extends CustomPainter {
       this.shapeInfo,
       this.signShapeBorderColor,
       this.signShapeBorderWidth,
+      this.signUiImage,
       {this.grid = true});
 
   @override
@@ -139,6 +140,11 @@ class MakeParentSignPainter extends CustomPainter {
         }
       }
     }
+
+    if (signUiImage != null) {
+      canvas.drawImage(signUiImage!, const Offset(0, 0), Paint());
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////

@@ -36,11 +36,26 @@ class ParentProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // init START
+  // ParentBar Sign START
+  ////////////////////////////////////////////////////////////////////////////////
+  int parentSignInfoIdx = -1;
+  void setParentSignInfoIdx(int idx, {bool notify = true}) {
+    parentSignInfoIdx = idx;
+
+    if (notify)   notifyListeners();
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  // ParentBar Sign END
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Sign init START
   ////////////////////////////////////////////////////////////////////////////////
   void initAll({bool notify = true}) {
     // sign
     selectedSignInfoIdx = -1;
+    signUiImage?.dispose();
+    signUiImage = null;
 
     // line
     signLines.clear();
@@ -82,9 +97,23 @@ class ParentProvider with ChangeNotifier {
   }
   // shape info idx
   int selectedSignInfoIdx = -1;
-  void setSelectedSignInfoIdx(int idx) {
+  void setSelectedSignInfoIdx(int idx, {bool notify = true}) {
     selectedSignInfoIdx = idx;
-    notifyListeners();
+
+    if (notify)   notifyListeners();
+  }
+  ui.Image? signUiImage;
+  void setSignUiImage(ui.Image? s, {bool notify = true}) {
+    signUiImage?.dispose();
+    signUiImage = s;
+
+    if (notify)   notifyListeners();
+  }
+  void initSignUiImage({bool notify = true}) {
+    signUiImage?.dispose();
+    signUiImage = null;
+
+    if (notify)   notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////
   // signInfoList END
@@ -98,19 +127,23 @@ class ParentProvider with ChangeNotifier {
     List<DotInfo> oneLine = <DotInfo>[];
     oneLine.add(DotInfo(offset, signWidth, signColor));
     signLines.add(oneLine);
+
     notifyListeners();
   }
   void drawSignLines(Offset offset, double s) {
     signLines.last.add(DotInfo(offset, s, null));
+
     notifyListeners();
   }
   void initSignLines({bool notify = true}) {
     signLines.clear();
+
     if (notify)   notifyListeners();
   }
   void undoSignLines({bool notify = true}) {
     if (signLines.isNotEmpty) {
       signLines.removeLast();
+
       if (notify)   notifyListeners();
     }
   }
@@ -134,23 +167,27 @@ class ParentProvider with ChangeNotifier {
     if (recentSignColorList.length > max) {
       recentSignColorList.removeLast();
     }
+
     if (notify)   notifyListeners();
   }
   // sign color
   late Color signColor;
   void setSignColor(Color color) {
     signColor = color;
+
     notifyListeners();
   }
   // sign width
   double signWidth = 10;
   void setSignWidth(double size) {
     signWidth = size;
+
     notifyListeners();
   }
   void changeSignColorAndWidth(Color c, double s,{bool notify = true}) {
     signColor = c;
     signWidth = s;
+
     if (notify)   notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////
@@ -173,12 +210,14 @@ class ParentProvider with ChangeNotifier {
     if (recentSignBackgroundColorList.length > max) {
       recentSignBackgroundColorList.removeLast();
     }
+
     if (notify)   notifyListeners();
   }
   // background color
   Color? signBackgroundColor;
   void setSignBackgroundColor(Color? color) {
     signBackgroundColor = color;
+
     notifyListeners();
   }
   // background image
@@ -186,7 +225,10 @@ class ParentProvider with ChangeNotifier {
   Future<void> loadSignBackgroundUiImage(String path, double whSignBoard) async {
     dev.log('# ParentProvider loadSignBackgroundUiImage START');
 
-    InfoUtil.loadUiImageFromPath(path).then((image) async {
+    // 지우고 시작
+    initSignBackgroundUiImage(notify: false);
+
+    FileUtil.loadUiImageFromPath(path).then((image) async {
       dev.log('loadUiImageFromPath START');
 
       // 꽉찬 크기의 비율 구하기
@@ -198,7 +240,7 @@ class ParentProvider with ChangeNotifier {
 
       await FileUtil.resizeJpgWithFile(path, newImageFile.path, (image.width * scaleNew).toInt(), (image.height * scaleNew).toInt());
 
-      InfoUtil.loadUiImageFromPath(newImageFile.path).then((imageNew) {
+      FileUtil.loadUiImageFromPath(newImageFile.path).then((imageNew) {
         signBackgroundUiImage = imageNew;
         dev.log('loadUiImageFromPath2 w: ${imageNew.width}, h: ${imageNew.height}');
 
@@ -209,6 +251,7 @@ class ParentProvider with ChangeNotifier {
   void initSignBackgroundUiImage({bool notify = true}) {
     signBackgroundUiImage?.dispose();
     signBackgroundUiImage = null;
+
     if (notify)   notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////
@@ -231,6 +274,7 @@ class ParentProvider with ChangeNotifier {
   int selectedShapeInfoIdx = -1;
   void setSelectedShapeInfoIdx(int idx) {
     selectedShapeInfoIdx = idx;
+
     notifyListeners();
   }
   // recent shape border color list
@@ -246,23 +290,27 @@ class ParentProvider with ChangeNotifier {
     if (recentSignShapeBorderColorList.length > max) {
       recentSignShapeBorderColorList.removeLast();
     }
+
     if (notify)   notifyListeners();
   }
   // shape border color
   Color? signShapeBorderColor;
   void setSignShapeBorderColor(Color? color) {
     signShapeBorderColor = color;
+
     notifyListeners();
   }
   // shape border width
   double signShapeBorderWidth = 10;
   void setSignShapeBorderWidth(double size) {
     signShapeBorderWidth = size;
+
     notifyListeners();
   }
   void changeSignShapeBorderColorAndWidth(Color c, double s,{bool notify = true}) {
     signShapeBorderColor = c;
     signShapeBorderWidth = s;
+
     if (notify)   notifyListeners();
   }
   ////////////////////////////////////////////////////////////////////////////////
