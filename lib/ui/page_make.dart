@@ -2,6 +2,7 @@ import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:draggable_float_widget/draggable_float_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -94,6 +95,10 @@ class MakePageState extends State<MakePage> {
   /// fab 을 toggle 할때 사용
   late final GlobalObjectKey<CustomExpandableDraggableFabState> _fabGlobalKey =
       GlobalObjectKey<CustomExpandableDraggableFabState>(context);
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  Offset signOffset = Offset(600, 300);
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -236,14 +241,29 @@ class MakePageState extends State<MakePage> {
                             // size 안 정해도 동작함
                             //painter: (makeProvider.parentResize)
                             painter: (_makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
-                                ? MakeParentResizePainter()
-                                : MakePainter(),
+                                ? MakeParentResizePainter(ParentInfo.wScreen, ParentInfo.hScreen, ParentInfo.wImage, ParentInfo.hImage,
+                              ParentInfo.inScale, ParentInfo.xBlank, ParentInfo.yBlank, ParentInfo.xStart, ParentInfo.yStart, ParentInfo.scale,
+                                ParentInfo.leftTopOffset, ParentInfo.rightTopOffset, ParentInfo.leftBottomOffset, ParentInfo.rightBottomOffset)
+                                : MakePainter(ParentInfo.wScreen, ParentInfo.hScreen, ParentInfo.wImage, ParentInfo.hImage,
+                                ParentInfo.inScale, ParentInfo.xBlank, ParentInfo.yBlank, ParentInfo.xStart, ParentInfo.yStart, ParentInfo.scale),
                           ),
                         ),
                       ),
                     if (_makePageEnum != MakePageEnum.BLANK)
-                      for (int i = 0, j = 2; i < j; i++)
-                        Text('$i Text===========\nafdafjkl;j;alfj;ds\njfdalfjs;dalk\nfdalkfj;l'),
+                      //for (int i = 0, j = 2; i < j; i++)
+                      Positioned(
+                        left: signOffset.dx,
+                        top: signOffset.dy,
+                        child: Draggable(
+                          feedback: Text('~~~aaa\nbbb\nccc\nddd~~~'),
+                          childWhenDragging: Opacity(
+                            opacity: .3,
+                            child: Text('====aaa\nbbb\nccc\nddd======'),
+                          ),
+                          onDragEnd: (details) => setState(() => signOffset = details.offset),
+                          child: Text('aaa\nbbb\nccc\nddd'),
+                        ),
+                      ),
                     if (_makePageEnum == MakePageEnum.BLANK)
                       Row(
                         key: _screenGlobalKey,
@@ -430,6 +450,7 @@ class MakePageState extends State<MakePage> {
       }
     }
     ////////////////////////////////////////////////////////////////////////////////
+
   }
 
   void _bringParentPressed(MakePageBringEnum type) async {

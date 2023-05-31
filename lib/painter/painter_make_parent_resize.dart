@@ -31,6 +31,10 @@ class MakeParentResizePainter extends CustomPainter {
   Offset rightBottomOffset = const Offset(0, 0);
   ////////////////////////////////////////////////////////////////////////////////
 
+  MakeParentResizePainter(this.wScreen, this.hScreen, this.wImage, this.hImage, this.inScale,
+      this.xBlank, this.yBlank, this.xStart, this.yStart, this.scale,
+      this.leftTopOffset, this.rightTopOffset, this.leftBottomOffset, this.rightBottomOffset);
+
   /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
   @override
   void paint(Canvas canvas, Size size) {
@@ -38,7 +42,7 @@ class MakeParentResizePainter extends CustomPainter {
     dev.log('# MakeParentResizePainter paint START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    initParentData();
+    //initParentData();
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -189,6 +193,7 @@ class MakeParentResizePainter extends CustomPainter {
     //return true;
   }
 
+/*
   ////////////////////////////////////////////////////////////////////////////////
   void initParentData() {
     wScreen = ParentInfo.wScreen;
@@ -213,5 +218,6 @@ class MakeParentResizePainter extends CustomPainter {
     rightBottomOffset = ParentInfo.rightBottomOffset;
   }
   ////////////////////////////////////////////////////////////////////////////////
+*/
 
 }

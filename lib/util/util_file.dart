@@ -339,6 +339,7 @@ class FileUtil {
     return null;
   }
   /// fileNameList 에 없는 것은 맨 마지막으로 밀려남
+  /// infoList 가 유지됨
   static void reorderInfoListWithFileNameList(List<dynamic> infoList, List<String> fileNameList) {
     int newIdx = 0;
     for (int fileIdx = 0, j = fileNameList.length; fileIdx < j; fileIdx++) {

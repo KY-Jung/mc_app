@@ -24,12 +24,10 @@ class MakePainter extends CustomPainter {
   double yStart = 0;
 
   double scale = 0;
-
-  Offset leftTopOffset = const Offset(0, 0);
-  Offset rightTopOffset = const Offset(0, 0);
-  Offset leftBottomOffset = const Offset(0, 0);
-  Offset rightBottomOffset = const Offset(0, 0);
   ////////////////////////////////////////////////////////////////////////////////
+
+  MakePainter(this.wScreen, this.hScreen, this.wImage, this.hImage, this.inScale,
+      this.xBlank, this.yBlank, this.xStart, this.yStart, this.scale);
 
   /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
   @override
@@ -38,7 +36,7 @@ class MakePainter extends CustomPainter {
     dev.log('# MakePainter paint START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    initParentData();
+    //initParentData();
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -73,15 +71,6 @@ class MakePainter extends CustomPainter {
     // TODO : impl
     // 다시 그려야할 정보 검사
 
-    if (ParentInfo.leftTopOffset.dx != oldDelegate.leftTopOffset.dx)  return true;
-    if (ParentInfo.leftTopOffset.dy != oldDelegate.leftTopOffset.dy)  return true;
-    if (ParentInfo.rightTopOffset.dx != oldDelegate.rightTopOffset.dx)  return true;
-    if (ParentInfo.rightTopOffset.dy != oldDelegate.rightTopOffset.dy)  return true;
-    if (ParentInfo.leftBottomOffset.dx != oldDelegate.leftBottomOffset.dx)  return true;
-    if (ParentInfo.leftBottomOffset.dy != oldDelegate.leftBottomOffset.dy)  return true;
-    if (ParentInfo.rightBottomOffset.dx != oldDelegate.rightBottomOffset.dx)  return true;
-    if (ParentInfo.rightBottomOffset.dy != oldDelegate.rightBottomOffset.dy)  return true;
-
     if (ParentInfo.inScale != oldDelegate.inScale)  return true;
     if (ParentInfo.xStart != oldDelegate.xStart)  return true;
     if (ParentInfo.yStart != oldDelegate.yStart)  return true;
@@ -109,11 +98,6 @@ class MakePainter extends CustomPainter {
     yStart = ParentInfo.yStart;
 
     scale = ParentInfo.scale;
-
-    leftTopOffset = ParentInfo.leftTopOffset;
-    rightTopOffset = ParentInfo.rightTopOffset;
-    leftBottomOffset = ParentInfo.leftBottomOffset;
-    rightBottomOffset = ParentInfo.rightBottomOffset;
   }
 ////////////////////////////////////////////////////////////////////////////////
 }

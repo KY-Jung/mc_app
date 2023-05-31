@@ -63,6 +63,8 @@ dependencies:
   reorderables: ^0.6.0
   flutter_draggable_gridview: ^0.0.7
   path_drawing: ^1.0.1
+  #draggable_widget: ^2.0.0
+  draggable_float_widget: ^0.0.2
 
 
 
@@ -104,6 +106,8 @@ dev_dependencies:
   reorderables: ^0.6.0
   flutter_draggable_gridview: ^0.0.7
   path_drawing: ^1.0.1
+  #draggable_widget: ^2.0.0
+  draggable_float_widget: ^0.0.2
 
 
 
