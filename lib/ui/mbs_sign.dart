@@ -153,9 +153,7 @@ class SignMbsState extends State<SignMbs> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         Row(
           // 맨 위 확인 버튼
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -165,16 +163,12 @@ class SignMbsState extends State<SignMbs> {
             ElevatedButton(onPressed: _onPressedOk, child: Text('OK'.tr())),
           ],
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         const Divider(
           height: 0,
           thickness: 1,
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         GestureDetector(
           // sign board
           behavior: HitTestBehavior.translucent,
@@ -233,9 +227,7 @@ class SignMbsState extends State<SignMbs> {
             ],
           ),
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         Container(
           // sign list
           decoration: AppColors.BOXDECO_GREEN50,
@@ -333,9 +325,7 @@ class SignMbsState extends State<SignMbs> {
             ),
           ),
         ),
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         Container(
           // tab
           decoration: AppColors.BOXDECO_GREEN50,
@@ -564,9 +554,7 @@ class SignMbsState extends State<SignMbs> {
                                         child: Text('${AppConfig.SIGN_WIDTH_MAX.toInt()}'),
                                       ),
                                     ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
+                                    const SizedBox(width: 10),
                                     SingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
                                       child: Container(
@@ -806,8 +794,14 @@ class SignMbsState extends State<SignMbs> {
                                       ),
                                       label: Text('GALLERY'.tr()),
                                       style: TextButton.styleFrom(backgroundColor: Colors.white),
-                                      onPressed: () {
-                                        _bringSignPressed(MakePageBringEnum.GALLERY, whSignBoard);
+                                      onPressed: () async {
+                                        //_bringSignPressed(MakePageBringEnum.GALLERY, whSignBoard);
+                                        XFile? xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+                                        dev.log('xFile: ${xFile!.path}');
+                                        if (xFile != null) {
+                                          await parentProvider.loadSignBackgroundUiImage(xFile!.path, whSignBoard);
+                                          setState(() { });
+                                        }
                                       }),
                                   ElevatedButton.icon(
                                       icon: const Icon(
@@ -816,8 +810,14 @@ class SignMbsState extends State<SignMbs> {
                                       ),
                                       label: Text('CAMERA'.tr()),
                                       style: TextButton.styleFrom(backgroundColor: Colors.white),
-                                      onPressed: () {
-                                        _bringSignPressed(MakePageBringEnum.CAMERA, whSignBoard);
+                                      onPressed: () async {
+                                        //_bringSignPressed(MakePageBringEnum.CAMERA, whSignBoard);
+                                        XFile? xFile = await ImagePicker().pickImage(source: ImageSource.camera);
+                                        dev.log('xFile2: ${xFile!.path}');
+                                        if (xFile != null) {
+                                          await parentProvider.loadSignBackgroundUiImage(xFile!.path, whSignBoard);
+                                          setState(() { });
+                                        }
                                       }),
                                 ],
                               ),
@@ -1132,9 +1132,7 @@ class SignMbsState extends State<SignMbs> {
                                         child: Text('${AppConfig.SIGN_WIDTH_MAX.toInt()}'),
                                       ),
                                     ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
+                                    const SizedBox(width: 10),
                                     SingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
                                       child: Container(
@@ -1393,7 +1391,7 @@ class SignMbsState extends State<SignMbs> {
       setState(() { });
     });
   }
-
+/*
   void _bringSignPressed(MakePageBringEnum type, double whSignBoard) async {
     dev.log('# SignMbs _bringSignPressed START');
 
@@ -1410,7 +1408,7 @@ class SignMbsState extends State<SignMbs> {
 
     dev.log('# SignMbs _bringSignPressed END');
   }
-
+*/
   void _onPresseClearAll() async {
     dev.log('# SignMbs _onPresseClearAll START');
 

@@ -54,29 +54,21 @@ class PublicTabState extends State<PublicTab> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {},
               child: const Text('사진찍기'),
             ),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             const Divider(
               thickness: 3,
             ),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {},
               child: const Text('라이브러리에서 불러오기'),
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
           ],
         );
       },

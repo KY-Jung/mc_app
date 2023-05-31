@@ -2,11 +2,9 @@ import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:draggable_float_widget/draggable_float_widget.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
-import 'package:image_picker/image_picker.dart';
 import 'package:mc/provider/provider_make.dart';
 import 'package:mc/ui/bar_baby.dart';
 import 'package:mc/ui/bar_blank.dart';
@@ -29,18 +27,16 @@ import '../util/util_info.dart';
 import '../util/util_popup.dart';
 
 enum MakePageEnum {
-  BLANK,
+  //BLANK,    // 코드가 복잡해져서 이제 사용 안함 (2023.05.31, KY.Jung)
   PARENT,
   BABY,
   CAPTION,
   SOUND,
   LINK,
 }
-
+// parent 가 resize 된 이미지인지 구분
 enum MakePageBringEnum {
   NONE,
-  GALLERY,
-  CAMERA,
   RESIZE,
 }
 
@@ -71,7 +67,8 @@ class MakePageState extends State<MakePage> {
   ////////////////////////////////////////////////////////////////////////////////
   // variable
 
-  MakePageEnum _makePageEnum = MakePageEnum.BLANK;
+  //MakePageEnum _makePageEnum = MakePageEnum.BLANK;
+  MakePageEnum _makePageEnum = MakePageEnum.PARENT;
 
   // InteractiveView size (_afterBuild 에서 구해짐)
   late Size screenSize;
@@ -200,7 +197,7 @@ class MakePageState extends State<MakePage> {
                   alignment: Alignment.center,
                   fit: StackFit.expand, // 비로소 상하 center 에 오게됨
                   children: <Widget>[
-                    if (_makePageEnum != MakePageEnum.BLANK)
+                    //if (_makePageEnum != MakePageEnum.BLANK)
                       GestureDetector(
                         onTapDown: _onTapDown,
                         onTapUp: _onTapUp,
@@ -234,7 +231,7 @@ class MakePageState extends State<MakePage> {
                           child: Image.file(File(ParentInfo.path)),
                         ),
                       ),
-                    if (_makePageEnum != MakePageEnum.BLANK)
+                    //if (_makePageEnum != MakePageEnum.BLANK)
                       IgnorePointer(
                         child: RepaintBoundary(
                           child: CustomPaint(
@@ -249,7 +246,7 @@ class MakePageState extends State<MakePage> {
                           ),
                         ),
                       ),
-                    if (_makePageEnum != MakePageEnum.BLANK)
+                    //if (_makePageEnum != MakePageEnum.BLANK)
                       //for (int i = 0, j = 2; i < j; i++)
                       Positioned(
                         left: signOffset.dx,
@@ -264,6 +261,7 @@ class MakePageState extends State<MakePage> {
                           child: Text('aaa\nbbb\nccc\nddd'),
                         ),
                       ),
+                  /*
                     if (_makePageEnum == MakePageEnum.BLANK)
                       Row(
                         key: _screenGlobalKey,
@@ -278,7 +276,7 @@ class MakePageState extends State<MakePage> {
                               style: TextButton.styleFrom(
                                   backgroundColor: Colors.white),
                               onPressed: () {
-                                _bringParentPressed(MakePageBringEnum.GALLERY);
+                                //_bringParentPressed(MakePageBringEnum.GALLERY);
                               }),
                           ElevatedButton.icon(
                               icon: const Icon(
@@ -289,10 +287,11 @@ class MakePageState extends State<MakePage> {
                               style: TextButton.styleFrom(
                                   backgroundColor: Colors.white),
                               onPressed: () {
-                                _bringParentPressed(MakePageBringEnum.CAMERA);
+                                //_bringParentPressed(MakePageBringEnum.CAMERA);
                               }),
                         ],
                       ),
+                    */
                   ],
                 ),
               ),
@@ -307,9 +306,7 @@ class MakePageState extends State<MakePage> {
       ),
       floatingActionButtonAnimator: NoScalingAnimation(),
       floatingActionButtonLocation: ExpandableFloatLocation(),
-      floatingActionButton: (_makePageEnum == MakePageEnum.BLANK)
-          ? Container()
-          : CustomExpandableDraggableFab(
+      floatingActionButton: CustomExpandableDraggableFab(
               key: _fabGlobalKey,
               childrenCount: 5,
               onTab: _onTabFab,
@@ -409,8 +406,8 @@ class MakePageState extends State<MakePage> {
 
   Widget _chooseFunctionBar(type) {
     switch (type) {
-      case MakePageEnum.BLANK:
-        return const BlankBar();
+      //case MakePageEnum.BLANK:
+      //  return const BlankBar();
       case MakePageEnum.PARENT:
         return const ParentBar();
       case MakePageEnum.BABY:
@@ -452,7 +449,7 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
 
   }
-
+/*
   void _bringParentPressed(MakePageBringEnum type) async {
     dev.log('# MakePage _bringParentPressed START');
 
@@ -481,7 +478,7 @@ class MakePageState extends State<MakePage> {
     });
     dev.log('# MakePage _bringParentPressed END');
   }
-
+*/
   /// 변경되는 값 : xStart, yStart, xyOffset
   void _onInteractionUpdate(ScaleUpdateDetails scaleUpdateDetails) async {
     ////////////////////////////////////////////////////////////////////////////////
@@ -761,9 +758,10 @@ class MakePageState extends State<MakePage> {
         // TODO : 모두 초기화하는 함수를 별도로 작성하고 호출
 
         ParentInfo.path = '';
-        setState(() {
-          _makePageEnum = MakePageEnum.BLANK;
-        });
+        Navigator.pop(context, 'CANCEL');
+        //setState(() {
+        //  _makePageEnum = MakePageEnum.BLANK;
+        //});
       }
     });
   }

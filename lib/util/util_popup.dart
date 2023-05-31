@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PopupUtil {
   ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +145,69 @@ class PopupUtil {
       ),
     );
   }
+  static Future<dynamic> popupImageBring(
+      context, title, msg) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true, // 바깥 영역 터치시 창닫기
+      builder: (BuildContext context2) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(msg),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                ElevatedButton.icon(
+                    icon: const Icon(
+                      Icons.photo,
+                      color: Colors.amber,
+                    ),
+                    label: Text('GALLERY'.tr()),
+                    style: TextButton.styleFrom(
+                        backgroundColor: Colors.white),
+                    onPressed: () {
+                      //XFile? xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+                      //if (!context.mounted) return;
+                      //Navigator.pop(context, xFile?.path);
 
+                      //XFile? xFile = await ImagePicker().pickImage(source: ImageSource.gallery).then((xFile) {
+                      ImagePicker().pickImage(source: ImageSource.gallery).then((xFile) {
+                        Navigator.pop(context, xFile?.path);
+                      });
+                      //if (!context.mounted) return;
+
+                    }),
+                const SizedBox(width: 20),
+                ElevatedButton.icon(
+                    icon: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: Colors.lightGreen,
+                    ),
+                    label: Text('CAMERA'.tr()),
+                    style: TextButton.styleFrom(
+                        backgroundColor: Colors.white),
+                    onPressed: () {
+                      //XFile? xFile = await ImagePicker().pickImage(source: ImageSource.camera);
+                      //if (!context.mounted) return;
+                      //Navigator.pop(context, xFile?.path);
+                      ImagePicker().pickImage(source: ImageSource.camera).then((xFile) {
+                        Navigator.pop(context, xFile?.path);
+                      });
+                    }),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(onPressed: () => Navigator.pop(context, 'CANCEL'), child: Text('CANCEL'.tr())),
+        ],
+      ),
+    );
+  }
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////

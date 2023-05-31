@@ -128,9 +128,7 @@ class ReorderListPopupState extends State<ReorderListPopup> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text('LONGCLICK_FOR_REORDERING'.tr()),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             Expanded(
               child: ReorderableWrap(
                 enableReorder: true,

@@ -18,6 +18,7 @@ import '../provider/provider_make.dart';
 import '../provider/provider_parent.dart';
 import '../util/util_color.dart';
 import '../util/util_file.dart';
+import '../util/util_info.dart';
 
 class MakeTab extends StatefulWidget {
   const MakeTab({super.key});
@@ -32,6 +33,12 @@ class MakeTabState extends State<MakeTab> {
   late MakeProvider makeProvider;
   late ParentProvider parentProvider;
   ////////////////////////////////////////////////////////////////////////////////
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  Offset signOffset = Offset(0, 0);
+  ////////////////////////////////////////////////////////////////////////////////
+
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
@@ -68,8 +75,9 @@ class MakeTabState extends State<MakeTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('MAKE'.tr()),
-            Text('McImageId is '),
+            Text('MAKE'.tr(), style: TextStyle(color: Colors.white)),
+            Text('McImageId is ', style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 20),
             ElevatedButton(
               child: Text('MAKE_NEW'.tr()),
               onPressed: () async {
@@ -82,21 +90,93 @@ class MakeTabState extends State<MakeTab> {
                 // 초기화 END
                 ////////////////////////////////////////////////////////////////////////////////
 
+                ////////////////////////////////////////////////////////////////////////////////
+                // 있으면 재사용
+                if (ParentInfo.path != '') {
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MakePage()),
+                  );
+                  return;
+                }
+
+                // 없으면 parent 먼저 선택
+                if (!mounted) return;
+                PopupUtil.popupImageBring(context, 'INFO'.tr(), 'PARENT_BRING'.tr()).then((ret) async {
+                  dev.log('popupImageBring: $ret');
+
+                  if (ret == null) {
+                    // 팝업 바깥 영역을 클릭한 경우
+                    return;
+                  }
+                  if (ret == AppConstant.CANCEL) {
+                    return;
+                  }
+
+                  // path 저장 및 초기화
+                  //await InfoUtil.setParentInfo(ret);
+                  // make page 의 initState 에서 하는 것으로 수정
+                  ParentInfo.path = ret;
+
+                  // 페이지 이동
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MakePage()),
+                  );
+                });
+                ////////////////////////////////////////////////////////////////////////////////
+
+                /*
                 if (!mounted) return;
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const MakePage()),
                 );
+                */
               },
             ),
-            SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             ElevatedButton(
               child: Text('* PREFS 초기화 *'),
               onPressed: () async {
                 initPrefs();
               },
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 400,
+              height: 400,
+              color: Colors.white,
+              child: Stack(
+                children: [
+                Positioned(
+                  //left: signOffset.dx,
+                  //top: signOffset.dy,
+                  left: 200,
+                  top: 100,
+                  child: Draggable(
+                    feedback: Text('122222ddd~~~', style: TextStyle(
+                      decoration: TextDecoration.none,
+                        fontSize: 10,
+                    )),
+                    childWhenDragging: Opacity(
+                      opacity: 0,
+                      child: Text('====aaa\nbbb\nccc\nddd======'),
+                    ),
+                    onDragEnd:
+                      (details) {
+                      print('onDragEnd offset: ${details.offset}');
+                      signOffset = details.offset;
+                      setState(() { });
+                      },
+
+                    child: Text('aaa\nbbb\nccc\nddd'),
+                  ),
+                ),
+                ]
+              ),
             ),
           ],
         ),

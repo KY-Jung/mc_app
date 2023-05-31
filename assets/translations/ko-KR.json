@@ -21,6 +21,7 @@
   "INFO": "알림",
   "CONFIRM": "확인",
   "INIT_MAKE": "작업중인 화면을 완전히 초기화하시겠습니까?",
+  "PARENT_BRING": "배경 이미지 가져오기",
 
   "FRAME": "틀",
   "SIZE": "크기",

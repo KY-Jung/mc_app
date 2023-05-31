@@ -21,6 +21,7 @@
   "INFO": "Info",
   "CONFIRM": "Confirm",
   "INIT_MAKE": "Do you want to completely reset the screen you are working on?",
+  "PARENT_BRING": "Bring image",
 
   "FRAME": "Frame",
   "SIZE": "Size",

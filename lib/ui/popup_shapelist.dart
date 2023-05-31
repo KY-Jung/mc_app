@@ -123,9 +123,7 @@ class ShapeListPopupState extends State<ShapeListPopup> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text('LONGCLICK_FOR_REORDERING'.tr()),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             Expanded(
               child: ReorderableWrap(
                 enableReorder: true,

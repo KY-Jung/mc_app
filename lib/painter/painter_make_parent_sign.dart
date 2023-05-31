@@ -130,14 +130,43 @@ class MakeParentSignPainter extends CustomPainter {
         int hShapeBackgroundUiImage = shapeBackgroundUiImage!.height;
         dev.log('shapeBackgroundUiImage w: $wShapeBackgroundUiImage, h: $hShapeBackgroundUiImage');
 
-        canvas.drawImage(shapeBackgroundUiImage!,
-            Offset((width - wShapeBackgroundUiImage) / 2, (height - hShapeBackgroundUiImage) / 2), Paint());
+        //canvas.drawImage(shapeBackgroundUiImage!,
+        //    Offset((width - wShapeBackgroundUiImage) / 2, (height - hShapeBackgroundUiImage) / 2), Paint());
+        Rect shapeBackgroundUiImageRect = Offset((width - wShapeBackgroundUiImage) / -2, (height - hShapeBackgroundUiImage) / -2) & Size(width, height);
+        canvas.drawImageRect(shapeBackgroundUiImage!, shapeBackgroundUiImageRect, whRect, Paint());
       } else {
         if (signBackgroundColor != null) {
           Paint backgroundPaint = Paint()
             ..color = signBackgroundColor!;
           canvas.drawPath(borderPath!, backgroundPaint);
         }
+      }
+    } else {
+      if (shapeBackgroundUiImage != null) {
+        int wShapeBackgroundUiImage = shapeBackgroundUiImage!.width;
+        int hShapeBackgroundUiImage = shapeBackgroundUiImage!.height;
+        dev.log('shapeBackgroundUiImage w: $wShapeBackgroundUiImage, h: $hShapeBackgroundUiImage');
+
+        //canvas.drawImage(shapeBackgroundUiImage!,
+        //    Offset((width - wShapeBackgroundUiImage) / 2, (height - hShapeBackgroundUiImage) / 2), Paint());
+        Rect shapeBackgroundUiImageRect = Offset((width - wShapeBackgroundUiImage) / -2, (height - hShapeBackgroundUiImage) / -2) & Size(width, height);
+        canvas.drawImageRect(shapeBackgroundUiImage!, shapeBackgroundUiImageRect, whRect, Paint());
+      } else {
+        if (signBackgroundColor != null) {
+          Paint backgroundPaint = Paint()
+            ..color = signBackgroundColor!;
+          //canvas.drawPath(borderPath!, backgroundPaint);
+          canvas.drawRect(whRect, backgroundPaint);
+        }
+      }
+      // 전체를 덮어썼기 때문에 다시 그려줌
+      if (grid) {
+        // grid
+        // background color 다음에 해야 보기 좋음
+        Paint gridPaint = Paint()
+          ..color = Colors.black38
+          ..strokeWidth = 1;
+        InfoUtil.drawGrid(canvas, width, height, 0, 0, 0.5, gridPaint);
       }
     }
 
