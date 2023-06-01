@@ -790,9 +790,10 @@ class ParentBarState extends State<ParentBar> {
     if (idx == parentProvider.parentSignInfoIdx) {
       return;
     }
-    parentProvider.parentSignInfoIdx = idx;
+    //parentProvider.parentSignInfoIdx = idx;
+    parentProvider.setParentSignInfoIdx(idx);
 
-    setState(() { });
+    //setState(() { });
   }
 ////////////////////////////////////////////////////////////////////////////////
 // Event Start //

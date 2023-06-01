@@ -145,39 +145,6 @@ class MakeTabState extends State<MakeTab> {
               },
             ),
             const SizedBox(height: 20),
-            Container(
-              width: 400,
-              height: 400,
-              color: Colors.white,
-              child: Stack(
-                children: [
-                Positioned(
-                  //left: signOffset.dx,
-                  //top: signOffset.dy,
-                  left: 200,
-                  top: 100,
-                  child: Draggable(
-                    feedback: Text('122222ddd~~~', style: TextStyle(
-                      decoration: TextDecoration.none,
-                        fontSize: 10,
-                    )),
-                    childWhenDragging: Opacity(
-                      opacity: 0,
-                      child: Text('====aaa\nbbb\nccc\nddd======'),
-                    ),
-                    onDragEnd:
-                      (details) {
-                      print('onDragEnd offset: ${details.offset}');
-                      signOffset = details.offset;
-                      setState(() { });
-                      },
-
-                    child: Text('aaa\nbbb\nccc\nddd'),
-                  ),
-                ),
-                ]
-              ),
-            ),
           ],
         ),
       ),
@@ -412,6 +379,8 @@ class MakeTabState extends State<MakeTab> {
     ////////////////////////////////////////////////////////////////////////////////
     // 초기화 후에 하나도 안 보이므로 일단 모두 추가하기
     parentProvider.signInfoList = await FileUtil.loadSignInfoList(AppConstant.SIGN_DIR);
+
+    dev.log('parentProvider.signInfoList ${parentProvider.signInfoList}');
     ////////////////////////////////////////////////////////////////////////////////
     
     setState(() {});
