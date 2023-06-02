@@ -414,8 +414,9 @@ class ParentBarState extends State<ParentBar> {
 
         ////////////////////////////////////////////////////////////////////////////////
         // 화면 갱신
+        parentProvider.clearParentProvider();
         parentProvider.path = newImageFile.path;
-        await parentProvider.setParenProvider();
+        await parentProvider.initParenProvider();
         parentProvider.makeBringEnum = MakePageBringEnum.RESIZE;
         ////////////////////////////////////////////////////////////////////////////////
 

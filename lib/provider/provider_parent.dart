@@ -29,6 +29,8 @@ class ParentProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
   // 설정되어 있는지 여부를 결정
   String path = '';
+
+  bool init = false;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -82,9 +84,11 @@ class ParentProvider with ChangeNotifier {
   // Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
   // blank 구하기
   // bracket offset 초기화
-  Future<void> setParenProvider() async {
+  Future<void> initParenProvider() async {
     //dev.log('setParenProvider path: $p');
     //path = p;
+
+    init = true;
 
     ui.Image uiImage = await FileUtil.loadUiImageFromPath(path);
 
@@ -123,6 +127,10 @@ class ParentProvider with ChangeNotifier {
 
     // offset
     clearParentBracket();
+  }
+  void clearParentProvider() {
+    path = '';
+    init = false;
   }
 
   /// bracket offset 초기화

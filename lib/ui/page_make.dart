@@ -39,7 +39,7 @@ class MakePageState extends State<MakePage> {
   // variable
 
   //MakePageEnum _makePageEnum = MakePageEnum.PARENT;
-  bool first = true;
+  //bool first = true;
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,8 +127,9 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // initState 에서 MediaQuery 를 호출하면 에러 발생
 
-    if (first) {
-      parentProvider.setParenProvider().then((_) {        // sign 을 위한 설정
+    if (!parentProvider.init) {
+      dev.log('first start');
+      parentProvider.initParenProvider().then((_) {        // sign 을 위한 설정
         parentProvider.hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
         parentProvider.hBottomBlank = AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT;
         var wScreen = MediaQuery.of(context).size.width;
@@ -145,10 +146,7 @@ class MakePageState extends State<MakePage> {
         dev.log('hTopBlank: $parentProvider.hTopBlank');
         dev.log('hBottomBlank: $parentProvider.hBottomBlank');
         dev.log('whSign: $parentProvider.whSign');
-
-        first = false;
       });
-
     }
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -642,7 +640,8 @@ class MakePageState extends State<MakePage> {
       if (ret == AppConstant.OK) {
         // TODO : 모두 초기화하는 함수를 별도로 작성하고 호출
 
-        parentProvider.path = '';
+        //parentProvider.path = '';
+        parentProvider.clearParentProvider();   // path, init 같이 처리
         Navigator.pop(context, 'CANCEL');
       }
     });
