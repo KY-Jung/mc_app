@@ -1,6 +1,5 @@
 import 'dart:developer' as dev;
 
-//import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../config/config_app.dart';
@@ -42,7 +41,6 @@ class MakeParentResizePainter extends CustomPainter {
     dev.log('# MakeParentResizePainter paint START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    //initParentData();
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -56,8 +54,6 @@ class MakeParentResizePainter extends CustomPainter {
       ..color = Colors.white30
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 2;
-    //InfoUtil.drawGrid(canvas, wScreen, hScreen, wImage, hImage, inScale, xBlank,
-    //    yBlank, AppConfig.SIZE_GRID_RATIO, gridPaint);
     InfoUtil.drawGrid(canvas, wScreen, hScreen, xBlank, yBlank,
         AppConfig.SIZE_GRID_RATIO, gridPaint);
     ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +168,7 @@ class MakeParentResizePainter extends CustomPainter {
   @override
   bool shouldRepaint(MakeParentResizePainter oldDelegate) {
     // 다시 그려야할 정보 검사
-
+/*
     if (ParentInfo.leftTopOffset.dx != oldDelegate.leftTopOffset.dx)  return true;
     if (ParentInfo.leftTopOffset.dy != oldDelegate.leftTopOffset.dy)  return true;
     if (ParentInfo.rightTopOffset.dx != oldDelegate.rightTopOffset.dx)  return true;
@@ -186,38 +182,11 @@ class MakeParentResizePainter extends CustomPainter {
     if (ParentInfo.xStart != oldDelegate.xStart)  return true;
     if (ParentInfo.yStart != oldDelegate.yStart)  return true;
     if (ParentInfo.scale != oldDelegate.scale)  return true;
-
+*/
 
     dev.log('# MakeParentResizePainter shouldRepaint return false');
-    return false;
-    //return true;
+    //return false;
+    return true;
   }
-
-/*
-  ////////////////////////////////////////////////////////////////////////////////
-  void initParentData() {
-    wScreen = ParentInfo.wScreen;
-    hScreen = ParentInfo.hScreen;
-
-    wImage = ParentInfo.wImage;
-    hImage = ParentInfo.hImage;
-
-    inScale = ParentInfo.inScale;
-
-    xBlank = ParentInfo.xBlank;
-    yBlank = ParentInfo.yBlank;
-
-    xStart = ParentInfo.xStart;
-    yStart = ParentInfo.yStart;
-
-    scale = ParentInfo.scale;
-
-    leftTopOffset = ParentInfo.leftTopOffset;
-    rightTopOffset = ParentInfo.rightTopOffset;
-    leftBottomOffset = ParentInfo.leftBottomOffset;
-    rightBottomOffset = ParentInfo.rightBottomOffset;
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-*/
 
 }

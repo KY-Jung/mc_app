@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-class ShapeInfo {
+class ShapeFileInfo {
 
   late String fileName;
   late SvgPicture image;
@@ -11,6 +11,6 @@ class ShapeInfo {
 
   @override
   String toString() {
-    return 'ShapeInfo{fileName: $fileName}';
+    return 'ShapeFileInfo{fileName: $fileName}';
   }
 }

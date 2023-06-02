@@ -1,18 +1,9 @@
 import 'dart:developer' as dev;
-import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as IMG;
-import 'package:path_provider/path_provider.dart';
 
-import '../config/constant_app.dart';
-import '../dto/info_dot.dart';
-import '../dto/info_shape.dart';
-import '../dto/info_sign.dart';
-import '../painter/clipper_sign.dart';
+import '../config/enum_app.dart';
 import '../ui/bar_parent.dart';
 import '../util/util_file.dart';
 import '../util/util_info.dart';
@@ -36,285 +27,131 @@ class ParentProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // ParentBar Sign START
-  ////////////////////////////////////////////////////////////////////////////////
-  int parentSignInfoIdx = -1;
-  void setParentSignInfoIdx(int idx, {bool notify = true}) {
-    parentSignInfoIdx = idx;
-
-    if (notify)   notifyListeners();
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // ParentBar Sign END
+  // 설정되어 있는지 여부를 결정
+  String path = '';
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // Sign init START
-  ////////////////////////////////////////////////////////////////////////////////
-  void initAll({bool notify = true}) {
-    // sign
-    selectedSignInfoIdx = -1;
-    signUiImage?.dispose();
-    signUiImage = null;
-
-    // line
-    signLines.clear();
-    //if (recentSignColorList.isEmpty) {
-    //  signColor = Colors.blue;
-    //} else {
-    //  signColor = recentSignColorList[0];
-    //}
-    signWidth = 10;
-
-    // background
-    signBackgroundColor = null;
-    signBackgroundUiImage?.dispose();
-    signBackgroundUiImage = null;
-
-    // shape
-    selectedShapeInfoIdx = -1;
-    signShapeBorderColor = null;
-    signShapeBorderWidth = 10;
-
-    if (notify)   notifyListeners();
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // init END
+  // none, resize 로만 설정
+  MakePageBringEnum makeBringEnum = MakePageBringEnum.NONE;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // signInfoList START
-  ////////////////////////////////////////////////////////////////////////////////
-  // sign info list
-  List<SignInfo> signInfoList = [];
-  void addSignInfoList(SignInfo signInfo, int max, {bool notify = true}) {
-    signInfoList.insert(0, signInfo);
-    if (signInfoList.length > max) {
-      signInfoList.removeLast();
-    }
+  double wScreen = 0;
+  double hScreen = 0;
 
-    if (notify)   notifyListeners();
-  }
-  // shape info idx
-  int selectedSignInfoIdx = -1;
-  void setSelectedSignInfoIdx(int idx, {bool notify = true}) {
-    selectedSignInfoIdx = idx;
+  int wImage = 0;
+  int hImage = 0;
 
-    if (notify)   notifyListeners();
-  }
-  ui.Image? signUiImage;
-  void setSignUiImage(ui.Image? s, {bool notify = true}) {
-    signUiImage?.dispose();
-    signUiImage = s;
+  // Parent 이미지가 screen 에 맞추어진 ratio
+  double inScale = 0;
 
-    if (notify)   notifyListeners();
-  }
-  void initSignUiImage({bool notify = true}) {
-    signUiImage?.dispose();
-    signUiImage = null;
+  double xBlank = 0;
+  double yBlank = 0;
 
-    if (notify)   notifyListeners();
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // signInfoList END
+  double xStart = 0;
+  double yStart = 0;
+
+  double scale = 0;    // 사용하지 않음
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // drawing START
-  ////////////////////////////////////////////////////////////////////////////////
-  List<List<DotInfo>> signLines = <List<DotInfo>>[];
-  void drawSignLinesStart(Offset offset) {
-    List<DotInfo> oneLine = <DotInfo>[];
-    oneLine.add(DotInfo(offset, signWidth, signColor));
-    signLines.add(oneLine);
-
-    notifyListeners();
-  }
-  void drawSignLines(Offset offset, double s) {
-    signLines.last.add(DotInfo(offset, s, null));
-
-    notifyListeners();
-  }
-  void initSignLines({bool notify = true}) {
-    signLines.clear();
-
-    if (notify)   notifyListeners();
-  }
-  void undoSignLines({bool notify = true}) {
-    if (signLines.isNotEmpty) {
-      signLines.removeLast();
-
-      if (notify)   notifyListeners();
-    }
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // drawint END
+  // for sign
+  double hTopBlank = 0;
+  double hBottomBlank = 0;
+  double whSign = 0;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // Line START
+  Offset xyOffset = const Offset(0, 0);    // for test
+  Offset leftTopOffset = const Offset(0, 0);
+  Offset rightTopOffset = const Offset(0, 0);
+  Offset leftBottomOffset = const Offset(0, 0);
+  Offset rightBottomOffset = const Offset(0, 0);
+
+  // 선택된 bracket 12개 중 하나
+  MakeParentResizePointEnum makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
   ////////////////////////////////////////////////////////////////////////////////
-  // recent color
-  List<Color> recentSignColorList = [];
-  void addRecentSignColor(Color color, int max, {bool notify = true}) {
-    recentSignColorList.insert(0, color);
-    for (int i = 1, j = recentSignColorList.length; i < j; i++) {
-      if (color.value == recentSignColorList[i].value) {
-        recentSignColorList.removeAt(i);
-        break;
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Parent START
+  ////////////////////////////////////////////////////////////////////////////////
+  // path 를 받아서
+  // ui.Image 로 변환
+  // 이미지 크기 구하기
+  // Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
+  // blank 구하기
+  // bracket offset 초기화
+  Future<void> setParenProvider() async {
+    //dev.log('setParenProvider path: $p');
+    //path = p;
+
+    ui.Image uiImage = await FileUtil.loadUiImageFromPath(path);
+
+    /// Parent 이미지 크기
+    wImage = uiImage.width;
+    hImage = uiImage.height;
+    dev.log('wImage: ${uiImage.width}, hImage: ${uiImage.height}');
+
+    /// Parent 이미지가 screen 에 맞추어진 ratio 구하기
+    double inScale = InfoUtil.calcFitRatioIn(
+        wScreen, hScreen, uiImage.width, uiImage.height);
+    inScale = inScale;
+    dev.log('inScale: $inScale');
+
+    // blank
+    if (inScale < 1.0) {
+      // 화면보다 큰 이미지인 경우
+      double wReal = uiImage.width * inScale;
+      double hReal = uiImage.height * inScale;
+      dev.log('wReal: $wReal, hReal: $hReal');
+      if ((wScreen - wReal) > (hScreen - hReal)) {
+        xBlank = (wScreen - wReal) / 2;
+        yBlank = 0.0;
+      } else {
+        yBlank = (hScreen - hReal) / 2;
+        xBlank = 0.0;
       }
+    } else {
+      // 화면보다 작은 이미지인 경우
+      xBlank = (wScreen - uiImage.width) * 0.5;
+      yBlank = (hScreen - uiImage.height) * 0.5;
     }
-    if (recentSignColorList.length > max) {
-      recentSignColorList.removeLast();
-    }
+    dev.log('xBlank: $xBlank, yBlank: $yBlank');
 
-    if (notify)   notifyListeners();
+    uiImage.dispose();
+
+    // offset
+    clearParentBracket();
   }
-  // sign color
-  late Color signColor;
-  void setSignColor(Color color) {
-    signColor = color;
 
-    notifyListeners();
-  }
-  // sign width
-  double signWidth = 10;
-  void setSignWidth(double size) {
-    signWidth = size;
-
-    notifyListeners();
-  }
-  void changeSignColorAndWidth(Color c, double s,{bool notify = true}) {
-    signColor = c;
-    signWidth = s;
-
-    if (notify)   notifyListeners();
+  /// bracket offset 초기화
+  /// 1. setParentProvider
+  /// 2. ParentBar 의 initState 에서 (다른 bar 로 갔다가 돌아온 경우 때문에)
+  /// 3. Size 버튼 누른 경우
+  void clearParentBracket() {
+    // offset
+    leftTopOffset = Offset(xBlank, yBlank);
+    rightTopOffset = Offset(wScreen - xBlank, yBlank);
+    leftBottomOffset = Offset(xBlank, hScreen - yBlank);
+    rightBottomOffset = Offset(wScreen - xBlank, hScreen - yBlank);
   }
   ////////////////////////////////////////////////////////////////////////////////
-  // Line END
+  // Parent END
   ////////////////////////////////////////////////////////////////////////////////
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // Background START
-  ////////////////////////////////////////////////////////////////////////////////
-  // recent background color
-  List<Color> recentSignBackgroundColorList = [];
-  void addRecentSignBackgroundColor(Color color, int max, {bool notify = true}) {
-    recentSignBackgroundColorList.insert(0, color);
-    for (int i = 1, j = recentSignBackgroundColorList.length; i < j; i++) {
-      if (color.value == recentSignBackgroundColorList[i].value) {
-        recentSignBackgroundColorList.removeAt(i);
-        break;
-      }
-    }
-    if (recentSignBackgroundColorList.length > max) {
-      recentSignBackgroundColorList.removeLast();
-    }
-
-    if (notify)   notifyListeners();
+  void printParent() {
+    dev.log('path: $path, '
+        'wScreen: $wScreen, hScreen: $hScreen, '
+        'wImage: $wImage, hImage: $hImage, '
+        'inScale: $inScale, '
+        'xBlank: $xBlank, yBlank: $yBlank, '
+        'xStart: $xStart, yStart: $yStart, '
+        'scale: $scale, '
+        'hTopBlank: $hTopBlank, hBottomBlank: $hBottomBlank, whSign: $whSign, '
+        'xyOffset: $xyOffset, leftTopOffset: $leftTopOffset, rightTopOffset: $rightTopOffset, '
+        'leftBottomOffset: $leftBottomOffset, rightBottomOffset: $rightBottomOffset, '
+        'makeParentSizePointEnum: $makeParentSizePointEnum');
   }
-  // background color
-  Color? signBackgroundColor;
-  void setSignBackgroundColor(Color? color) {
-    signBackgroundColor = color;
-
-    notifyListeners();
-  }
-  // background image
-  ui.Image? signBackgroundUiImage;
-  Future<void> loadSignBackgroundUiImage(String path, double whSignBoard) async {
-    dev.log('# ParentProvider loadSignBackgroundUiImage START');
-
-    // 지우고 시작
-    initSignBackgroundUiImage(notify: false);
-
-    FileUtil.loadUiImageFromPath(path).then((image) async {
-      dev.log('loadUiImageFromPath START');
-
-      // 꽉찬 크기의 비율 구하기
-      double scaleNew = InfoUtil.calcFitRatioOut(whSignBoard, whSignBoard, image.width, image.height);
-      dev.log('scaleNew: $scaleNew');
-
-      File newImageFile = await FileUtil.initTempDirAndFile(AppConstant.SIGN_SHAPEBACKGROUND_DIR, 'jpg');
-      dev.log('newImageFile.path: ${newImageFile.path}');
-
-      await FileUtil.resizeJpgWithFile(path, newImageFile.path, (image.width * scaleNew).toInt(), (image.height * scaleNew).toInt());
-
-      FileUtil.loadUiImageFromPath(newImageFile.path).then((imageNew) {
-        signBackgroundUiImage = imageNew;
-        dev.log('loadUiImageFromPath2 w: ${imageNew.width}, h: ${imageNew.height}');
-
-        notifyListeners();
-      });
-    });
-  }
-  void initSignBackgroundUiImage({bool notify = true}) {
-    signBackgroundUiImage?.dispose();
-    signBackgroundUiImage = null;
-
-    if (notify)   notifyListeners();
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // Background END
-  ////////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Shape START
-  ////////////////////////////////////////////////////////////////////////////////
-  // shape info list
-  List<ShapeInfo> shapeInfoList = [];
-  /*
-  void reorderShapeInfoList(List<String> fileNameList) {
-    //FileUtil.reorderShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
-    FileUtil.reorderInfoListWithFileNameList(shapeInfoList, fileNameList);
-    notifyListeners();
-  }
-  */
-  // shape info idx
-  int selectedShapeInfoIdx = -1;
-  void setSelectedShapeInfoIdx(int idx) {
-    selectedShapeInfoIdx = idx;
-
-    notifyListeners();
-  }
-  // recent shape border color list
-  List<Color> recentSignShapeBorderColorList = [];
-  void addRecentSignShapeBorderColor(Color color, int max, {bool notify = true}) {
-    recentSignShapeBorderColorList.insert(0, color);
-    for (int i = 1, j = recentSignShapeBorderColorList.length; i < j; i++) {
-      if (color.value == recentSignShapeBorderColorList[i].value) {
-        recentSignShapeBorderColorList.removeAt(i);
-        break;
-      }
-    }
-    if (recentSignShapeBorderColorList.length > max) {
-      recentSignShapeBorderColorList.removeLast();
-    }
-
-    if (notify)   notifyListeners();
-  }
-  // shape border color
-  Color? signShapeBorderColor;
-  void setSignShapeBorderColor(Color? color) {
-    signShapeBorderColor = color;
-
-    notifyListeners();
-  }
-  // shape border width
-  double signShapeBorderWidth = 10;
-  void setSignShapeBorderWidth(double size) {
-    signShapeBorderWidth = size;
-
-    notifyListeners();
-  }
-  void changeSignShapeBorderColorAndWidth(Color c, double s,{bool notify = true}) {
-    signShapeBorderColor = c;
-    signShapeBorderWidth = s;
-
-    if (notify)   notifyListeners();
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // Shape END
-  ////////////////////////////////////////////////////////////////////////////////
 
 }

@@ -1,36 +1,9 @@
-import 'dart:async';
 import 'dart:developer' as dev;
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'dart:math' as math;
+import 'dart:async';
 import 'package:flex_color_picker/flex_color_picker.dart';
-import 'package:image/image.dart' as IMG;
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:jpeg_encode/jpeg_encode.dart';
-import 'package:mc/config/constant_app.dart';
-import 'package:mc/ui/page_make.dart';
-import 'package:mc/util/util_popup.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:badges/badges.dart' as badges;
-import 'package:svg_path_parser/svg_path_parser.dart';
-
-import '../config/color_app.dart';
-import '../config/config_app.dart';
-import '../dto/info_parent.dart';
-import '../painter/clipper_sign.dart';
-import '../painter/painter_make_parent_sign.dart';
-import '../provider/provider_make.dart';
-import '../provider/provider_parent.dart';
-import '../util/util_file.dart';
-import '../util/util_info.dart';
 
 class ColorPickerPage extends StatefulWidget {
   const ColorPickerPage({super.key});
@@ -95,48 +68,6 @@ class ColorPickerPageState extends State<ColorPickerPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
         children: <Widget>[
-          /*
-          // Show the selected color.
-          ListTile(
-            title: const Text('Select color below to change this color'),
-            subtitle: Text('${ColorTools.materialNameAndCode(screenPickerColor)} '
-                'aka ${ColorTools.nameThatColor(screenPickerColor)}'),
-            trailing: ColorIndicator(
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              color: screenPickerColor,
-            ),
-          ),
-
-          SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Card(
-                elevation: 2,
-                child: ColorPicker(
-                  // Use the screenPickerColor as start color.
-                  color: screenPickerColor,
-                  // Update the screenPickerColor using the callback.
-                  onColorChanged: (Color color) =>
-                      setState(() => screenPickerColor = color),
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  heading: Text(
-                    'Select color',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  subheading: Text(
-                    'Select color shade',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          */
           ListTile(
             title: const Text('Click this color to change it in a dialog'),
             subtitle:
@@ -146,7 +77,7 @@ class ColorPickerPageState extends State<ColorPickerPage> {
               'aka ${ColorTools.nameThatColor(dialogPickerColor)}',
             ),
              */
-              Text('select color'),
+              const Text('select color'),
             trailing: ColorIndicator(
               width: 44,
               height: 44,
@@ -226,7 +157,7 @@ class ColorPickerPageState extends State<ColorPickerPage> {
       maxRecentColors: 6,
       recentColors: const <Color>[Colors.amber, Colors.brown],
       onRecentColorsChanged: (List<Color> colors) {
-        print('onRecentColorsChanged: ${colors.length}');
+        dev.log('onRecentColorsChanged: ${colors.length}');
       },
     ).showPickerDialog(
       context,

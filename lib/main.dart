@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mc/provider/provider_make.dart';
 import 'package:mc/provider/provider_parent.dart';
+import 'package:mc/provider/provider_sign.dart';
 import 'package:mc/ui/page_imageview.dart';
 import 'package:mc/ui/page_index.dart';
 import 'package:mc/ui/page_splash.dart';
@@ -56,6 +57,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<ParentProvider>(
           create: (context) => ParentProvider(),
         ),
+        ChangeNotifierProvider<SignProvider>(
+          create: (context) => SignProvider(),
+        ),
       ],
       child: MaterialApp(
         title: 'MC',
@@ -82,4 +86,5 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+
 }

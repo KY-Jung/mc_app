@@ -49,7 +49,7 @@ class AppConfig {
   static const int SIGNCOLOR_SAVE_MAX = 6;
 
   // parent 의 가로/세로에 비례한 크기 비율
-  static const double SIGN_WH_RATIO = 0.15;
+  static const double SIGN_WH_RATIO = 0.1;
   ////////////////////////////////////////////////////////////////////////////////
 
 

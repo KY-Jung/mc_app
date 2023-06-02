@@ -19,7 +19,7 @@ class AppConstant {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  //static const String SHAPE_DIR = 'assets/shape/';    // 사용하는 곳 없
+  //static const String SHAPE_DIR = 'assets/shape/';    // 사용하는 곳 없음
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -27,16 +27,18 @@ class AppConstant {
   static const String PREFS_DELIM = ',';
   static const String PREFS_DELIM2 = '|';
 
-  static const String PREFS_SIGNINFOLIST = 'PREFS_SIGNINFOLIST';
+  static const String PREFS_SIGNFILEINFOLIST = 'PREFS_SIGNFILEINFOLIST';
+  static const String PREFS_PARENTSIGNOFFSET_X = 'PREFS_PARENTSIGNOFFSET_X';
+  static const String PREFS_PARENTSIGNOFFSET_Y = 'PREFS_PARENTSIGNOFFSET_Y';
 
   static const String PREFS_RECENTSIGNCOLOR = 'PREFS_RECENTSIGNCOLOR';
   static const String PREFS_SIGNWIDTH = 'PREFS_SIGNWIDTH';
 
   static const String PREFS_RECENTSIGNBACKGROUNDCOLOR = 'PREFS_RECENTSIGNBACKGROUNDCOLOR';
 
-  static const String PREFS_SHAPEINFOLIST = 'PREFS_SHAPEINFOLIST';
+  static const String PREFS_SHAPEFILEINFOLIST = 'PREFS_SHAPEFILEINFOLIST';
   static const String PREFS_RECENTSHAPEBORDERCOLOR = 'PREFS_RECENTSHAPEBORDERCOLOR';
-  static const String PREFS_SHAPEBORDERWIDTH = 'PREFS_SHAPEBORDERWIDTH';
+  static const String PREFS_SIGNSHAPEBORDERWIDTH = 'PREFS_SIGNSHAPEBORDERWIDTH';
   ////////////////////////////////////////////////////////////////////////////////
 
 }

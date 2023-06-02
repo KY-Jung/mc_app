@@ -10,12 +10,13 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../dto/info_parent.dart';
-import '../dto/info_shape.dart';
-import '../dto/info_sign.dart';
+import '../dto/info_shapefile.dart';
+import '../dto/info_signfile.dart';
 import '../model/mcuser.dart';
 
 import '../provider/provider_make.dart';
 import '../provider/provider_parent.dart';
+import '../provider/provider_sign.dart';
 import '../util/util_color.dart';
 import '../util/util_file.dart';
 import '../util/util_info.dart';
@@ -28,17 +29,12 @@ class MakeTab extends StatefulWidget {
 }
 
 class MakeTabState extends State<MakeTab> {
-
   ////////////////////////////////////////////////////////////////////////////////
   late MakeProvider makeProvider;
   late ParentProvider parentProvider;
-  ////////////////////////////////////////////////////////////////////////////////
+  late SignProvider signProvider;
 
-
   ////////////////////////////////////////////////////////////////////////////////
-  Offset signOffset = Offset(0, 0);
-  ////////////////////////////////////////////////////////////////////////////////
-
 
   ////////////////////////////////////////////////////////////////////////////////
   @override
@@ -51,7 +47,7 @@ class MakeTabState extends State<MakeTab> {
     // TODO : 임시 사용, 초기 화면 지정
     WidgetsBinding.instance.addPostFrameCallback((_) => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const MakeScreen()),
+          MaterialPageRoute(builder: (context) => const MakePage()),
         ));
     // ######################################################################## //
     */
@@ -67,6 +63,7 @@ class MakeTabState extends State<MakeTab> {
     //makeProvider = Provider.of<MakeProvider>(context, listen: false);
     makeProvider = Provider.of<MakeProvider>(context);
     parentProvider = Provider.of<ParentProvider>(context, listen: false);
+    signProvider = Provider.of<SignProvider>(context, listen: false);
     ////////////////////////////////////////////////////////////////////////////////
 
     return Scaffold(
@@ -75,24 +72,15 @@ class MakeTabState extends State<MakeTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text('MAKE'.tr(), style: TextStyle(color: Colors.white)),
-            Text('McImageId is ', style: TextStyle(color: Colors.white)),
+            Text('MAKE'.tr(), style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 20),
             ElevatedButton(
               child: Text('MAKE_NEW'.tr()),
               onPressed: () async {
 
                 ////////////////////////////////////////////////////////////////////////////////
-                // 초기화 START
-                ////////////////////////////////////////////////////////////////////////////////
-                await initMakePage();
-                ////////////////////////////////////////////////////////////////////////////////
-                // 초기화 END
-                ////////////////////////////////////////////////////////////////////////////////
-
-                ////////////////////////////////////////////////////////////////////////////////
                 // 있으면 재사용
-                if (ParentInfo.path != '') {
+                if (parentProvider.path != '') {
                   if (!mounted) return;
                   Navigator.push(
                     context,
@@ -100,10 +88,18 @@ class MakeTabState extends State<MakeTab> {
                   );
                   return;
                 }
+                ////////////////////////////////////////////////////////////////////////////////
 
+                ////////////////////////////////////////////////////////////////////////////////
+                // 초기화 START
+                await initSignProvider();
+                // 초기화 END
+                ////////////////////////////////////////////////////////////////////////////////
+
+                ////////////////////////////////////////////////////////////////////////////////
                 // 없으면 parent 먼저 선택
                 if (!mounted) return;
-                PopupUtil.popupImageBring(context, 'INFO'.tr(), 'PARENT_BRING'.tr()).then((ret) async {
+                await PopupUtil.popupImageBring(context, 'INFO'.tr(), 'PARENT_BRING'.tr()).then((ret) async {
                   dev.log('popupImageBring: $ret');
 
                   if (ret == null) {
@@ -115,9 +111,11 @@ class MakeTabState extends State<MakeTab> {
                   }
 
                   // path 저장 및 초기화
-                  //await InfoUtil.setParentInfo(ret);
+                  //await InfoUtil.setparentProvider(ret);
                   // make page 의 initState 에서 하는 것으로 수정
-                  ParentInfo.path = ret;
+                  //parentProvider.setParenProvider(ret).then((_) => {});
+                  // 여기서 하면 팝업이 빨리 사라지지 않는 경우가 있음 (2023.06.02, KY.Jung)
+                  parentProvider.path = ret;
 
                   // 페이지 이동
                   if (!mounted) return;
@@ -127,21 +125,20 @@ class MakeTabState extends State<MakeTab> {
                   );
                 });
                 ////////////////////////////////////////////////////////////////////////////////
-
-                /*
-                if (!mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MakePage()),
-                );
-                */
               },
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('* PREFS 초기화 *'),
+              child: const Text('* clear PREFS *'),
               onPressed: () async {
-                initPrefs();
+                clearPrefs();
+              },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              child: const Text('* loadSignFileAndSavePrefs *'),
+              onPressed: () async {
+                loadSignFileAndSavePrefs();
               },
             ),
             const SizedBox(height: 20),
@@ -156,8 +153,7 @@ class MakeTabState extends State<MakeTab> {
           await userSqlite.initDb().then((_) async {
             List<McUser>? listUser = await userSqlite.getUser();
             if (listUser == null) {
-              await userSqlite.setUser(
-                  McUser(email: 'test_1@gainsys.kr', signKey: '123abc'));
+              await userSqlite.setUser(McUser(email: 'test_1@gainsys.kr', signKey: '123abc'));
             }
           }).catchError((e) {
             // browser or FATAL
@@ -169,189 +165,233 @@ class MakeTabState extends State<MakeTab> {
       ),
     );
   }
+
   ////////////////////////////////////////////////////////////////////////////////
 
-  Future<void> initMakePage() async {
+  Future<void> initSignProvider() async {
+    dev.log('# MakeTab initSignProvider START');
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     ////////////////////////////////////////////////////////////////////////////////
-    // sign
-    if (parentProvider.signInfoList.isNotEmpty) {
-      // 이미 초기화되어 있으므로, 있는 것 사용
-      dev.log('이미 signInfoList 초기화되어 있으므로, 재사용');
+    // ParentBar sign
+
+    // parentSignFileInfoIdx
+    signProvider.parentSignFileInfoIdx = -1;
+
+    // parentSignOffset
+    double? prefsParentSignOffsetX = prefs.getDouble(AppConstant.PREFS_PARENTSIGNOFFSET_X);
+    double? prefsParentSignOffsetY = prefs.getDouble(AppConstant.PREFS_PARENTSIGNOFFSET_Y);
+    if (prefsParentSignOffsetX == null || prefsParentSignOffsetY == null) {
+      signProvider.parentSignOffset = null;
     } else {
-      // load
-      dev.log('PNG 로딩 START: ${DateTime.now()}');
-      List<SignInfo> signInfoList = await FileUtil.loadSignInfoList(AppConstant.SIGN_DIR);
-      dev.log('PNG 로딩 ${signInfoList.length} END: ${DateTime.now()}');
-
-      // prefs 읽기
-      String? prefsSignInfoList = prefs.getString(AppConstant.PREFS_SIGNINFOLIST);
-      if (prefsSignInfoList == null || prefsSignInfoList.isEmpty) {
-        // 최초인 경우
-        dev.log('signInfoList 최초인 경우');
-
-        // 저장되어 있는것 무시
-        signInfoList = [];
-      } else {
-        dev.log('prefsSignInfoList parsing');
-
-        // prefs 의 내용으로 순서 조정
-        List<String> prefsFileNameList = prefsSignInfoList!.split(AppConstant.PREFS_DELIM);
-        // reordering
-        dev.log('!!! prefs 목록을 기준으로 순서 조정');
-        signInfoList = FileUtil.reorderSignInfoListWithFileNameList(signInfoList, prefsFileNameList, AppConstant.PREFS_DELIM2);
-      }
-
-      parentProvider.signInfoList = signInfoList;
+      signProvider.parentSignOffset = Offset(prefsParentSignOffsetX, prefsParentSignOffsetY);
     }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    // line - color
-    String? prefsRecentSignColor = prefs.getString(AppConstant.PREFS_RECENTSIGNCOLOR);
+    // sign
 
-    // recent color list
+    // signFileInfoList
+    if (signProvider.signFileInfoList.isNotEmpty) {
+      // 이미 초기화되어 있으므로, 있는 것 사용
+      dev.log('이미 signFileInfoList 초기화되어 있으므로, 재사용');
+    } else {
+      // load
+      dev.log('PNG 로딩 START: ${DateTime.now()}');
+      List<SignFileInfo> signFileInfoList = await FileUtil.loadSignFileInfoList(AppConstant.SIGN_DIR);
+      dev.log('PNG 로딩 ${signFileInfoList.length} END: ${DateTime.now()}');
+
+      // prefs 읽기
+      String? prefsSignFileInfoList = prefs.getString(AppConstant.PREFS_SIGNFILEINFOLIST);
+      if (prefsSignFileInfoList == null || prefsSignFileInfoList.isEmpty) {
+        // 최초인 경우
+        dev.log('signFileInfoList prefs 에 없음');
+
+        // 저장되어 있는것 무시
+        signFileInfoList = [];
+      } else {
+        dev.log('prefsSignFileInfoList parsing');
+
+        // prefs 의 내용으로 순서 조정
+        List<String> prefsFileNameList = prefsSignFileInfoList.split(AppConstant.PREFS_DELIM);
+        // reordering
+        dev.log('!!! prefs 목록을 기준으로 순서 조정');
+        /// fileNameList 에 없는 것은 반환하지 않음
+        signFileInfoList = FileUtil.reorderSignFileInfoListWithFileNameList(
+            signFileInfoList, prefsFileNameList, AppConstant.PREFS_DELIM2);
+      }
+      signProvider.signFileInfoList = signFileInfoList;
+    }
+
+    // selectedSignFileInfoIdx
+    signProvider.selectedSignFileInfoIdx = -1;
+
+    // selectedSignFileInfoIdx
+    signProvider.clearSignUiImage();
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // line
+    // recentSignColorList
+    signProvider.signLines.clear();
+
+    // recentSignColorList
+    String? prefsRecentSignColor = prefs.getString(AppConstant.PREFS_RECENTSIGNCOLOR);
     if (prefsRecentSignColor == null || prefsRecentSignColor.isEmpty) {
     } else {
       List<Color> recentSignColorList = [];
-      List<String> recentSignColorStrList = prefsRecentSignColor!.split(AppConstant.PREFS_DELIM);
+      List<String> recentSignColorStrList = prefsRecentSignColor.split(AppConstant.PREFS_DELIM);
       for (String colorStr in recentSignColorStrList) {
         Color color = ColorUtil.convertStringToColor(colorStr);
         recentSignColorList.add(color);
       }
-      parentProvider.recentSignColorList = recentSignColorList;
+      signProvider.recentSignColorList = recentSignColorList;
     }
-    dev.log('initMakePage recentSignColorList: ${parentProvider.recentSignColorList}');
+    dev.log('initMakePage recentSignColorList: ${signProvider.recentSignColorList}');
 
-    // sign color
-    if (parentProvider.recentSignColorList.isEmpty) {
-      parentProvider.signColor = Colors.blue;
+    // signColor
+    if (signProvider.recentSignColorList.isEmpty) {
+      signProvider.signColor = Colors.blue;
     } else {
-      parentProvider.signColor = parentProvider.recentSignColorList.elementAt(0);
+      signProvider.signColor = signProvider.recentSignColorList.elementAt(0);
     }
-    dev.log('initMakePage signColor: ${parentProvider.signColor}');
+    dev.log('initMakePage signColor: ${signProvider.signColor}');
 
-    // sign width
+    // signWidth
     double? prefsSignWidth = prefs.getDouble(AppConstant.PREFS_SIGNWIDTH);
     if (prefsSignWidth == null) {
-      parentProvider.signWidth = 10;
+      signProvider.signWidth = 10;
     } else {
-      parentProvider.signWidth = prefsSignWidth;
+      signProvider.signWidth = prefsSignWidth;
     }
-    dev.log('initMakePage signWidth: ${parentProvider.signWidth}');
+    dev.log('initMakePage signWidth: ${signProvider.signWidth}');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    // background - color
+    // background
+
+    // recentSignBackgroundColorList
     String? prefsSignBackgroundColor = prefs.getString(AppConstant.PREFS_RECENTSIGNBACKGROUNDCOLOR);
     if (prefsSignBackgroundColor == null || prefsSignBackgroundColor.isEmpty) {
     } else {
       List<Color> recentSignBackgroundColorList = [];
-      List<String> recentSignBackgroundColorStrList = prefsSignBackgroundColor!.split(AppConstant.PREFS_DELIM);
+      List<String> recentSignBackgroundColorStrList = prefsSignBackgroundColor.split(AppConstant.PREFS_DELIM);
       for (String colorStr in recentSignBackgroundColorStrList) {
         Color color = ColorUtil.convertStringToColor(colorStr);
         recentSignBackgroundColorList.add(color);
       }
-      parentProvider.recentSignBackgroundColorList = recentSignBackgroundColorList;
+      signProvider.recentSignBackgroundColorList = recentSignBackgroundColorList;
     }
-    dev.log('initMakePage recentSignBackgroundColorList: ${parentProvider.recentSignBackgroundColorList}');
-    parentProvider.signBackgroundColor = null;
-    dev.log('initMakePage signBackgroundColor: ${parentProvider.signBackgroundColor}');
-    parentProvider.signBackgroundUiImage = null;
-    dev.log('initMakePage shapeBackgroundUiImage: ${parentProvider.signBackgroundUiImage}');
+    dev.log('initMakePage recentSignBackgroundColorList: ${signProvider.recentSignBackgroundColorList}');
+
+    // signBackgroundColor
+    signProvider.signBackgroundColor = null;
+    dev.log('initMakePage signBackgroundColor: ${signProvider.signBackgroundColor}');
+
+    // signBackgroundUiImage
+    signProvider.clearSignBackgroundUiImage();
+    dev.log('initMakePage shapeBackgroundUiImage: ${signProvider.signBackgroundUiImage}');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // shape
-    if (parentProvider.shapeInfoList.isNotEmpty) {
+
+    // shapeFileInfoList
+    if (signProvider.shapeFileInfoList.isNotEmpty) {
       // 이미 초기화되어 있으므로, 있는 것 사용
-      dev.log('이미 shapeInfoList 초기화되어 있으므로, 재사용');
+      dev.log('이미 shapeFileInfoList 초기화되어 있으므로, 재사용');
     } else {
       // load
       dev.log('SVG 로딩 START: ${DateTime.now()}');
-      List<ShapeInfo> shapeInfoList = await FileUtil.loadShapeInfoList();
-      dev.log('SVG 로딩 ${shapeInfoList.length} END: ${DateTime.now()}');
+      List<ShapeFileInfo> shapeFileInfoList = await FileUtil.loadShapeFileInfoList();
+      dev.log('SVG 로딩 ${shapeFileInfoList.length} END: ${DateTime.now()}');
 
       // prefs 읽기
-      String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
-      if (prefsShapeInfoList == null || prefsShapeInfoList.isEmpty) {
+      String? prefsShapeFileInfoList = prefs.getString(AppConstant.PREFS_SHAPEFILEINFOLIST);
+      if (prefsShapeFileInfoList == null || prefsShapeFileInfoList.isEmpty) {
         // 최초인 경우 prefs 에 목록 저장
-        dev.log('shapeInfoList 최초인 경우 prefs 에 목록 저장');
+        dev.log('shapeFileInfoList 최초인 경우 prefs 에 목록 저장');
 
         // save prefs
-        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(shapeInfoList);
+        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(shapeFileInfoList);
         String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
-        await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
+        await prefs.setString(AppConstant.PREFS_SHAPEFILEINFOLIST, fileNameStr);
       } else {
-        dev.log('prefsShapeInfoList parsing');
+        dev.log('prefsShapeFileInfoList parsing');
 
         // 목록이 재배포되었다면 다시 저장
-        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(shapeInfoList);
+        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(shapeFileInfoList);
         String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
 
-        if (prefsShapeInfoList != fileNameStr) {
+        if (prefsShapeFileInfoList != fileNameStr) {
           dev.log('!!! load 파일 목록과 prefs 목록이 다르므로 순서 조정');
           // 파싱하여 사용
-          fileNameList = prefsShapeInfoList!.split(AppConstant.PREFS_DELIM);
+          fileNameList = prefsShapeFileInfoList.split(AppConstant.PREFS_DELIM);
           dev.log('split fileNameList: $fileNameList');
 
           // reordering
-          //FileUtil.reorderShapeInfoListWithFileNameList(shapeInfoList, fileNameList);
-          FileUtil.reorderInfoListWithFileNameList(shapeInfoList, fileNameList);
+          //FileUtil.reorderShapeFileInfoListWithFileNameList(shapeFileInfoList, fileNameList);
+          FileUtil.reorderInfoListWithFileNameList(shapeFileInfoList, fileNameList);
 
           // 다시 저장
-          fileNameList = FileUtil.extractFileNameFromInfoList(shapeInfoList);
+          fileNameList = FileUtil.extractFileNameFromInfoList(shapeFileInfoList);
           fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
-          await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
+          await prefs.setString(AppConstant.PREFS_SHAPEFILEINFOLIST, fileNameStr);
         } else {
           dev.log('load 파일 목록과 prefs 목록 동일');
         }
       }
-
-      parentProvider.shapeInfoList = shapeInfoList;
+      signProvider.shapeFileInfoList = shapeFileInfoList;
     }
 
-    // selected idx
-    parentProvider.selectedShapeInfoIdx = -1;
+    // selectedSignShapeFileInfoIdx
+    signProvider.selectedSignShapeFileInfoIdx = -1;
 
-    // shape - border color
+    //  recentSignShapeBorderColorList
     String? prefsRecentSignShapeBorderColor = prefs.getString(AppConstant.PREFS_RECENTSHAPEBORDERCOLOR);
     if (prefsRecentSignShapeBorderColor == null || prefsRecentSignShapeBorderColor.isEmpty) {
     } else {
       List<Color> recentSignShapeBorderColorList = [];
-      List<String> recentSignShapeBorderColorStrList = prefsRecentSignShapeBorderColor!.split(AppConstant.PREFS_DELIM);
+      List<String> recentSignShapeBorderColorStrList = prefsRecentSignShapeBorderColor.split(AppConstant.PREFS_DELIM);
       for (String colorStr in recentSignShapeBorderColorStrList) {
         Color color = ColorUtil.convertStringToColor(colorStr);
         recentSignShapeBorderColorList.add(color);
       }
-      parentProvider.recentSignShapeBorderColorList = recentSignShapeBorderColorList;
+      signProvider.recentSignShapeBorderColorList = recentSignShapeBorderColorList;
     }
-    parentProvider.signShapeBorderColor = null;
-    dev.log('initMakePage signShapeBorderColor: ${parentProvider.signShapeBorderColor}');
 
-    // border width
-    double? prefsShapeBorderWidth = prefs.getDouble(AppConstant.PREFS_SHAPEBORDERWIDTH);
-    if (prefsShapeBorderWidth == null) {
-      parentProvider.signShapeBorderWidth = 10;
+    // signShapeBorderColor
+    signProvider.signShapeBorderColor = null;
+    dev.log('initMakePage signShapeBorderColor: ${signProvider.signShapeBorderColor}');
+
+    // signShapeBorderWidth
+    double? prefsSignShapeBorderWidth = prefs.getDouble(AppConstant.PREFS_SIGNSHAPEBORDERWIDTH);
+    if (prefsSignShapeBorderWidth == null) {
+      signProvider.signShapeBorderWidth = 10;
     } else {
-      parentProvider.signShapeBorderWidth = prefsShapeBorderWidth;
+      signProvider.signShapeBorderWidth = prefsSignShapeBorderWidth;
     }
-    dev.log('initMakePage signShapeBorderWidth: ${parentProvider.signShapeBorderWidth}');
+    dev.log('initMakePage signShapeBorderWidth: ${signProvider.signShapeBorderWidth}');
     ////////////////////////////////////////////////////////////////////////////////
 
+    dev.log('# MakeTab initSignProvider EMD');
   }
 
-  void initPrefs() async {
-    dev.log('initPrefs 초기화 START');
+  // for test
+  void clearPrefs() async {
+    dev.log('# MakeTab initPrefs 초기화 START');
 
-    // PREFS_SHAPEINFOLIST 초기화
+    // PREFS_SHAPEFILEINFOLIST 초기화
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     ////////////////////////////////////////////////////////////////////////////////
-    // sign
-    await prefs.remove(AppConstant.PREFS_SIGNINFOLIST);
+    // SignProvider
+
+    // signfile
+    await prefs.remove(AppConstant.PREFS_SIGNFILEINFOLIST);
+    await prefs.remove(AppConstant.PREFS_PARENTSIGNOFFSET_X);
+    await prefs.remove(AppConstant.PREFS_PARENTSIGNOFFSET_Y);
 
     // line
     await prefs.remove(AppConstant.PREFS_RECENTSIGNCOLOR);
@@ -361,31 +401,49 @@ class MakeTabState extends State<MakeTab> {
     await prefs.remove(AppConstant.PREFS_RECENTSIGNBACKGROUNDCOLOR);
 
     // shape
-    await prefs.remove(AppConstant.PREFS_SHAPEINFOLIST);
+    await prefs.remove(AppConstant.PREFS_SHAPEFILEINFOLIST);
     await prefs.remove(AppConstant.PREFS_RECENTSHAPEBORDERCOLOR);
-    await prefs.remove(AppConstant.PREFS_SHAPEBORDERWIDTH);
+    await prefs.remove(AppConstant.PREFS_SIGNSHAPEBORDERWIDTH);
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    // parentProvider
-    parentProvider.recentSignColorList.clear();
-    parentProvider.recentSignBackgroundColorList.clear();
-    parentProvider.shapeInfoList.clear();
-    parentProvider.recentSignShapeBorderColorList.clear();
+    // signProvider
+    signProvider.signFileInfoList.clear();
 
-    parentProvider.initAll(notify: false);
+    signProvider.recentSignColorList.clear();
+    signProvider.recentSignBackgroundColorList.clear();
+
+    signProvider.shapeFileInfoList.clear();
+    signProvider.recentSignShapeBorderColorList.clear();
+
+    signProvider.clearAll();
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // 초기화 후에 하나도 안 보이므로 일단 모두 추가하기
-    parentProvider.signInfoList = await FileUtil.loadSignInfoList(AppConstant.SIGN_DIR);
-
-    dev.log('parentProvider.signInfoList ${parentProvider.signInfoList}');
+    loadSignFileAndSavePrefs();
     ////////////////////////////////////////////////////////////////////////////////
-    
+
     setState(() {});
 
-    dev.log('initPrefs 초기화 END');
+    dev.log('# MakeTab initPrefs 초기화 END');
+  }
+
+  void loadSignFileAndSavePrefs() async {
+    dev.log('# MakeTab loadSignFileAndSavePrefs START');
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // 초기화 후에 하나도 안 보이므로 일단 모두 추가하기
+    signProvider.signFileInfoList = await FileUtil.loadSignFileInfoList(AppConstant.SIGN_DIR);
+    dev.log('signProvider.signFileInfoList ${signProvider.signFileInfoList}');
+
+    // prefs 에 반영
+    List<String> fileNameList =
+        FileUtil.extractFileNameAndCntFromSignFileInfoList(signProvider.signFileInfoList, AppConstant.PREFS_DELIM2);
+    String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(AppConstant.PREFS_SIGNFILEINFOLIST, fileNameStr);
+    ////////////////////////////////////////////////////////////////////////////////
   }
 
 }

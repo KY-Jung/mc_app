@@ -1,42 +1,28 @@
-import 'dart:async';
 import 'dart:developer' as dev;
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:dotted_border/dotted_border.dart';
-import 'package:image/image.dart' as IMG;
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:jpeg_encode/jpeg_encode.dart';
 import 'package:mc/config/constant_app.dart';
-import 'package:mc/ui/page_make.dart';
 import 'package:mc/ui/popup_reorderlist.dart';
-import 'package:mc/ui/popup_shapelist.dart';
 import 'package:mc/util/util_popup.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:badges/badges.dart' as badges;
-import 'package:svg_path_parser/svg_path_parser.dart';
 
 import '../config/color_app.dart';
 import '../config/config_app.dart';
-import '../dto/info_parent.dart';
-import '../dto/info_sign.dart';
-import '../painter/clipper_sign.dart';
+import '../dto/info_signfile.dart';
 import '../painter/painter_line.dart';
 import '../painter/painter_make_parent_sign.dart';
-import '../provider/provider_make.dart';
-import '../provider/provider_parent.dart';
+import '../provider/provider_sign.dart';
 import '../util/util_color.dart';
 import '../util/util_file.dart';
 import '../util/util_info.dart';
-import 'page_colorpicker.dart';
 
 class SignMbs extends StatefulWidget {
   const SignMbs({super.key});
@@ -47,7 +33,7 @@ class SignMbs extends StatefulWidget {
 
 class SignMbsState extends State<SignMbs> {
   ////////////////////////////////////////////////////////////////////////////////
-  late ParentProvider parentProvider;
+  late SignProvider signProvider;
 
   late double whSignBoard;
   late double hBarDetail;
@@ -57,11 +43,13 @@ class SignMbsState extends State<SignMbs> {
 
   /// shapelist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
   late ScrollController _preShapeController;
+
   /// signlist 에서 OK 한 경우 선택된 shape 로 위치이동하기 위해 사용
   late ScrollController _preSignController;
 
-  /// signInfo 를 최초에는 mbs 의 parentSignInfoIdx 값을 보고 scroll 하기 위해 사용
+  /// signFileInfo 를 최초에는 mbs 의 parentSignInfoIdx 값을 보고 scroll 하기 위해 사용
   bool first = true;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +60,7 @@ class SignMbsState extends State<SignMbs> {
 
     ////////////////////////////////////////////////////////////////////////////////
     /// build 이후 실행
-    /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
+    /// InteractiveViewer 실제 크기를 구해서 ParentProvider wScreen/hScreen 에 저장
     WidgetsBinding.instance.addPostFrameCallback((_) => _afterBuild(context));
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -88,9 +76,8 @@ class SignMbsState extends State<SignMbs> {
     // 다시 사용안하는 데이터 지우기
     // 나머지는 유지하고 initAll 에서만 모두 지우기
     // --> Sign 을 설정하는 기능을 위해 나갈때 모두 초기화로 변경 (2023.05.28, KY.Jung)
-    //parentProvider.initSignLines(notify: false);
-    //parentProvider.initSignBackgroundUiImage(notify: false);
-    parentProvider.initAll(notify: false);
+    //signProvider.initAll(notify: false);
+    signProvider.clearAll();
 
     _preShapeController.dispose();
     _preSignController.dispose();
@@ -102,7 +89,7 @@ class SignMbsState extends State<SignMbs> {
     dev.log('# SignMbs build START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    parentProvider = Provider.of<ParentProvider>(context);
+    signProvider = Provider.of<SignProvider>(context);
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +107,7 @@ class SignMbsState extends State<SignMbs> {
 
     wScreen = MediaQuery.of(context).size.width;
 
-    dev.log('whSignBoard: ${whSignBoard}, hBarDetail: ${hBarDetail}, whPreSign: ${whPreSign}, hAppBar: ${hAppBar}');
+    dev.log('whSignBoard: $whSignBoard, hBarDetail: $hBarDetail, whPreSign: $whPreSign, hAppBar: $hAppBar');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -129,26 +116,22 @@ class SignMbsState extends State<SignMbs> {
     dev.log('cntPreSign: $cntPreSign');
     _preShapeController = ScrollController(
         initialScrollOffset:
-            parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+            signProvider.selectedSignShapeFileInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
 
     // 처음위치는 parentSignInfoIdx 를 사용
     if (first) {
       _preSignController = ScrollController(
           initialScrollOffset:
-          parentProvider.parentSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+              signProvider.parentSignFileInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
       first = false;
     } else {
       _preSignController = ScrollController(
           initialScrollOffset:
-          parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
+              signProvider.selectedSignFileInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5);
     }
     ////////////////////////////////////////////////////////////////////////////////
 
-    // for test
-    List<String> preSignList = <String>['A', 'B', 'C', '1', '2', '3', '4', '가', '나', '다', '1', '2', '3', '4'];
-    List<int> colorCodes = <int>[600, 500, 400, 300, 200, 100, 100, 600, 500, 400, 600, 500, 400, 300];
-
-    dev.log('# ParentProvider.size ${parentProvider.signWidth}');
+    dev.log('# signProvider.size ${signProvider.signWidth}');
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -173,13 +156,14 @@ class SignMbsState extends State<SignMbs> {
           // sign board
           behavior: HitTestBehavior.translucent,
           onPanStart: (DragStartDetails d) {
-            if (parentProvider.signWidth == 0) {
+            if (signProvider.signWidth == 0) {
               return;
             }
-            parentProvider.drawSignLinesStart(d.localPosition);
+            signProvider.drawSignLinesStart(d.localPosition);
+            setState(() { });
           },
           onPanUpdate: (DragUpdateDetails dragUpdateDetails) {
-            if (parentProvider.signWidth == 0) {
+            if (signProvider.signWidth == 0) {
               return;
             }
             //double? primaryDelta = dragUpdateDetails.primaryDelta;  // 항상 null
@@ -187,10 +171,11 @@ class SignMbsState extends State<SignMbs> {
             //dev.log('offset: $offset');
             double delta = math.sqrt(math.pow(offset.dx, 2) + math.pow(offset.dy, 2));
             //dev.log('delta: $delta');
-            double newSize = parentProvider.signWidth - parentProvider.signWidth / 10 * delta;
+            double newSize = signProvider.signWidth - signProvider.signWidth / 10 * delta;
             //dev.log('newSize: newSize');
-            parentProvider.drawSignLines(dragUpdateDetails.localPosition, newSize);
-            //dev.log('onPanUpdate: ${ParentProvider.lines}');
+            signProvider.drawSignLines(dragUpdateDetails.localPosition, newSize);
+            //dev.log('onPanUpdate: ${signProvider.lines}');
+            setState(() { });
           },
           child: Stack(
             alignment: Alignment.center,
@@ -200,26 +185,25 @@ class SignMbsState extends State<SignMbs> {
                 width: whSignBoard,
                 height: whSignBoard,
                 //child: Image.asset('assets/images/jeju.jpg', fit: BoxFit.cover),
-                //child:
               ),
               IgnorePointer(
                 child: RepaintBoundary(
                   child: CustomPaint(
                     size: Size(whSignBoard, whSignBoard),
                     painter: MakeParentSignPainter(
-                        whSignBoard,
-                        whSignBoard,
-                        parentProvider.signLines,
-                        parentProvider.signColor,
-                        parentProvider.signWidth,
-                        parentProvider.signBackgroundColor,
-                        parentProvider.signBackgroundUiImage,
-                        (parentProvider.selectedShapeInfoIdx == -1)
-                            ? null
-                            : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
-                        parentProvider.signShapeBorderColor,
-                        parentProvider.signShapeBorderWidth,
-                        parentProvider.signUiImage,
+                      whSignBoard,
+                      whSignBoard,
+                      signProvider.signLines,
+                      signProvider.signColor,
+                      signProvider.signWidth,
+                      signProvider.signBackgroundColor,
+                      signProvider.signBackgroundUiImage,
+                      (signProvider.selectedSignShapeFileInfoIdx == -1)
+                          ? null
+                          : signProvider.shapeFileInfoList[signProvider.selectedSignShapeFileInfoIdx],
+                      signProvider.signShapeBorderColor,
+                      signProvider.signShapeBorderWidth,
+                      signProvider.signUiImage,
                     ),
                   ),
                 ),
@@ -232,17 +216,15 @@ class SignMbsState extends State<SignMbs> {
           // sign list
           decoration: AppColors.BOXDECO_GREEN50,
           child: SizedBox(
-            //width: MediaQuery.of(context).size.width * 1.0,
             height: hBarDetail,
             child: Row(
               children: <Widget>[
-
-
                 InkWell(
                   onTap: () {
-                    if (parentProvider.selectedSignInfoIdx != -1) {
-                      parentProvider.setSelectedSignInfoIdx(-1, notify: false);
-                      parentProvider.initSignUiImage();
+                    if (signProvider.selectedSignFileInfoIdx != -1) {
+                      signProvider.selectedSignFileInfoIdx = -1;
+                      signProvider.clearSignUiImage();
+                      setState(() { });
                     }
                   },
                   child: Container(
@@ -250,7 +232,7 @@ class SignMbsState extends State<SignMbs> {
                     height: whPreSign,
                     margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                     alignment: Alignment.center,
-                    decoration: (parentProvider.selectedSignInfoIdx == -1)
+                    decoration: (signProvider.selectedSignFileInfoIdx == -1)
                         ? BoxDecoration(color: Colors.grey, border: Border.all(color: Colors.black))
                         : BoxDecoration(border: Border.all(color: Colors.grey)),
                     child: Text('NONE'.tr()),
@@ -267,7 +249,7 @@ class SignMbsState extends State<SignMbs> {
                       padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                       shrinkWrap: true,
                       scrollDirection: Axis.horizontal,
-                      itemCount: parentProvider.signInfoList.length,
+                      itemCount: signProvider.signFileInfoList.length,
                       itemBuilder: (BuildContext context, int index) {
                         return Row(
                           children: [
@@ -277,7 +259,7 @@ class SignMbsState extends State<SignMbs> {
                                 width: whPreSign,
                                 height: whPreSign,
                                 child: badges.Badge(
-                                  badgeContent: Text('${parentProvider.signInfoList[index].cnt}'),
+                                  badgeContent: Text('${signProvider.signFileInfoList[index].cnt}'),
                                   badgeStyle: badges.BadgeStyle(
                                     badgeColor: AppColors.BLUE_LIGHT,
                                   ),
@@ -285,12 +267,11 @@ class SignMbsState extends State<SignMbs> {
                                     alignment: Alignment.center,
                                     width: whPreSign,
                                     height: whPreSign,
-                                    decoration: (parentProvider.selectedSignInfoIdx == index)
+                                    decoration: (signProvider.selectedSignFileInfoIdx == index)
                                         ? BoxDecoration(
-                                        color: Colors.grey[200],
-                                        border: Border.all(color: Colors.black))
+                                            color: Colors.grey[200], border: Border.all(color: Colors.black))
                                         : const BoxDecoration(),
-                                    child: parentProvider.signInfoList[index].image,
+                                    child: signProvider.signFileInfoList[index].image,
                                   ),
                                 ),
                               ),
@@ -319,8 +300,6 @@ class SignMbsState extends State<SignMbs> {
                     ),
                   ),
                 ),
-
-
               ],
             ),
           ),
@@ -329,7 +308,6 @@ class SignMbsState extends State<SignMbs> {
         Container(
           // tab
           decoration: AppColors.BOXDECO_GREEN50,
-          //width: MediaQuery.of(context).size.width * 1.0,
           height: hAppBar * 4.8,
           child: DefaultTabController(
             length: 3,
@@ -369,7 +347,7 @@ class SignMbsState extends State<SignMbs> {
                               flex: 1,
                               child: Row(
                                 children: <Widget>[
-                                  (parentProvider.recentSignColorList.isEmpty)
+                                  (signProvider.recentSignColorList.isEmpty)
                                       ? Container(
                                           margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                           width: whPreSign,
@@ -377,16 +355,17 @@ class SignMbsState extends State<SignMbs> {
                                         )
                                       : InkWell(
                                           onTap: () {
-                                            dev.log('recent click: ${parentProvider.recentSignColorList.elementAt(0)}');
-                                            parentProvider
-                                                .setSignColor(parentProvider.recentSignColorList.elementAt(0));
+                                            dev.log('recent click: ${signProvider.recentSignColorList.elementAt(0)}');
+                                            signProvider
+                                                .signColor = signProvider.recentSignColorList.elementAt(0);
+                                            setState(() { });
                                           },
                                           child: Container(
                                             margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                             width: whPreSign,
                                             height: whPreSign,
                                             decoration: BoxDecoration(
-                                              color: parentProvider.recentSignColorList.elementAt(0),
+                                              color: signProvider.recentSignColorList.elementAt(0),
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                 width: 2,
@@ -394,14 +373,14 @@ class SignMbsState extends State<SignMbs> {
                                               ),
                                             ),
                                             alignment: Alignment.center,
-                                            child: ((parentProvider.recentSignColorList.elementAt(0).value ==
-                                                        parentProvider.signColor.value) &&
+                                            child: ((signProvider.recentSignColorList.elementAt(0).value ==
+                                                        signProvider.signColor.value) &&
                                                     !ColorUtil.findColor(AppColors.DEFAULT_COLOR_LIST,
-                                                        parentProvider.recentSignColorList.elementAt(0)))
+                                                        signProvider.recentSignColorList.elementAt(0)))
                                                 ? Text(
                                                     '✔',
                                                     style: TextStyle(
-                                                        color: (parentProvider.recentSignColorList.elementAt(0).value ==
+                                                        color: (signProvider.recentSignColorList.elementAt(0).value ==
                                                                 Colors.black.value)
                                                             ? Colors.white
                                                             : Colors.black),
@@ -424,7 +403,8 @@ class SignMbsState extends State<SignMbs> {
                                                 onTap: () {
                                                   dev.log(
                                                       'default color click idx: $index, color: ${AppColors.DEFAULT_COLOR_LIST[index]}');
-                                                  parentProvider.setSignColor(AppColors.DEFAULT_COLOR_LIST[index]);
+                                                  signProvider.signColor = AppColors.DEFAULT_COLOR_LIST[index];
+                                                  setState(() { });
                                                 },
                                                 child: Container(
                                                   width: whPreSign,
@@ -432,7 +412,7 @@ class SignMbsState extends State<SignMbs> {
                                                   color: AppColors.DEFAULT_COLOR_LIST[index],
                                                   alignment: Alignment.center,
                                                   child: (AppColors.DEFAULT_COLOR_LIST[index].value ==
-                                                          parentProvider.signColor.value)
+                                                          signProvider.signColor.value)
                                                       ? Text(
                                                           '✔',
                                                           style: TextStyle(
@@ -464,9 +444,8 @@ class SignMbsState extends State<SignMbs> {
                                     ),
                                     alignment: Alignment.center,
                                     child: InkWell(
-                                      //onTap: _onTapColorPicker,
                                       onTap: () {
-                                        _onTapColorPicker(parentProvider.signColor, parentProvider.recentSignColorList,
+                                        _onTapColorPicker(signProvider.signColor, signProvider.recentSignColorList,
                                             _callbackSignColor);
                                       },
                                       child: GridView.builder(
@@ -502,7 +481,8 @@ class SignMbsState extends State<SignMbs> {
                                       child: MaterialButton(
                                         height: 20,
                                         onPressed: () {
-                                          parentProvider.setSignWidth(0);
+                                          signProvider.signWidth = 0;
+                                          setState(() { });
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -516,27 +496,34 @@ class SignMbsState extends State<SignMbs> {
                                         activeTrackColor: Colors.lightBlue[100],
                                         inactiveTrackColor: Colors.grey,
                                         //thumbColor: Colors.orange,
-                                        thumbColor: parentProvider.signColor,
+                                        thumbColor: signProvider.signColor,
                                         activeTickMarkColor: Colors.yellow,
                                         valueIndicatorColor: Colors.lightBlue[100],
-                                        //valueIndicatorColor: parentProvider.signColor,
+                                        //valueIndicatorColor: signProvider.signColor,
                                         valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
                                         overlayShape: SliderComponentShape.noOverlay,
                                         showValueIndicator: ShowValueIndicator.always,
                                       ),
                                       child: Slider(
-                                        value: parentProvider.signWidth,
+                                        value: signProvider.signWidth,
                                         min: 0,
                                         max: AppConfig.SIGN_WIDTH_MAX,
                                         divisions: AppConfig.SIGN_WIDTH_MAX.toInt() - 1,
                                         label:
-                                            '${parentProvider.signWidth.toInt()} / ${AppConfig.SIGN_WIDTH_MAX.toInt()}',
+                                            '${signProvider.signWidth.toInt()} / ${AppConfig.SIGN_WIDTH_MAX.toInt()}',
                                         onChangeStart: (newValue) {
-                                          dev.log('- Slider ParentProvider.size: ${parentProvider.signWidth}');
+                                          dev.log('- Slider signProvider.size: ${signProvider.signWidth}');
                                         },
                                         onChanged: (newValue) {
-                                          parentProvider.setSignWidth(newValue);
+                                          signProvider.signWidth = newValue;
                                           dev.log('- Slider onChanged size: $newValue');
+                                          setState(() { });
+                                        },
+                                        onChangeEnd: (newValue) {
+                                          dev.log('- Slider onChangeEnd: $newValue');
+                                          SharedPreferences.getInstance().then((prefs) {
+                                            prefs.setDouble(AppConstant.PREFS_SIGNWIDTH, newValue);
+                                          });
                                         },
                                       ),
                                     ),
@@ -545,7 +532,8 @@ class SignMbsState extends State<SignMbs> {
                                       child: MaterialButton(
                                         height: 20,
                                         onPressed: () {
-                                          parentProvider.setSignWidth(AppConfig.SIGN_WIDTH_MAX);
+                                          signProvider.signWidth = AppConfig.SIGN_WIDTH_MAX;
+                                          setState(() { });
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -571,7 +559,7 @@ class SignMbsState extends State<SignMbs> {
                                             dashPattern: const [6, 4],
                                             child: CustomPaint(
                                               size: const Size(80, 30),
-                                              painter: LinePainter(parentProvider.signWidth, parentProvider.signColor,
+                                              painter: LinePainter(signProvider.signWidth, signProvider.signColor,
                                                   straight: false),
                                             ),
                                           ),
@@ -597,7 +585,8 @@ class SignMbsState extends State<SignMbs> {
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
                                         onPressed: () {
-                                          parentProvider.initSignLines();
+                                          signProvider.clearSignLines();
+                                          setState(() { });
                                         },
                                         child: Text('SIGN_CLEAR'.tr())),
                                   ),
@@ -607,7 +596,8 @@ class SignMbsState extends State<SignMbs> {
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
                                         onPressed: () {
-                                          parentProvider.undoSignLines();
+                                          signProvider.undoSignLines();
+                                          setState(() { });
                                         },
                                         child: Text('SING_UNDO'.tr())),
                                   ),
@@ -629,7 +619,7 @@ class SignMbsState extends State<SignMbs> {
                               flex: 1,
                               child: Row(
                                 children: [
-                                  (parentProvider.recentSignBackgroundColorList.isEmpty)
+                                  (signProvider.recentSignBackgroundColorList.isEmpty)
                                       ? Container(
                                           margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                           width: whPreSign,
@@ -638,16 +628,17 @@ class SignMbsState extends State<SignMbs> {
                                       : InkWell(
                                           onTap: () {
                                             dev.log(
-                                                'recent click: ${parentProvider.recentSignBackgroundColorList.elementAt(0)}');
-                                            parentProvider.setSignBackgroundColor(
-                                                parentProvider.recentSignBackgroundColorList.elementAt(0));
+                                                'recent click: ${signProvider.recentSignBackgroundColorList.elementAt(0)}');
+                                            signProvider.signBackgroundColor =
+                                                signProvider.recentSignBackgroundColorList.elementAt(0);
+                                            setState(() { });
                                           },
                                           child: Container(
                                             margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                             width: whPreSign,
                                             height: whPreSign,
                                             decoration: BoxDecoration(
-                                              color: parentProvider.recentSignBackgroundColorList.elementAt(0),
+                                              color: signProvider.recentSignBackgroundColorList.elementAt(0),
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                 width: 2,
@@ -655,14 +646,14 @@ class SignMbsState extends State<SignMbs> {
                                               ),
                                             ),
                                             alignment: Alignment.center,
-                                            child: ((parentProvider.recentSignBackgroundColorList.elementAt(0).value ==
-                                                        parentProvider.signBackgroundColor?.value) &&
+                                            child: ((signProvider.recentSignBackgroundColorList.elementAt(0).value ==
+                                                        signProvider.signBackgroundColor?.value) &&
                                                     !ColorUtil.findColor(AppColors.DEFAULT_COLOR_LIST,
-                                                        parentProvider.recentSignBackgroundColorList.elementAt(0)))
+                                                        signProvider.recentSignBackgroundColorList.elementAt(0)))
                                                 ? Text(
                                                     '✔',
                                                     style: TextStyle(
-                                                        color: (parentProvider.recentSignBackgroundColorList
+                                                        color: (signProvider.recentSignBackgroundColorList
                                                                     .elementAt(0)
                                                                     .value ==
                                                                 Colors.black.value)
@@ -674,7 +665,8 @@ class SignMbsState extends State<SignMbs> {
                                         ),
                                   InkWell(
                                     onTap: () {
-                                      parentProvider.setSignBackgroundColor(null);
+                                      signProvider.signBackgroundColor = null;
+                                      setState(() { });
                                     },
                                     child: Container(
                                       width: whPreSign,
@@ -684,7 +676,7 @@ class SignMbsState extends State<SignMbs> {
                                       decoration: BoxDecoration(
                                         border: Border.all(color: Colors.grey),
                                       ),
-                                      child: (parentProvider.signBackgroundColor == null)
+                                      child: (signProvider.signBackgroundColor == null)
                                           ? const Text('✔', style: TextStyle(color: Colors.black))
                                           : const Text(''),
                                     ),
@@ -704,8 +696,8 @@ class SignMbsState extends State<SignMbs> {
                                                 onTap: () {
                                                   dev.log(
                                                       'default color click idx: $index, color: ${AppColors.DEFAULT_COLOR_LIST[index]}');
-                                                  parentProvider
-                                                      .setSignBackgroundColor(AppColors.DEFAULT_COLOR_LIST[index]);
+                                                  signProvider.signBackgroundColor = AppColors.DEFAULT_COLOR_LIST[index];
+                                                  setState(() { });
                                                 },
                                                 child: Container(
                                                   width: whPreSign,
@@ -713,7 +705,7 @@ class SignMbsState extends State<SignMbs> {
                                                   color: AppColors.DEFAULT_COLOR_LIST[index],
                                                   alignment: Alignment.center,
                                                   child: (AppColors.DEFAULT_COLOR_LIST[index].value ==
-                                                          parentProvider.signBackgroundColor?.value)
+                                                          signProvider.signBackgroundColor?.value)
                                                       ? Text(
                                                           '✔',
                                                           style: TextStyle(
@@ -745,10 +737,9 @@ class SignMbsState extends State<SignMbs> {
                                     ),
                                     alignment: Alignment.center,
                                     child: InkWell(
-                                      //onTap: _onTapColorPicker,
                                       onTap: () {
-                                        _onTapColorPicker(parentProvider.signBackgroundColor,
-                                            parentProvider.recentSignBackgroundColorList, _callbackSignBackgroundColor);
+                                        _onTapColorPicker(signProvider.signBackgroundColor,
+                                            signProvider.recentSignBackgroundColorList, _callbackSignBackgroundColor);
                                       },
                                       child: GridView.builder(
                                         itemCount: AppColors.DEFAULT_COLOR_LIST.length, //item 개수
@@ -781,8 +772,9 @@ class SignMbsState extends State<SignMbs> {
                                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                         ),
                                         onPressed: () {
-                                          if (parentProvider.signBackgroundUiImage != null) {
-                                            parentProvider.initSignBackgroundUiImage(notify: true);
+                                          if (signProvider.signBackgroundUiImage != null) {
+                                            signProvider.clearSignBackgroundUiImage();
+                                            setState(() { });
                                           }
                                         },
                                         child: Text('SIGN_CLEAR'.tr())),
@@ -797,10 +789,10 @@ class SignMbsState extends State<SignMbs> {
                                       onPressed: () async {
                                         //_bringSignPressed(MakePageBringEnum.GALLERY, whSignBoard);
                                         XFile? xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-                                        dev.log('xFile: ${xFile!.path}');
+                                        dev.log('xFile: ${xFile?.path}');
                                         if (xFile != null) {
-                                          await parentProvider.loadSignBackgroundUiImage(xFile!.path, whSignBoard);
-                                          setState(() { });
+                                          await signProvider.loadSignBackgroundUiImage(xFile.path, whSignBoard);
+                                          setState(() {});
                                         }
                                       }),
                                   ElevatedButton.icon(
@@ -813,10 +805,10 @@ class SignMbsState extends State<SignMbs> {
                                       onPressed: () async {
                                         //_bringSignPressed(MakePageBringEnum.CAMERA, whSignBoard);
                                         XFile? xFile = await ImagePicker().pickImage(source: ImageSource.camera);
-                                        dev.log('xFile2: ${xFile!.path}');
+                                        dev.log('xFile2: ${xFile?.path}');
                                         if (xFile != null) {
-                                          await parentProvider.loadSignBackgroundUiImage(xFile!.path, whSignBoard);
-                                          setState(() { });
+                                          await signProvider.loadSignBackgroundUiImage(xFile.path, whSignBoard);
+                                          setState(() {});
                                         }
                                       }),
                                 ],
@@ -844,14 +836,15 @@ class SignMbsState extends State<SignMbs> {
                                 children: <Widget>[
                                   InkWell(
                                     onTap: () {
-                                      parentProvider.setSelectedShapeInfoIdx(-1);
+                                      signProvider.selectedSignShapeFileInfoIdx = -1;
+                                      setState(() { });
                                     },
                                     child: Container(
                                       width: whPreSign,
                                       height: whPreSign,
                                       margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                       alignment: Alignment.center,
-                                      decoration: (parentProvider.selectedShapeInfoIdx == -1)
+                                      decoration: (signProvider.selectedSignShapeFileInfoIdx == -1)
                                           ? BoxDecoration(color: Colors.grey, border: Border.all(color: Colors.black))
                                           : BoxDecoration(border: Border.all(color: Colors.grey)),
                                       child: Text('NONE'.tr()),
@@ -866,7 +859,7 @@ class SignMbsState extends State<SignMbs> {
                                         padding: const EdgeInsets.all(10),
                                         shrinkWrap: true,
                                         scrollDirection: Axis.horizontal,
-                                        itemCount: parentProvider.shapeInfoList.length,
+                                        itemCount: signProvider.shapeFileInfoList.length,
                                         itemBuilder: (BuildContext context, int index) {
                                           return Row(
                                             children: [
@@ -875,12 +868,12 @@ class SignMbsState extends State<SignMbs> {
                                                 child: Container(
                                                   width: whPreSign,
                                                   height: whPreSign,
-                                                  decoration: (parentProvider.selectedShapeInfoIdx == index)
+                                                  decoration: (signProvider.selectedSignShapeFileInfoIdx == index)
                                                       ? BoxDecoration(
                                                           color: Colors.grey[200],
                                                           border: Border.all(color: Colors.black))
                                                       : const BoxDecoration(),
-                                                  child: parentProvider.shapeInfoList[index].image,
+                                                  child: signProvider.shapeFileInfoList[index].image,
                                                 ),
                                               ),
                                               Container(
@@ -919,7 +912,7 @@ class SignMbsState extends State<SignMbs> {
                               flex: 1,
                               child: Row(
                                 children: [
-                                  (parentProvider.recentSignShapeBorderColorList.isEmpty)
+                                  (signProvider.recentSignShapeBorderColorList.isEmpty)
                                       ? Container(
                                           margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                           width: whPreSign,
@@ -928,16 +921,16 @@ class SignMbsState extends State<SignMbs> {
                                       : InkWell(
                                           onTap: () {
                                             dev.log(
-                                                'recent click: ${parentProvider.recentSignShapeBorderColorList.elementAt(0)}');
-                                            parentProvider.setSignShapeBorderColor(
-                                                parentProvider.recentSignShapeBorderColorList.elementAt(0));
+                                                'recent click: ${signProvider.recentSignShapeBorderColorList.elementAt(0)}');
+                                            signProvider.signShapeBorderColor = signProvider.recentSignShapeBorderColorList.elementAt(0);
+                                            setState(() { });
                                           },
                                           child: Container(
                                             margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                                             width: whPreSign,
                                             height: whPreSign,
                                             decoration: BoxDecoration(
-                                              color: parentProvider.recentSignShapeBorderColorList.elementAt(0),
+                                              color: signProvider.recentSignShapeBorderColorList.elementAt(0),
                                               shape: BoxShape.circle,
                                               border: Border.all(
                                                 width: 2,
@@ -945,14 +938,14 @@ class SignMbsState extends State<SignMbs> {
                                               ),
                                             ),
                                             alignment: Alignment.center,
-                                            child: ((parentProvider.recentSignShapeBorderColorList.elementAt(0).value ==
-                                                        parentProvider.signShapeBorderColor?.value) &&
+                                            child: ((signProvider.recentSignShapeBorderColorList.elementAt(0).value ==
+                                                        signProvider.signShapeBorderColor?.value) &&
                                                     !ColorUtil.findColor(AppColors.DEFAULT_COLOR_LIST,
-                                                        parentProvider.recentSignShapeBorderColorList.elementAt(0)))
+                                                        signProvider.recentSignShapeBorderColorList.elementAt(0)))
                                                 ? Text(
                                                     '✔',
                                                     style: TextStyle(
-                                                        color: (parentProvider.recentSignShapeBorderColorList
+                                                        color: (signProvider.recentSignShapeBorderColorList
                                                                     .elementAt(0)
                                                                     .value ==
                                                                 Colors.black.value)
@@ -964,7 +957,8 @@ class SignMbsState extends State<SignMbs> {
                                         ),
                                   InkWell(
                                     onTap: () {
-                                      parentProvider.setSignShapeBorderColor(null);
+                                      signProvider.signShapeBorderColor = null;
+                                      setState(() { });
                                     },
                                     child: Container(
                                       width: whPreSign,
@@ -974,7 +968,7 @@ class SignMbsState extends State<SignMbs> {
                                       decoration: BoxDecoration(
                                         border: Border.all(color: Colors.grey),
                                       ),
-                                      child: (parentProvider.signShapeBorderColor == null)
+                                      child: (signProvider.signShapeBorderColor == null)
                                           ? const Text('✔', style: TextStyle(color: Colors.black))
                                           : const Text(''),
                                     ),
@@ -994,8 +988,8 @@ class SignMbsState extends State<SignMbs> {
                                                 onTap: () {
                                                   dev.log(
                                                       'default color click idx: $index, color: ${AppColors.DEFAULT_COLOR_LIST[index]}');
-                                                  parentProvider
-                                                      .setSignShapeBorderColor(AppColors.DEFAULT_COLOR_LIST[index]);
+                                                  signProvider.signShapeBorderColor = AppColors.DEFAULT_COLOR_LIST[index];
+                                                  setState(() { });
                                                 },
                                                 child: Container(
                                                   width: whPreSign,
@@ -1003,7 +997,7 @@ class SignMbsState extends State<SignMbs> {
                                                   color: AppColors.DEFAULT_COLOR_LIST[index],
                                                   alignment: Alignment.center,
                                                   child: (AppColors.DEFAULT_COLOR_LIST[index].value ==
-                                                          parentProvider.signShapeBorderColor?.value)
+                                                          signProvider.signShapeBorderColor?.value)
                                                       ? Text(
                                                           '✔',
                                                           style: TextStyle(
@@ -1035,11 +1029,10 @@ class SignMbsState extends State<SignMbs> {
                                     ),
                                     alignment: Alignment.center,
                                     child: InkWell(
-                                      //onTap: _onTapColorPicker,
                                       onTap: () {
                                         _onTapColorPicker(
-                                            parentProvider.signShapeBorderColor,
-                                            parentProvider.recentSignShapeBorderColorList,
+                                            signProvider.signShapeBorderColor,
+                                            signProvider.recentSignShapeBorderColorList,
                                             _callbackSignShapeBorderColor);
                                       },
                                       child: GridView.builder(
@@ -1075,7 +1068,8 @@ class SignMbsState extends State<SignMbs> {
                                       child: MaterialButton(
                                         height: 20,
                                         onPressed: () {
-                                          parentProvider.setSignShapeBorderWidth(0);
+                                          signProvider.signShapeBorderWidth = 0;
+                                          setState(() { });
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -1089,32 +1083,39 @@ class SignMbsState extends State<SignMbs> {
                                         activeTrackColor: Colors.lightBlue[100],
                                         inactiveTrackColor: Colors.grey,
                                         //thumbColor: Colors.orange,
-                                        thumbColor: parentProvider.signShapeBorderColor,
+                                        thumbColor: signProvider.signShapeBorderColor,
                                         activeTickMarkColor: Colors.yellow,
                                         valueIndicatorColor: Colors.lightBlue[100],
-                                        //valueIndicatorColor: parentProvider.signColor,
+                                        //valueIndicatorColor: signProvider.signColor,
                                         valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
                                         overlayShape: SliderComponentShape.noOverlay,
                                         showValueIndicator: ShowValueIndicator.always,
                                       ),
                                       child: Slider(
-                                        value: (parentProvider.signShapeBorderColor == null)
+                                        value: (signProvider.signShapeBorderColor == null)
                                             ? 0
-                                            : parentProvider.signShapeBorderWidth,
+                                            : signProvider.signShapeBorderWidth,
                                         min: 0,
                                         max: AppConfig.SIGN_WIDTH_MAX,
                                         divisions: AppConfig.SIGN_WIDTH_MAX.toInt() - 1,
                                         label:
-                                            '${parentProvider.signShapeBorderWidth.toInt()} / ${AppConfig.SIGN_WIDTH_MAX.toInt()}',
+                                            '${signProvider.signShapeBorderWidth.toInt()} / ${AppConfig.SIGN_WIDTH_MAX.toInt()}',
                                         onChangeStart: (newValue) {
                                           dev.log(
-                                              '- Slider ParentProvider.size: ${parentProvider.signShapeBorderWidth}');
+                                              '- Slider signProvider.size: ${signProvider.signShapeBorderWidth}');
                                         },
                                         onChanged: (newValue) {
-                                          if (parentProvider.signShapeBorderColor != null) {
-                                            parentProvider.setSignShapeBorderWidth(newValue);
+                                          if (signProvider.signShapeBorderColor != null) {
+                                            signProvider.signShapeBorderWidth = newValue;
+                                            setState(() { });
                                             dev.log('- Slider onChanged size: $newValue');
                                           }
+                                        },
+                                        onChangeEnd: (newValue) {
+                                          dev.log('- Slider onChangeEnd: $newValue');
+                                          SharedPreferences.getInstance().then((prefs) {
+                                            prefs.setDouble(AppConstant.PREFS_SIGNSHAPEBORDERWIDTH, newValue);
+                                          });
                                         },
                                       ),
                                     ),
@@ -1123,7 +1124,8 @@ class SignMbsState extends State<SignMbs> {
                                       child: MaterialButton(
                                         height: 20,
                                         onPressed: () {
-                                          parentProvider.setSignShapeBorderWidth(AppConfig.SIGN_WIDTH_MAX);
+                                          signProvider.signShapeBorderWidth = AppConfig.SIGN_WIDTH_MAX;
+                                          setState(() { });
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -1149,8 +1151,8 @@ class SignMbsState extends State<SignMbs> {
                                             dashPattern: const [6, 4],
                                             child: CustomPaint(
                                               size: const Size(80, 30),
-                                              painter: LinePainter(parentProvider.signShapeBorderWidth,
-                                                  parentProvider.signShapeBorderColor,
+                                              painter: LinePainter(signProvider.signShapeBorderWidth,
+                                                  signProvider.signShapeBorderColor,
                                                   straight: true),
                                             ),
                                           ),
@@ -1188,95 +1190,80 @@ class SignMbsState extends State<SignMbs> {
   ////////////////////////////////////////////////////////////////////////////////
   // Event Start //
   ////////////////////////////////////////////////////////////////////////////////
-  void _onTapNone() {
-    dev.log('# SignMbs _onTapNone START');
-    dev.log('----------');
-    dev.log('parentProvider.recentSignColorList: ${parentProvider.recentSignColorList}');
-    dev.log('parentProvider.signColor: ${parentProvider.signColor}');
-    dev.log('parentProvider.signWidth: ${parentProvider.signWidth}');
-    dev.log('parentProvider.recentSignBackgroundColorList: ${parentProvider.recentSignBackgroundColorList}');
-    dev.log('parentProvider.signBackgroundColor: ${parentProvider.signBackgroundColor}');
-    dev.log('parentProvider.recentSignShapeBorderColorList: ${parentProvider.recentSignShapeBorderColorList}');
-    dev.log('parentProvider.signShapeBorderColor: ${parentProvider.signShapeBorderColor}');
-    dev.log('parentProvider.signShapeBorderWidth: ${parentProvider.signShapeBorderWidth}');
-    dev.log('----------');
-    dev.log('parentProvider.signLines: ${parentProvider.signLines}');
-    dev.log('parentProvider.selectedShapeInfoIdx: ${parentProvider.selectedShapeInfoIdx}');
-    dev.log('whPreSign: $whPreSign');
-  }
-
   void _onTapColorPicker(Color? color, List<Color> colorList, var callback) async {
     dev.log('# SignMbs _onTapColorPicker START');
 
     // color picker 에서 초기 color 는 null 일 수 없음
     color ??= Colors.blue;
 
-    //List<Color> listColor = List.from(parentProvider.recentSignColorList);
-    //ColorUtil.insertAndSet(listColor, parentProvider.signColor, AppConfig.SIGNCOLOR_SAVE_MAX);
     final Color colorBeforeDialog = color;
     // Wait for the picker to close, if dialog was dismissed,
     // then restore the color we had before it was opened.
     if (!(await ColorUtil.colorPickerDialog(
-        //context, parentProvider.signColor, parentProvider.recentSignColorList, _callbackSignColor))) {
+        //context, signProvider.signColor, signProvider.recentSignColorList, _callbackSignColor))) {
         context,
         color,
         colorList,
         callback))) {
-      //parentProvider.setSignColor(colorBeforeDialog);
+      //signProvider.setSignColor(colorBeforeDialog);
       callback(colorBeforeDialog);
     } else {
-      //parentProvider.addRecentColor(parentProvider.signColor, AppConfig.SIGNCOLOR_SAVE_MAX);
+      //signProvider.addRecentColor(signProvider.signColor, AppConfig.SIGNCOLOR_SAVE_MAX);
       callback(null, recent: true);
     }
   }
 
   void _callbackSignColor(Color? color, {bool recent = false}) {
-    color ??= parentProvider.signColor;
+    color ??= signProvider.signColor;
     if (recent) {
-      parentProvider.addRecentSignColor(color, AppConfig.SIGNCOLOR_SAVE_MAX, notify: false);
+      signProvider.addRecentSignColor(color, AppConfig.SIGNCOLOR_SAVE_MAX);
     }
-    parentProvider.setSignColor(color);
+    signProvider.signColor = color;
+    setState(() { });
   }
 
   void _callbackSignBackgroundColor(Color? color, {bool recent = false}) {
-    color ??= parentProvider.signBackgroundColor;
+    color ??= signProvider.signBackgroundColor;
     if (recent && color != null) {
-      parentProvider.addRecentSignBackgroundColor(color, AppConfig.SIGNCOLOR_SAVE_MAX, notify: false);
+      signProvider.addRecentSignBackgroundColor(color, AppConfig.SIGNCOLOR_SAVE_MAX);
     }
-    parentProvider.setSignBackgroundColor(color);
+    signProvider.signBackgroundColor = color;
+    setState(() { });
   }
 
   void _callbackSignShapeBorderColor(Color? color, {bool recent = false}) {
-    color ??= parentProvider.signShapeBorderColor;
+    color ??= signProvider.signShapeBorderColor;
     if (recent && color != null) {
-      parentProvider.addRecentSignShapeBorderColor(color, AppConfig.SIGNCOLOR_SAVE_MAX, notify: false);
+      signProvider.addRecentSignShapeBorderColor(color, AppConfig.SIGNCOLOR_SAVE_MAX);
     }
-    parentProvider.setSignShapeBorderColor(color);
+    signProvider.signShapeBorderColor = color;
+    setState(() { });
   }
 
   void _onTapPreSign(int idx) async {
     dev.log('# SignMbs _onTapPreSign START idx: $idx');
-    //parentProvider.setSelectedSignInfoIdx(idx);
 
-    if (idx == parentProvider.selectedSignInfoIdx) {
+    if (idx == signProvider.selectedSignFileInfoIdx) {
       return;
     }
-    parentProvider.selectedSignInfoIdx = idx;
+    signProvider.selectedSignFileInfoIdx = idx;
 
-    // 지우고 시작
-    parentProvider.initSignUiImage(notify: false);
-    ui.Image? signUiImage = await FileUtil.changeImageToUiImage(parentProvider.signInfoList[idx].image);
-    parentProvider.setSignUiImage(signUiImage);
+    ui.Image? signUiImage = await FileUtil.changeImageToUiImage(signProvider.signFileInfoList[idx].image);
+    signProvider.clearSignUiImage();
+    signProvider.signUiImage = signUiImage;
+
+    setState(() { });
   }
 
   void _onTapPreShape(int idx) {
     dev.log('# SignMbs _onTapPreShape START idx: $idx');
 
-    if (idx == parentProvider.selectedShapeInfoIdx) {
+    if (idx == signProvider.selectedSignShapeFileInfoIdx) {
       return;
     }
 
-    parentProvider.setSelectedShapeInfoIdx(idx);
+    signProvider.selectedSignShapeFileInfoIdx = idx;
+    setState(() { });
   }
 
   void _onTapShapeList() {
@@ -1287,47 +1274,54 @@ class SignMbsState extends State<SignMbs> {
         context: context,
         barrierDismissible: true, // 바깥 영역 터치시 창닫기
         builder: (BuildContext context) {
-          return ReorderListPopup(selectedIdx: parentProvider.selectedShapeInfoIdx,
-              infoList: parentProvider.shapeInfoList, whShape: whShape, title: 'SHAPE_LIST'.tr(), badge: false, delete: false, heightRatio: 1.0);
+          return ReorderListPopup(
+              selectedIdx: signProvider.selectedSignShapeFileInfoIdx,
+              infoList: signProvider.shapeFileInfoList,
+              whShape: whShape,
+              title: 'SHAPE_LIST'.tr(),
+              badge: false,
+              delete: false,
+              heightRatio: 1.0);
         }).then((idx) async {
       dev.log('_onTapShapeList ret: $idx');
       if (idx == null || idx == 'CANCEL') {
       } else {
-        parentProvider.selectedShapeInfoIdx = idx;
+        signProvider.selectedSignShapeFileInfoIdx = idx;
 
         ////////////////////////////////////////////////////////////////////////////////
         // 현재 파일명 목록 구하기
-        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(parentProvider.shapeInfoList);
+        List<String> fileNameList = FileUtil.extractFileNameFromInfoList(signProvider.shapeFileInfoList);
         String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
 
         // prefs 의 파일명 목록 구하기
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
+        String? prefsShapeFileInfoList = prefs.getString(AppConstant.PREFS_SHAPEFILEINFOLIST);
 
         // 같지 않으면 prefs 저장
-        if (fileNameStr != prefsShapeInfoList) {
+        if (fileNameStr != prefsShapeFileInfoList) {
           // save prefs
           dev.log('save prefs');
-          await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
+          await prefs.setString(AppConstant.PREFS_SHAPEFILEINFOLIST, fileNameStr);
         }
         ////////////////////////////////////////////////////////////////////////////////
 
         // 위치 조정
-        if (parentProvider.selectedShapeInfoIdx != -1) {
+        if (signProvider.selectedSignShapeFileInfoIdx != -1) {
           double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
           double cntPreSign = listWidth / (whPreSign + 10);
           dev.log('cntPreSign: $cntPreSign');
 
           _preShapeController.animateTo(
-            parentProvider.selectedShapeInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
+            signProvider.selectedSignShapeFileInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
             duration: const Duration(milliseconds: 200),
             curve: Curves.fastOutSlowIn,
           );
         }
       }
-      setState(() { });
+      setState(() {});
     });
   }
+
   void _onTapSignList() {
     dev.log('# SignMbs _onTapSignList START');
 
@@ -1336,79 +1330,67 @@ class SignMbsState extends State<SignMbs> {
         context: context,
         barrierDismissible: true, // 바깥 영역 터치시 창닫기
         builder: (BuildContext context) {
-          return ReorderListPopup(selectedIdx: parentProvider.selectedSignInfoIdx,
-              infoList: parentProvider.signInfoList, whShape: whShape, title: 'SIGN_LIST'.tr(), badge: true, delete: true, heightRatio: 0.4);
+          return ReorderListPopup(
+              selectedIdx: signProvider.selectedSignFileInfoIdx,
+              infoList: signProvider.signFileInfoList,
+              whShape: whShape,
+              title: 'SIGN_LIST'.tr(),
+              badge: true,
+              delete: true,
+              heightRatio: 0.4);
         }).then((idx) async {
       dev.log('_onTapSignList idx: $idx');
       if (idx == null || idx == 'CANCEL') {
       } else {
-        parentProvider.selectedSignInfoIdx = idx;
+        signProvider.selectedSignFileInfoIdx = idx;
 
         ////////////////////////////////////////////////////////////////////////////////
         // 현재 파일명 목록 구하기
-        //List<String> fileNameList = FileUtil.extractFileNameFromInfoList(parentProvider.signInfoList);
-        List<String> fileNameList = FileUtil.extractFileNameAndCntFromSignInfoList(parentProvider.signInfoList, AppConstant.PREFS_DELIM2);
+        List<String> fileNameList =
+            FileUtil.extractFileNameAndCntFromSignFileInfoList(signProvider.signFileInfoList, AppConstant.PREFS_DELIM2);
         String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
         dev.log('fileNameList: $fileNameList');
         dev.log('fileNameStr: $fileNameStr');
 
         // prefs 의 파일명 목록 구하기
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? prefsSignInfoList = prefs.getString(AppConstant.PREFS_SIGNINFOLIST);
-        dev.log('prefsSignInfoList: $prefsSignInfoList');
+        String? prefsSignFileInfoList = prefs.getString(AppConstant.PREFS_SIGNFILEINFOLIST);
+        dev.log('prefsSignFileInfoList: $prefsSignFileInfoList');
 
         // 같지 않으면 prefs 저장
-        if (fileNameStr != prefsSignInfoList) {
+        if (fileNameStr != prefsSignFileInfoList) {
           // save prefs
           dev.log('save prefs');
 
           List<String> fileNameList =
-            FileUtil.extractFileNameAndCntFromSignInfoList(parentProvider.signInfoList, AppConstant.PREFS_DELIM2);
+              FileUtil.extractFileNameAndCntFromSignFileInfoList(signProvider.signFileInfoList, AppConstant.PREFS_DELIM2);
           fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
 
-          await prefs.setString(AppConstant.PREFS_SIGNINFOLIST, fileNameStr);
+          await prefs.setString(AppConstant.PREFS_SIGNFILEINFOLIST, fileNameStr);
         }
         ////////////////////////////////////////////////////////////////////////////////
 
         // 위치 조정
-        if (parentProvider.selectedSignInfoIdx != -1) {
+        if (signProvider.selectedSignFileInfoIdx != -1) {
           double listWidth = wScreen - (whPreSign + 10 * 2) * 2;
           double cntPreSign = listWidth / (whPreSign + 10);
           dev.log('cntPreSign: $cntPreSign');
 
           _preSignController.animateTo(
-            parentProvider.selectedSignInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
+            signProvider.selectedSignFileInfoIdx * (whPreSign + 10) - (whPreSign) * cntPreSign * 0.5 - 10 * 0.5,
             duration: const Duration(milliseconds: 200),
             curve: Curves.fastOutSlowIn,
           );
         }
 
-        // 지우고 시작
-        parentProvider.initSignUiImage(notify: false);
-        ui.Image? signUiImage = await FileUtil.changeImageToUiImage(parentProvider.signInfoList[idx].image);
-        parentProvider.setSignUiImage(signUiImage);
+        ui.Image? signUiImage = await FileUtil.changeImageToUiImage(signProvider.signFileInfoList[idx].image);
+        signProvider.clearSignUiImage();
+        signProvider.signUiImage = signUiImage;
       }
-      setState(() { });
+      setState(() {});
     });
   }
-/*
-  void _bringSignPressed(MakePageBringEnum type, double whSignBoard) async {
-    dev.log('# SignMbs _bringSignPressed START');
 
-    XFile? xFile;
-    if (type == MakePageBringEnum.CAMERA) {
-      xFile = await ImagePicker().pickImage(source: ImageSource.camera);
-    } else {
-      xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    }
-    dev.log('file: ${xFile?.path}');
-    if (xFile == null) return; // 취소한 경우
-
-    await parentProvider.loadSignBackgroundUiImage(xFile!.path, whSignBoard);
-
-    dev.log('# SignMbs _bringSignPressed END');
-  }
-*/
   void _onPresseClearAll() async {
     dev.log('# SignMbs _onPresseClearAll START');
 
@@ -1421,7 +1403,8 @@ class SignMbsState extends State<SignMbs> {
         return;
       }
       if (ret == AppConstant.OK) {
-        parentProvider.initAll();
+        signProvider.clearAll();
+        setState(() { });
       }
     });
   }
@@ -1432,9 +1415,11 @@ class SignMbsState extends State<SignMbs> {
     int statusSign;
     ////////////////////////////////////////////////////////////////////////////////
     // 상태 결정
-    if (parentProvider.signLines.isEmpty && parentProvider.signBackgroundColor == null
-      && parentProvider.signBackgroundUiImage == null && parentProvider.selectedShapeInfoIdx == -1) {
-      if (parentProvider.selectedSignInfoIdx == -1) {
+    if (signProvider.signLines.isEmpty &&
+        signProvider.signBackgroundColor == null &&
+        signProvider.signBackgroundUiImage == null &&
+        signProvider.selectedSignShapeFileInfoIdx == -1) {
+      if (signProvider.selectedSignFileInfoIdx == -1) {
         // 아무 작업도 없음
         statusSign = 0;
       } else {
@@ -1461,7 +1446,7 @@ class SignMbsState extends State<SignMbs> {
       dev.log('# SignMbs _onPressedOk 사인만 선택됨');
 
       if (!mounted) return;
-      Navigator.pop(context, parentProvider.selectedSignInfoIdx);
+      Navigator.pop(context, signProvider.selectedSignFileInfoIdx);
 
       return;
     }
@@ -1479,22 +1464,20 @@ class SignMbsState extends State<SignMbs> {
     MakeParentSignPainter makeParentSignPainter = MakeParentSignPainter(
         whSignBoard,
         whSignBoard,
-        parentProvider.signLines,
-        parentProvider.signColor,
-        parentProvider.signWidth,
-        parentProvider.signBackgroundColor,
-        parentProvider.signBackgroundUiImage,
-        (parentProvider.selectedShapeInfoIdx == -1)
+        signProvider.signLines,
+        signProvider.signColor,
+        signProvider.signWidth,
+        signProvider.signBackgroundColor,
+        signProvider.signBackgroundUiImage,
+        (signProvider.selectedSignShapeFileInfoIdx == -1)
             ? null
-            : parentProvider.shapeInfoList[parentProvider.selectedShapeInfoIdx],
-        parentProvider.signShapeBorderColor,
-        parentProvider.signShapeBorderWidth,
-        parentProvider.signUiImage,
+            : signProvider.shapeFileInfoList[signProvider.selectedSignShapeFileInfoIdx],
+        signProvider.signShapeBorderColor,
+        signProvider.signShapeBorderWidth,
+        signProvider.signUiImage,
         grid: false);
     makeParentSignPainter.paint(canvas, Size(whSignBoard, whSignBoard));
 
-    //PopupUtil.popupImageOkCancel(context, 'INFO'.tr(), 'SIGN_SAVE'.tr(),
-    //    CustomPaint(painter: makeParentSignPainter), whSignBoard, whSignBoard)
     PopupUtil.popupImage2OkCancel(
         context,
         'INFO'.tr(),
@@ -1502,7 +1485,7 @@ class SignMbsState extends State<SignMbs> {
         CustomPaint(painter: makeParentSignPainter),
         whSignBoard,
         whSignBoard,
-        (parentProvider.signInfoList.length >= AppConfig.SIGN_SAVE_MAX) ? parentProvider.signInfoList.last.image : null,
+        (signProvider.signFileInfoList.length >= AppConfig.SIGN_SAVE_MAX) ? signProvider.signFileInfoList.last.image : null,
         'SIGN_SAVE_DELETE'.tr(args: [AppConfig.SIGN_SAVE_MAX.toString()])).then((ret) async {
       dev.log('popupImage2OkCancel: $ret');
 
@@ -1523,30 +1506,25 @@ class SignMbsState extends State<SignMbs> {
         await FileUtil.saveUiImageToPng(newImage, newImageFile);
         dev.log('saveUiImageToPng end');
 
-        // signInfoList 에 추가
-        SignInfo signInfo = SignInfo(newImageFile.path, Image.file(newImageFile));
-        parentProvider.addSignInfoList(signInfo, AppConfig.SIGN_SAVE_MAX, notify: true);
+        // signFileInfoList 에 추가
+        SignFileInfo signFileInfo = SignFileInfo(newImageFile.path, Image.file(newImageFile));
+        signProvider.addSignFileInfoList(signFileInfo, AppConfig.SIGN_SAVE_MAX, notify: true);
 
         // prefs 에 반영
         List<String> fileNameList =
-            FileUtil.extractFileNameAndCntFromSignInfoList(parentProvider.signInfoList, AppConstant.PREFS_DELIM2);
+            FileUtil.extractFileNameAndCntFromSignFileInfoList(signProvider.signFileInfoList, AppConstant.PREFS_DELIM2);
         String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setString(AppConstant.PREFS_SIGNINFOLIST, fileNameStr);
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // 아래는 dispose 에서 처리함
-        //parentProvider.initSignLines(notify: false);
-        //parentProvider.initSignBackgroundUiImage(notify: false);
-        ////////////////////////////////////////////////////////////////////////////////
+        prefs.setString(AppConstant.PREFS_SIGNFILEINFOLIST, fileNameStr);
 
         if (!mounted) return;
-        Navigator.pop(context, parentProvider.selectedSignInfoIdx);   // 0 idx
+        Navigator.pop(context, signProvider.selectedSignFileInfoIdx); // 0 idx
       }
     });
     ////////////////////////////////////////////////////////////////////////////////
   }
-////////////////////////////////////////////////////////////////////////////////
-// Event Start //
-////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+  // Event Start //
+  ////////////////////////////////////////////////////////////////////////////////
+
 }

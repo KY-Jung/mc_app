@@ -1,87 +1,13 @@
 import 'dart:developer' as dev;
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui' as ui;
-import 'package:image/image.dart' as IMG;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mc/util/util_file.dart';
 
 import '../dto/info_parent.dart';
 
 class InfoUtil {
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Parent START
-  ////////////////////////////////////////////////////////////////////////////////
-  // path 를 받아서
-  // ui.Image 로 변환
-  // 이미지 크기 구하기
-  // Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
-  // blank 구하기
-  // bracket offset 초기화
-  static Future setParentInfo(path) async {
-    dev.log('setParentInfo path: $path');
-    ParentInfo.path = path;
-
-    ui.Image uiImage = await FileUtil.loadUiImageFromPath(path);
-
-    /// Parent 이미지 크기
-    ParentInfo.wImage = uiImage.width;
-    ParentInfo.hImage = uiImage.height;
-    dev.log('wImage: ${uiImage.width}, hImage: ${uiImage.height}');
-
-    /// Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
-    double inScale = InfoUtil.calcFitRatioIn(
-        ParentInfo.wScreen, ParentInfo.hScreen, uiImage.width, uiImage.height);
-    ParentInfo.inScale = inScale;
-    dev.log('inScale: $inScale');
-
-    // blank
-    if (ParentInfo.inScale < 1.0) {
-      // 화면보다 큰 이미지인 경우
-      double wReal = uiImage.width * inScale;
-      double hReal = uiImage.height * inScale;
-      dev.log('wReal: $wReal, hReal: $hReal');
-      if ((ParentInfo.wScreen - wReal) > (ParentInfo.hScreen - hReal)) {
-        ParentInfo.xBlank = (ParentInfo.wScreen - wReal) / 2;
-        ParentInfo.yBlank = 0;
-      } else {
-        ParentInfo.yBlank = (ParentInfo.hScreen - hReal) / 2;
-        ParentInfo.xBlank = 0;
-      }
-    } else {
-      // 화면보다 작은 이미지인 경우
-      ParentInfo.xBlank = (ParentInfo.wScreen - uiImage.width) * 0.5;
-      ParentInfo.yBlank = (ParentInfo.hScreen - uiImage.height) * 0.5;
-    }
-    dev.log('xBlank: ${ParentInfo.xBlank}, yBlank: ${ParentInfo.yBlank}');
-
-    uiImage.dispose();
-
-    // offset
-    initParentInfoBracket();
-  }
-
-  /// bracket offset 초기화
-  /// 1. setParentInfo
-  /// 2. ParentBar 의 initState 에서 (다른 bar 로 갔다가 돌아온 경우 때문에)
-  /// 3. Size 버튼 누른 경우
-  static void initParentInfoBracket() {
-    // offset
-    ParentInfo.leftTopOffset = Offset(ParentInfo.xBlank, ParentInfo.yBlank);
-    ParentInfo.rightTopOffset =
-        Offset(ParentInfo.wScreen - ParentInfo.xBlank, ParentInfo.yBlank);
-    ParentInfo.leftBottomOffset =
-        Offset(ParentInfo.xBlank, ParentInfo.hScreen - ParentInfo.yBlank);
-    ParentInfo.rightBottomOffset = Offset(
-        ParentInfo.wScreen - ParentInfo.xBlank,
-        ParentInfo.hScreen - ParentInfo.yBlank);
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // Parent END
-  ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   // 화면 계산 START

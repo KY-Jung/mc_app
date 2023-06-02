@@ -3,13 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mc/config/config_app.dart';
-import 'package:svg_path_parser/svg_path_parser.dart';
 
-import '../config/constant_app.dart';
 import '../dto/info_dot.dart';
-import '../dto/info_shape.dart';
+import '../dto/info_shapefile.dart';
 import '../util/util_info.dart';
 
 class MakeParentSignPainter extends CustomPainter {
@@ -31,11 +28,12 @@ class MakeParentSignPainter extends CustomPainter {
   ui.Image? shapeBackgroundUiImage;
 
   // shape
-  ShapeInfo? shapeInfo;
+  ShapeFileInfo? shapeFileInfo;
   Color? signShapeBorderColor;
   double signShapeBorderWidth;
 
   bool grid;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   MakeParentSignPainter(
@@ -46,7 +44,7 @@ class MakeParentSignPainter extends CustomPainter {
       this.signWidth,
       this.signBackgroundColor,
       this.shapeBackgroundUiImage,
-      this.shapeInfo,
+      this.shapeFileInfo,
       this.signShapeBorderColor,
       this.signShapeBorderWidth,
       this.signUiImage,
@@ -63,29 +61,38 @@ class MakeParentSignPainter extends CustomPainter {
 
     Path? shapePath;
     Path? borderPath;
-    if (shapeInfo != null) {
+    if (shapeFileInfo != null) {
       Float64List shapeMatrix = Float64List.fromList(
-          [width / AppConfig.SVG_WH, 0, 0, 0,
-            0, height / AppConfig.SVG_WH, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1]);
-      shapePath = shapeInfo!.path.transform(shapeMatrix);
+          [width / AppConfig.SVG_WH, 0, 0, 0, 0, height / AppConfig.SVG_WH, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+      shapePath = shapeFileInfo!.path.transform(shapeMatrix);
 
-      Float64List borderMatrix = Float64List.fromList(
-          [(width - signShapeBorderWidth * 2) / AppConfig.SVG_WH, 0, 0, 0,
-            0, (height - signShapeBorderWidth * 2) / AppConfig.SVG_WH, 0, 0,
-            0, 0, 1, 0,
-            signShapeBorderWidth, signShapeBorderWidth, 0, 1]);
-      borderPath = shapeInfo!.path.transform(borderMatrix);
+      Float64List borderMatrix = Float64List.fromList([
+        (width - signShapeBorderWidth * 2) / AppConfig.SVG_WH,
+        0,
+        0,
+        0,
+        0,
+        (height - signShapeBorderWidth * 2) / AppConfig.SVG_WH,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        signShapeBorderWidth,
+        signShapeBorderWidth,
+        0,
+        1
+      ]);
+      borderPath = shapeFileInfo!.path.transform(borderMatrix);
     }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // background color
     if (signBackgroundColor != null) {
-      Paint backgroundPaint = Paint()
-        ..color = signBackgroundColor!;
-      if (shapeInfo == null) {
+      Paint backgroundPaint = Paint()..color = signBackgroundColor!;
+      if (shapeFileInfo == null) {
         canvas.drawRect(whRect, backgroundPaint);
       } else {
         if (shapeBackgroundUiImage == null) {
@@ -105,26 +112,24 @@ class MakeParentSignPainter extends CustomPainter {
     }
 
     // shape
-    if (shapeInfo != null) {
+    if (shapeFileInfo != null) {
       if (signShapeBorderColor != null) {
-        Paint shapePaint = Paint()
-          ..color = signShapeBorderColor!;
-        canvas.drawPath(shapePath!, shapePaint);  // 0 두께일 수 있음
+        Paint shapePaint = Paint()..color = signShapeBorderColor!;
+        canvas.drawPath(shapePath!, shapePaint); // 0 두께일 수 있음
 
         if (signBackgroundColor == null) {
-          Paint shapePaint = Paint()
-            ..blendMode = BlendMode.clear;    // transparent
-          canvas.drawPath(borderPath!, shapePaint);  // 0 두께일 수 있음
+          Paint shapePaint = Paint()..blendMode = BlendMode.clear; // transparent
+          canvas.drawPath(borderPath!, shapePaint); // 0 두께일 수 있음
         }
       }
     }
 
     // background image 또는 background
-    if (shapeInfo != null) {
+    if (shapeFileInfo != null) {
       canvas.clipPath(borderPath!); // path 영역에서만 그리기가 동작함
     }
 
-    if (shapeInfo != null) {
+    if (shapeFileInfo != null) {
       if (shapeBackgroundUiImage != null) {
         int wShapeBackgroundUiImage = shapeBackgroundUiImage!.width;
         int hShapeBackgroundUiImage = shapeBackgroundUiImage!.height;
@@ -132,12 +137,13 @@ class MakeParentSignPainter extends CustomPainter {
 
         //canvas.drawImage(shapeBackgroundUiImage!,
         //    Offset((width - wShapeBackgroundUiImage) / 2, (height - hShapeBackgroundUiImage) / 2), Paint());
-        Rect shapeBackgroundUiImageRect = Offset((width - wShapeBackgroundUiImage) / -2, (height - hShapeBackgroundUiImage) / -2) & Size(width, height);
+        Rect shapeBackgroundUiImageRect =
+            Offset((width - wShapeBackgroundUiImage) / -2, (height - hShapeBackgroundUiImage) / -2) &
+                Size(width, height);
         canvas.drawImageRect(shapeBackgroundUiImage!, shapeBackgroundUiImageRect, whRect, Paint());
       } else {
         if (signBackgroundColor != null) {
-          Paint backgroundPaint = Paint()
-            ..color = signBackgroundColor!;
+          Paint backgroundPaint = Paint()..color = signBackgroundColor!;
           canvas.drawPath(borderPath!, backgroundPaint);
         }
       }
@@ -149,12 +155,13 @@ class MakeParentSignPainter extends CustomPainter {
 
         //canvas.drawImage(shapeBackgroundUiImage!,
         //    Offset((width - wShapeBackgroundUiImage) / 2, (height - hShapeBackgroundUiImage) / 2), Paint());
-        Rect shapeBackgroundUiImageRect = Offset((width - wShapeBackgroundUiImage) / -2, (height - hShapeBackgroundUiImage) / -2) & Size(width, height);
+        Rect shapeBackgroundUiImageRect =
+            Offset((width - wShapeBackgroundUiImage) / -2, (height - hShapeBackgroundUiImage) / -2) &
+                Size(width, height);
         canvas.drawImageRect(shapeBackgroundUiImage!, shapeBackgroundUiImageRect, whRect, Paint());
       } else {
         if (signBackgroundColor != null) {
-          Paint backgroundPaint = Paint()
-            ..color = signBackgroundColor!;
+          Paint backgroundPaint = Paint()..color = signBackgroundColor!;
           //canvas.drawPath(borderPath!, backgroundPaint);
           canvas.drawRect(whRect, backgroundPaint);
         }
@@ -251,6 +258,7 @@ class MakeParentSignPainter extends CustomPainter {
     return 'width: $width, height: $height, '
         'signColor: $signColor, signWidth: $signWidth, '
         'signBackgroundColor: $signBackgroundColor, '
-        'shapeInfo: $shapeInfo, signShapeBorderColor: $signShapeBorderColor, signShapeBorderWidth: $signShapeBorderWidth';
+        'shapeFileInfo: $shapeFileInfo, signShapeBorderColor: $signShapeBorderColor, signShapeBorderWidth: $signShapeBorderWidth';
   }
+
 }

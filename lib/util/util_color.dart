@@ -3,7 +3,6 @@ import 'dart:developer' as dev;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class ColorUtil {
 
@@ -102,7 +101,7 @@ class ColorUtil {
       //recentColors: const <Color>[Colors.amber, Colors.brown],
       recentColors: recentColorList,
       onRecentColorsChanged: (List<Color> colors) {
-        print('onRecentColorsChanged: ${colors.length}');
+        dev.log('onRecentColorsChanged: ${colors.length}');
       },
     ).showPickerDialog(
       context,

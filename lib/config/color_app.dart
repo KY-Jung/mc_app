@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class AppColors {
@@ -20,7 +18,6 @@ class AppColors {
 
   // MAKE SIGN
   static const Color MAKE_SIGN_BOARD = Color(0xffffffa8);
-
   ////////////////////////////////////////////////////////////////////////////////
 
   static Color BLUE_LIGHT = MAKE_PARENT_FB_BACKGROUND;
@@ -124,4 +121,5 @@ class AppColors {
     const Color(0xffffffff)
   ];
 ////////////////////////////////////////////////////////////////////////////////
+
 }

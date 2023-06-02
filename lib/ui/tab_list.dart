@@ -3,7 +3,6 @@ import 'dart:developer' as dev;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:mc/ui/page_imageview.dart';
-import 'package:provider/provider.dart';
 
 class ListTab extends StatefulWidget {
   const ListTab({super.key});

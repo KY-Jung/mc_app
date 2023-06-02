@@ -1,41 +1,15 @@
-import 'dart:async';
 import 'dart:developer' as dev;
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'dart:math' as math;
-import 'package:flutter_draggable_gridview/flutter_draggable_gridview.dart';
-import 'package:flutter_reorderable_grid_view/entities/order_update_entity.dart';
-import 'package:flutter_reorderable_grid_view/widgets/reorderable_builder.dart';
-import 'package:image/image.dart' as IMG;
-
 import 'package:easy_localization/easy_localization.dart';
-import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:jpeg_encode/jpeg_encode.dart';
-import 'package:mc/config/constant_app.dart';
-import 'package:mc/dto/info_shape.dart';
-import 'package:mc/ui/page_make.dart';
 import 'package:mc/util/util_popup.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:reorderables/reorderables.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:badges/badges.dart' as badges;
-import 'package:svg_path_parser/svg_path_parser.dart';
 
 import '../config/color_app.dart';
-import '../config/config_app.dart';
-import '../dto/info_parent.dart';
-import '../painter/clipper_sign.dart';
-import '../painter/painter_make_parent_sign.dart';
-import '../provider/provider_make.dart';
-import '../provider/provider_parent.dart';
 import '../util/util_file.dart';
-import '../util/util_info.dart';
 
+// <-- warning 방지 코드
+//ignore: must_be_immutable
 class ReorderListPopup extends StatefulWidget {
   //const ReorderListPopup({super.key});
   ReorderListPopup(
@@ -50,16 +24,16 @@ class ReorderListPopup extends StatefulWidget {
       : super(key: key);
 
   ////////////////////////////////////////////////////////////////////////////////
-  List<dynamic> infoList;
+  final List<dynamic> infoList;
   int selectedIdx; // 선택한 idx
   final double whShape;
-  String title;
-  bool badge;
-  bool delete;
-  double heightRatio;
+  final String title;
+  final bool badge;
+  final bool delete;
+  final double heightRatio;
 
-  List<Container> reorderContainerList = [];
-  List<String> reorderList = []; // 이전 파일명 저장
+  final List<Container> reorderContainerList = [];
+  final List<String> reorderList = []; // 이전 파일명 저장
   String? firstFileName; // 처음 선택된 파일명
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,6 +42,7 @@ class ReorderListPopup extends StatefulWidget {
 }
 
 class ReorderListPopupState extends State<ReorderListPopup> {
+
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
@@ -92,7 +67,7 @@ class ReorderListPopupState extends State<ReorderListPopup> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // 처음에만 provider 에서 읽어와서 넣음
-    // (cancel 한 경우에는 parentProvider.shapeInfoList 도 다시 초기화하는 것이 번거롭기 때문)
+    // (cancel 한 경우에는 signProvider.shapeFileInfoList 도 다시 초기화하는 것이 번거롭기 때문)
     if (widget.reorderContainerList.isEmpty) {
       dev.log('reorderContainerList 생성');
 
@@ -162,7 +137,7 @@ class ReorderListPopupState extends State<ReorderListPopup> {
     );
   }
 
-  /// shapeInfo 는 fileName, svgPicture 를 구하기 위해 필요
+  /// shapeFileInfo 는 fileName, svgPicture 를 구하기 위해 필요
   Container makeContainer(var info, BoxDecoration boxDecoration) {
     Container container = Container(
       key: Key(info.fileName),
@@ -278,38 +253,9 @@ class ReorderListPopupState extends State<ReorderListPopup> {
   void _onPressedOk() async {
     dev.log('# ReorderListPopup _onPressedOk START');
 
-    /*
-    ////////////////////////////////////////////////////////////////////////////////
-    // 현재 파일명 목록 구하기
-    List<String> fileNameList = FileUtil.extractFileNameFromShapeContainerList(widget.reorderContainerList);
-    String fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // prefs 의 파일명 목록 구하기
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? prefsShapeInfoList = prefs.getString(AppConstant.PREFS_SHAPEINFOLIST);
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // 같지 않으면 prefs 저장 + reordering
-    if (fileNameStr != prefsShapeInfoList) {
-      // save prefs
-      dev.log('save prefs');
-      await prefs.setString(AppConstant.PREFS_SHAPEINFOLIST, fileNameStr);
-
-      // reordering
-      dev.log('reordering');
-      //dev.log('fileNameList: $fileNameList');
-      FileUtil.reorderInfoListWithFileNameList(widget.infoList, fileNameList);
-    }
-    ////////////////////////////////////////////////////////////////////////////////
-    */
     // 팝업에서는 목록만 수정하고, mbs 에서 목록을 가지고 다시 prefs 저장
-    //if (widget.selectedIdx != -1) {
     List<String> fileNameList = FileUtil.extractFileNameFromContainerList(widget.reorderContainerList);
     FileUtil.reorderInfoListWithFileNameList(widget.infoList, fileNameList);
-    //}
 
     if (!mounted) return;
     Navigator.pop(context, widget.selectedIdx);
@@ -389,4 +335,5 @@ class ReorderListPopupState extends State<ReorderListPopup> {
 ////////////////////////////////////////////////////////////////////////////////
 // Event END
 ////////////////////////////////////////////////////////////////////////////////
+
 }

@@ -1,14 +1,10 @@
 import 'dart:developer' as dev;
-import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:svg_path_parser/svg_path_parser.dart';
+import 'package:path_drawing/path_drawing.dart';
 
 import '../config/config_app.dart';
-import '../dto/info_parent.dart';
-import '../util/util_info.dart';
 
 class SignClipper extends CustomClipper<Path> {
 
@@ -26,7 +22,7 @@ class SignClipper extends CustomClipper<Path> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // svg 크기 조정
-    Path svgPath = parseSvgPath('m12 23.1-1.45-1.608C5.4 15.804 2 12.052 2 7.45 2 3.698 4.42.75 7.5.75c1.74 0 3.41.987 4.5 2.546C13.09 1.736 14.76.75 16.5.75c3.08 0 5.5 2.948 5.5 6.699 0 4.604-3.4 8.355-8.55 14.055L12 23.1z');
+    Path svgPath = parseSvgPathData('m12 23.1-1.45-1.608C5.4 15.804 2 12.052 2 7.45 2 3.698 4.42.75 7.5.75c1.74 0 3.41.987 4.5 2.546C13.09 1.736 14.76.75 16.5.75c3.08 0 5.5 2.948 5.5 6.699 0 4.604-3.4 8.355-8.55 14.055L12 23.1z');
 
 
     //InfoUtil.calcFitRatioOut(AppConfig.SVG_WH, AppConfig.SVG_WH, i_x2, i_y2);

@@ -1,17 +1,16 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
-class SignInfo {
+class SignFileInfo {
 
   late String fileName;
   late Image image;
   int cnt = 0;
 
-  SignInfo(this.fileName, this.image);
+  SignFileInfo(this.fileName, this.image);
 
   @override
   String toString() {
-    return 'SignInfo{fileName: $fileName}';
+    return 'SignFileInfo{fileName: $fileName}';
   }
 }

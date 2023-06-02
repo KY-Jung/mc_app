@@ -1,6 +1,5 @@
 import 'dart:developer' as dev;
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../config/config_app.dart';
@@ -8,6 +7,7 @@ import '../dto/info_parent.dart';
 import '../util/util_info.dart';
 
 class MakePainter extends CustomPainter {
+
   ////////////////////////////////////////////////////////////////////////////////
   late double wScreen;
   late double hScreen;
@@ -36,7 +36,6 @@ class MakePainter extends CustomPainter {
     dev.log('# MakePainter paint START');
 
     ////////////////////////////////////////////////////////////////////////////////
-    //initParentData();
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -70,34 +69,15 @@ class MakePainter extends CustomPainter {
   bool shouldRepaint(MakePainter oldDelegate) {
     // TODO : impl
     // 다시 그려야할 정보 검사
-
+/*
     if (ParentInfo.inScale != oldDelegate.inScale)  return true;
     if (ParentInfo.xStart != oldDelegate.xStart)  return true;
     if (ParentInfo.yStart != oldDelegate.yStart)  return true;
     if (ParentInfo.scale != oldDelegate.scale)  return true;
-
+*/
 
     return false;
     //return true;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  void initParentData() {
-    wScreen = ParentInfo.wScreen;
-    hScreen = ParentInfo.hScreen;
-
-    wImage = ParentInfo.wImage;
-    hImage = ParentInfo.hImage;
-
-    inScale = ParentInfo.inScale;
-
-    xBlank = ParentInfo.xBlank;
-    yBlank = ParentInfo.yBlank;
-
-    xStart = ParentInfo.xStart;
-    yStart = ParentInfo.yStart;
-
-    scale = ParentInfo.scale;
-  }
-////////////////////////////////////////////////////////////////////////////////
 }

@@ -13,49 +13,19 @@ import 'package:mc/ui/bar_link.dart';
 import 'package:mc/ui/bar_parent.dart';
 import 'package:mc/ui/bar_sound.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../config/constant_app.dart';
-import '../dto/info_parent.dart';
+import '../config/enum_app.dart';
 import '../library/custom_expandable_draggable_widget.dart';
 import '../painter/painter_make.dart';
 import '../painter/painter_make_parent_resize.dart';
 import '../provider/provider_parent.dart';
+import '../provider/provider_sign.dart';
 import '../util/util_bracket.dart';
-import '../util/util_info.dart';
 import '../util/util_popup.dart';
-
-enum MakePageEnum {
-  //BLANK,    // 코드가 복잡해져서 이제 사용 안함 (2023.05.31, KY.Jung)
-  PARENT,
-  BABY,
-  CAPTION,
-  SOUND,
-  LINK,
-}
-
-// parent 가 resize 된 이미지인지 구분
-enum MakePageBringEnum {
-  NONE,
-  RESIZE,
-}
-
-enum MakeParentResizePointEnum {
-  NONE,
-  LEFTTOP,
-  RIGHTTOP,
-  LEFTBOTTOM,
-  RIGHTBOTTOM,
-  LEFTTOPH,
-  LEFTTOPV,
-  RIGHTTOPH,
-  RIGHTTOPV,
-  LEFTBOTTOMH,
-  LEFTBOTTOMV,
-  RIGHTBOTTOMH,
-  RIGHTBOTTOMV,
-}
 
 class MakePage extends StatefulWidget {
   const MakePage({super.key});
@@ -68,16 +38,9 @@ class MakePageState extends State<MakePage> {
   ////////////////////////////////////////////////////////////////////////////////
   // variable
 
-  //MakePageEnum _makePageEnum = MakePageEnum.BLANK;
-  MakePageEnum _makePageEnum = MakePageEnum.PARENT;
+  //MakePageEnum _makePageEnum = MakePageEnum.PARENT;
+  bool first = true;
 
-  // screen blank
-  late double hTopBlank;
-  late double hBottomBlank;
-
-  // sign
-  late double whSign;
-  late Offset signOffset; // global position
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +48,7 @@ class MakePageState extends State<MakePage> {
 
   late MakeProvider makeProvider;
   late ParentProvider parentProvider;
+  late SignProvider signProvider;
 
   final TransformationController _transformationController =
       TransformationController(Matrix4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1));
@@ -106,22 +70,26 @@ class MakePageState extends State<MakePage> {
     dev.log('# MakePage initState START');
     super.initState();
 
+/*
+    // parentProvider 가 아직 초기화되지 않는 문제 발생
+    // MakeTab 으로 다시 옮김
     ////////////////////////////////////////////////////////////////////////////////
     // 초기화
-    if (ParentInfo.path != '') {
+    if (parentProvider.path != '') {
       _makePageEnum = MakePageEnum.PARENT;
 
-      dev.log('initState recall _setParentInfo');
-      InfoUtil.setParentInfo(ParentInfo.path).then((_) => {});
+      dev.log('initState recall _setparentProvider');
+      InfoUtil.setParenProvider(parentProvider.path, parentProvider).then((_) => {});
 
       // TODO : 나머지도 있다면 초기화
     }
     ////////////////////////////////////////////////////////////////////////////////
+*/
 
     ////////////////////////////////////////////////////////////////////////////////
     /// build 이후 실행
-    /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
-    /// --> build 에서 직접 구하는 것으로 수정
+    /// InteractiveViewer 실제 크기를 구해서 ParentProvider wScreen/hScreen 에 저장
+    /// --> didChangeDependencies 에서 직접 구하는 것으로 수정
     //WidgetsBinding.instance.addPostFrameCallback((_) => _afterBuild(context));
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,30 +101,6 @@ class MakePageState extends State<MakePage> {
   void didChangeDependencies() {
     dev.log('# MakePage didChangeDependencies START');
     super.didChangeDependencies();
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // sign 을 위한 설정
-    hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
-    hBottomBlank = AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT;
-    var wScreen = MediaQuery.of(context).size.width;
-    var hScreen = MediaQuery.of(context).size.height - hTopBlank - hBottomBlank;
-    ParentInfo.wScreen = wScreen;
-    ParentInfo.hScreen = hScreen;
-    whSign = (wScreen + hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
-
-    // 최초 위치
-    double xSign = wScreen - ParentInfo.xBlank - whSign * 1.2;
-    double ySign = MediaQuery.of(context).size.height - hBottomBlank - ParentInfo.yBlank - whSign * 1.2;
-    signOffset = Offset(xSign, ySign);
-
-    dev.log('MediaQuery.of(context).size: ${MediaQuery.of(context).size}');
-    dev.log('MediaQuery.of(context).padding.top: ${MediaQuery.of(context).padding.top}');
-    dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
-    dev.log('ParentInfo.wScreen: ${ParentInfo.wScreen}');
-    dev.log('ParentInfo.hScreen: ${ParentInfo.hScreen}');
-    dev.log('whSign: $whSign');
-    dev.log('signOffset: $signOffset');
-    ////////////////////////////////////////////////////////////////////////////////
   }
 
   // 뒤로가기 클릭하면 호출됨
@@ -165,56 +109,68 @@ class MakePageState extends State<MakePage> {
     dev.log('# MakePage dispose START');
     super.dispose();
 
+    //signProvider.parentSignOffset = null;
+
     _transformationController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     dev.log('# MakePage build START');
-    dev.log('build _makeEnum: $_makePageEnum');
-    ParentInfo.printParent();
-    dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
 
     ////////////////////////////////////////////////////////////////////////////////
     makeProvider = Provider.of<MakeProvider>(context);
     parentProvider = Provider.of<ParentProvider>(context);
+    signProvider = Provider.of<SignProvider>(context);
     ////////////////////////////////////////////////////////////////////////////////
 
-    /*
-    // _onTapDownAll 에서 toggle 처리를 하므로, 아래 코드 사용하지 않음
     ////////////////////////////////////////////////////////////////////////////////
-    // function bar 에서 수신된 경우 처리
-    if (!makeProvider.fabOpen) {
-      var floatKeyState = _fabGlobalKey.currentState;
-      if (floatKeyState != null) {
-        if (floatKeyState.isOpen) {
-          dev.log('build floatKeyState.isOpen and close');
-          // 직접 호출하면 setState() or markNeedsBuild() called during build 에러 발생
-          //floatKeyState.toggle();
-          WidgetsBinding.instance
-              .addPostFrameCallback((_) => floatKeyState.toggle());
-        }
-      }
+    // initState 에서 MediaQuery 를 호출하면 에러 발생
+
+    if (first) {
+      parentProvider.setParenProvider().then((_) {        // sign 을 위한 설정
+        parentProvider.hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
+        parentProvider.hBottomBlank = AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT;
+        var wScreen = MediaQuery.of(context).size.width;
+        var hScreen = MediaQuery.of(context).size.height - parentProvider.hTopBlank - parentProvider.hBottomBlank;
+        parentProvider.wScreen = wScreen;
+        parentProvider.hScreen = hScreen;
+        parentProvider.whSign = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
+
+        dev.log('MediaQuery.of(context).size: ${MediaQuery.of(context).size}');
+        dev.log('MediaQuery.of(context).padding.top: ${MediaQuery.of(context).padding.top}');
+        dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
+        dev.log('parentProvider.wScreen: ${parentProvider.wScreen}');
+        dev.log('parentProvider.hScreen: ${parentProvider.hScreen}');
+        dev.log('hTopBlank: $parentProvider.hTopBlank');
+        dev.log('hBottomBlank: $parentProvider.hBottomBlank');
+        dev.log('whSign: $parentProvider.whSign');
+
+        first = false;
+      });
+
     }
     ////////////////////////////////////////////////////////////////////////////////
-    */
 
     return Scaffold(
       appBar: AppBar(
         title: Text('MAKE_NEW'.tr()),
         actions: [
-          Container(
-            alignment: Alignment.center,
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: InkWell(
-              onTap: _onTabDelete,
-              onLongPress: _onLongPressDelete,
-              child: Ink(
-                child: const Icon(Icons.delete_forever),
+          GestureDetector(
+            onTapDown: _onTapDownAll,
+            child: Container(
+              alignment: Alignment.center,
+              margin: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: InkWell(
+                onTap: _onTabDelete,
+                onLongPress: _onLongPressDelete,
+                child: Ink(
+                  child: const Icon(Icons.delete_forever),
+                ),
               ),
             ),
           ),
@@ -231,7 +187,6 @@ class MakePageState extends State<MakePage> {
                   alignment: Alignment.center,
                   fit: StackFit.expand, // 비로소 상하 center 에 오게됨
                   children: <Widget>[
-                    //if (_makePageEnum != MakePageEnum.BLANK)
                     GestureDetector(
                       onTapDown: _onTapDown,
                       onTapUp: _onTapUp,
@@ -242,12 +197,12 @@ class MakePageState extends State<MakePage> {
                         // build 이후 InteractiveViewer 의 사이즈 구하기
                         key: _screenGlobalKey,
                         //maxScale: (makeProvider.parentResize)
-                        maxScale: (_makePageEnum == MakePageEnum.PARENT &&
+                        maxScale: (makeProvider.makePageEnum == MakePageEnum.PARENT &&
                                 parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
                             ? 1.0
                             : AppConfig.MAKE_SCREEN_MAX,
                         //minScale: (makeProvider.parentResize)
-                        minScale: (_makePageEnum == MakePageEnum.PARENT &&
+                        minScale: (makeProvider.makePageEnum == MakePageEnum.PARENT &&
                                 parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
                             ? 1.0
                             : AppConfig.MAKE_SCREEN_MIN,
@@ -261,135 +216,84 @@ class MakePageState extends State<MakePage> {
                         onInteractionEnd: _onInteractionEnd,
                         onInteractionUpdate: _onInteractionUpdate,
                         //child: Image.asset('assets/images/jeju.jpg'),
-                        //child: CustomPaint(
-                        //  painter: MyPainter(ParentInfo.image!),
-                        //),
-                        child: Image.file(File(ParentInfo.path)),
+                        child: Image.file(File(parentProvider.path)),
                       ),
                     ),
-                    //if (_makePageEnum != MakePageEnum.BLANK)
                     IgnorePointer(
                       child: RepaintBoundary(
                         child: CustomPaint(
                           // size 안 정해도 동작함
                           //painter: (makeProvider.parentResize)
-                          painter: (_makePageEnum == MakePageEnum.PARENT &&
+                          painter: (makeProvider.makePageEnum == MakePageEnum.PARENT &&
                                   parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
                               ? MakeParentResizePainter(
-                                  ParentInfo.wScreen,
-                                  ParentInfo.hScreen,
-                                  ParentInfo.wImage,
-                                  ParentInfo.hImage,
-                                  ParentInfo.inScale,
-                                  ParentInfo.xBlank,
-                                  ParentInfo.yBlank,
-                                  ParentInfo.xStart,
-                                  ParentInfo.yStart,
-                                  ParentInfo.scale,
-                                  ParentInfo.leftTopOffset,
-                                  ParentInfo.rightTopOffset,
-                                  ParentInfo.leftBottomOffset,
-                                  ParentInfo.rightBottomOffset)
+                                  parentProvider.wScreen,
+                                  parentProvider.hScreen,
+                                  parentProvider.wImage,
+                                  parentProvider.hImage,
+                                  parentProvider.inScale,
+                                  parentProvider.xBlank,
+                                  parentProvider.yBlank,
+                                  parentProvider.xStart,
+                                  parentProvider.yStart,
+                                  parentProvider.scale,
+                                  parentProvider.leftTopOffset,
+                                  parentProvider.rightTopOffset,
+                                  parentProvider.leftBottomOffset,
+                                  parentProvider.rightBottomOffset)
                               : MakePainter(
-                                  ParentInfo.wScreen,
-                                  ParentInfo.hScreen,
-                                  ParentInfo.wImage,
-                                  ParentInfo.hImage,
-                                  ParentInfo.inScale,
-                                  ParentInfo.xBlank,
-                                  ParentInfo.yBlank,
-                                  ParentInfo.xStart,
-                                  ParentInfo.yStart,
-                                  ParentInfo.scale),
+                                  parentProvider.wScreen,
+                                  parentProvider.hScreen,
+                                  parentProvider.wImage,
+                                  parentProvider.hImage,
+                                  parentProvider.inScale,
+                                  parentProvider.xBlank,
+                                  parentProvider.yBlank,
+                                  parentProvider.xStart,
+                                  parentProvider.yStart,
+                                  parentProvider.scale),
                         ),
                       ),
                     ),
-                    //if (_makePageEnum != MakePageEnum.BLANK)
-                    //for (int i = 0, j = 2; i < j; i++)
-                    /*
+                    if (signProvider.parentSignFileInfoIdx != -1)
                       Positioned(
-                        left: signOffset.dx,
-                        top: signOffset.dy,
-                        child: Draggable(
-                          feedback: Text('~~~aaa\nbbb\nccc\nddd~~~'),
-                          childWhenDragging: Opacity(
-                            opacity: .3,
-                            child: Text('====aaa\nbbb\nccc\nddd======'),
-                          ),
-                          onDragEnd: (details) => setState(() => signOffset = details.offset),
-                          child: Text('aaa\nbbb\nccc\nddd'),
-                        ),
-                      ),
-                      */
-                    if (parentProvider.parentSignInfoIdx != -1)
-                      Positioned(
-                        left: signOffset.dx,
-                        top: signOffset.dy - hTopBlank,
-                        //left: 100,
-                        //top: 100,
-                        width: whSign,
-                        height: whSign,
+                        left: signProvider.parentSignOffset?.dx,
+                        top: signProvider.parentSignOffset?.dy,
+                        width: parentProvider.whSign,
+                        height: parentProvider.whSign,
                         child: Draggable(
                           feedback: SizedBox(
                             // 웬지 drag 중에는 Pogistioned 크기가 적용되지 않음
-                            width: whSign,
-                            height: whSign,
-                            child: parentProvider.signInfoList[parentProvider.parentSignInfoIdx].image,
-                            //Image.file(File('/data/user/0/kr.gainsys.mc/app_flutter/sign/orange.png')),
+                            width: parentProvider.whSign,
+                            height: parentProvider.whSign,
+                            child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
                           ),
                           childWhenDragging: Opacity(
                             opacity: 0.6,
-                            child: parentProvider.signInfoList[parentProvider.parentSignInfoIdx].image,
-                            // Image.file(File('/data/user/0/kr.gainsys.mc/app_flutter/sign/green.png')),
+                            child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
                           ),
                           onDragEnd: (details) {
-                            print('onDragEnd offset: ${details.offset}');
-                            signOffset = Offset(details.offset.dx, details.offset.dy - hTopBlank);
-                            print('onDragEnd signOffset: ${signOffset}');
+                            dev.log('onDragEnd offset: ${details.offset}');
+                            signProvider.parentSignOffset =
+                                Offset(details.offset.dx, details.offset.dy - parentProvider.hTopBlank);
+                            dev.log('onDragEnd signOffset: ${signProvider.parentSignOffset}');
                             setState(() {});
+
+                            SharedPreferences.getInstance().then((prefs) {
+                              prefs.setDouble(AppConstant.PREFS_PARENTSIGNOFFSET_X, details.offset.dx);
+                              prefs.setDouble(
+                                  AppConstant.PREFS_PARENTSIGNOFFSET_Y, details.offset.dy - parentProvider.hTopBlank);
+                            });
                           },
-                          child: parentProvider.signInfoList[parentProvider.parentSignInfoIdx].image,
-                          //Image.file(File('/data/user/0/kr.gainsys.mc/app_flutter/sign/red.png')),
+                          child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
                         ),
                       ),
-
-                    /*
-                    if (_makePageEnum == MakePageEnum.BLANK)
-                      Row(
-                        key: _screenGlobalKey,
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          ElevatedButton.icon(
-                              icon: const Icon(
-                                Icons.photo,
-                                color: Colors.amber,
-                              ),
-                              label: Text('GALLERY'.tr()),
-                              style: TextButton.styleFrom(
-                                  backgroundColor: Colors.white),
-                              onPressed: () {
-                                //_bringParentPressed(MakePageBringEnum.GALLERY);
-                              }),
-                          ElevatedButton.icon(
-                              icon: const Icon(
-                                Icons.camera_alt_rounded,
-                                color: Colors.lightGreen,
-                              ),
-                              label: Text('CAMERA'.tr()),
-                              style: TextButton.styleFrom(
-                                  backgroundColor: Colors.white),
-                              onPressed: () {
-                                //_bringParentPressed(MakePageBringEnum.CAMERA);
-                              }),
-                        ],
-                      ),
-                    */
                   ],
                 ),
               ),
               SizedBox(
                 height: AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT,
-                child: _chooseFunctionBar(_makePageEnum),
+                child: _chooseFunctionBar(makeProvider.makePageEnum),
               ),
             ],
           ),
@@ -471,44 +375,8 @@ class MakePageState extends State<MakePage> {
     );
   }
 
-  /// build 이후에 실행
-  void _afterBuild(context) {
-    /*
-    dev.log('# MakePage _afterBuild START');
-
-    ////////////////////////////////////////////////////////////////////////////////
-    /// InteractiveViewer 실제 크기를 구해서 ParentInfo wScreen/hScreen 에 저장
-    RenderBox renderBox = _screenGlobalKey.currentContext!.findRenderObject() as RenderBox;
-    screenSize = renderBox.size;
-    var wScreen = screenSize.width;
-    var hScreen = screenSize.height;
-
-    ParentInfo.wScreen = wScreen;
-    ParentInfo.hScreen = hScreen;
-    dev.log('InteractiveViewer size: $screenSize');
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // sign 을 위한 설정
-    hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
-
-    whSign = (wScreen + hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
-
-    double xSign = wScreen - ParentInfo.xBlank - whSign * 1.2;
-    double ySign = hScreen - ParentInfo.yBlank - whSign * 1.2;
-    signOffset = Offset(xSign, ySign);
-    ////////////////////////////////////////////////////////////////////////////////
-
-    dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
-    dev.log('MediaQuery.of(context).size: ${MediaQuery.of(context).size}');
-    dev.log('MediaQuery.of(context).padding.top: ${MediaQuery.of(context).padding.top}');
-    */
-  }
-
   Widget _chooseFunctionBar(type) {
     switch (type) {
-      //case MakePageEnum.BLANK:
-      //  return const BlankBar();
       case MakePageEnum.PARENT:
         return const ParentBar();
       case MakePageEnum.BABY:
@@ -532,12 +400,6 @@ class MakePageState extends State<MakePage> {
   void _onTapDownAll(TapDownDetails tapDownDetails) async {
     dev.log('# MakePage _onTapDownAll');
 
-    /*
-    // fab close 처리 (provider 를 사용해서 닫기)
-    if (makeProvider.fabOpen) {
-      makeProvider.setFabOpen(false);
-    }
-    */
     ////////////////////////////////////////////////////////////////////////////////
     // toggle fab
     //_fabGlobalKey.currentState?.toggle();
@@ -550,37 +412,6 @@ class MakePageState extends State<MakePage> {
     }
     ////////////////////////////////////////////////////////////////////////////////
   }
-
-/*
-  void _bringParentPressed(MakePageBringEnum type) async {
-    dev.log('# MakePage _bringParentPressed START');
-
-    XFile? xFile;
-    if (type == MakePageBringEnum.CAMERA) {
-      xFile = await ImagePicker().pickImage(source: ImageSource.camera);
-    } else {
-      xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    }
-    dev.log('file: ${xFile?.path}');
-    if (xFile == null) return; // 취소한 경우
-
-    // TODO : 모래시계 필요
-
-    await InfoUtil.setParentInfo(xFile.path);
-    if (type == MakePageBringEnum.CAMERA) {
-      ParentInfo.makeBringEnum = MakePageBringEnum.CAMERA;
-    } else {
-      ParentInfo.makeBringEnum = MakePageBringEnum.GALLERY;
-    }
-
-    // TODO : 나머지도 있다면 재조정
-
-    setState(() {
-      _makePageEnum = MakePageEnum.PARENT;
-    });
-    dev.log('# MakePage _bringParentPressed END');
-  }
-*/
 
   /// 변경되는 값 : xStart, yStart, xyOffset
   void _onInteractionUpdate(ScaleUpdateDetails scaleUpdateDetails) async {
@@ -614,29 +445,29 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // resize 상태 라면
     //if (makeProvider.parentResize) {
-    if (_makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+    if (makeProvider.makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
       // _onTapDown 이 호출되지 않은 경우, _onTapDown 에서 선택되지 않은 경우
-      if (ParentInfo.makeParentSizePointEnum == MakeParentResizePointEnum.NONE) {
+      if (parentProvider.makeParentSizePointEnum == MakeParentResizePointEnum.NONE) {
         return;
       }
 
       // blank 검사
-      if (!BracketUtil.checkBlankArea(xyOffset, ParentInfo.makeParentSizePointEnum)) {
+      if (!BracketUtil.checkBlankArea(xyOffset, parentProvider.makeParentSizePointEnum, parentProvider)) {
         dev.log('\n\n### checkBlankArea return\n\n');
         return;
       }
 
       // bracket 간에 침범할 수 없는 영역을 순식간에 넘어갔는지 검사
-      if (!BracketUtil.checkBracketCross(xyOffset, ParentInfo.makeParentSizePointEnum)) {
+      if (!BracketUtil.checkBracketCross(xyOffset, parentProvider.makeParentSizePointEnum, parentProvider)) {
         dev.log('\n\n### checkBracketCross return\n\n');
         return;
       }
 
       // shrink 허용치 검사
-      Rect bracketRect = BracketUtil.calcBracketRect(xyOffset, ParentInfo.makeParentSizePointEnum);
+      Rect bracketRect = BracketUtil.calcBracketRect(xyOffset, parentProvider.makeParentSizePointEnum, parentProvider);
       dev.log('bracketRect: $bracketRect');
-      double minArea = (ParentInfo.wScreen - ParentInfo.xBlank * 2) *
-          (ParentInfo.hScreen - ParentInfo.yBlank * 2) *
+      double minArea = (parentProvider.wScreen - parentProvider.xBlank * 2) *
+          (parentProvider.hScreen - parentProvider.yBlank * 2) *
           AppConfig.SIZE_SHRINK_MIN;
       if (minArea >= (bracketRect.width * bracketRect.height)) {
         dev.log('parentSize exceed ${AppConfig.SIZE_SHRINK_MIN * 100}%: $xyOffset');
@@ -647,24 +478,24 @@ class MakePageState extends State<MakePage> {
       dev.log('org xyOffset: $xyOffset');
       xyOffset = BracketUtil.stickyBracketOffset(
           xyOffset,
-          ParentInfo.wScreen,
-          ParentInfo.xBlank,
-          ParentInfo.hScreen,
-          ParentInfo.yBlank,
+          parentProvider.wScreen,
+          parentProvider.xBlank,
+          parentProvider.hScreen,
+          parentProvider.yBlank,
           AppConfig.SIZE_GRID_RATIO,
           AppConfig.SIZE_GRID_RATIO,
           AppConfig.SIZE_STICKY_RATIO,
-          ParentInfo.makeParentSizePointEnum);
+          parentProvider.makeParentSizePointEnum);
       dev.log('new xyOffset: $xyOffset');
 
       ////////////////////////////////////////////////////////////////////////////////
-      ParentInfo.xStart = xStart;
-      ParentInfo.yStart = yStart;
-      ParentInfo.xyOffset = xyOffset; // for test
+      parentProvider.xStart = xStart;
+      parentProvider.yStart = yStart;
+      parentProvider.xyOffset = xyOffset; // for test
       ////////////////////////////////////////////////////////////////////////////////
 
-      // ParentInfo 의 Offset 수정 --> paint 에서 사용
-      BracketUtil.updateBracketArea(xyOffset, ParentInfo.makeParentSizePointEnum);
+      // parentProvider 의 Offset 수정 --> paint 에서 사용
+      BracketUtil.updateBracketArea(xyOffset, parentProvider.makeParentSizePointEnum, parentProvider);
     } // end if (makeProvider.parentResize) {
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -674,7 +505,7 @@ class MakePageState extends State<MakePage> {
   // drag 이후에는 onTapUp 호출안됨
   void _onInteractionEnd(ScaleEndDetails scaleEndDetails) {
     dev.log('_onInteractionEnd Velocity: ${scaleEndDetails.velocity}');
-    ParentInfo.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
+    parentProvider.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
   }
 
   /// 변경되는 값 : xyOffset
@@ -683,23 +514,10 @@ class MakePageState extends State<MakePage> {
     // local x/y from image, global x/y from phone screen
     //dev.log('_onTapDown localPosition: ${details.localPosition}');
     dev.log('_onTapDown _transformationController.value: ${_transformationController.value}');
+    parentProvider.printParent();
 
     // onDoubleTap 에서 사용
     _tapDownDetails = tapDownDetails;
-
-    /*
-    ////////////////////////////////////////////////////////////////////////////////
-    // toggle 일 경우 return
-    var floatKeyState = _fabGlobalKey.currentState;
-    if (floatKeyState != null) {
-      if (floatKeyState.isOpen) {
-        dev.log('_onTapDown floatKeyState.isOpen and return');
-        floatKeyState.toggle();
-        return;
-      }
-    }
-    ////////////////////////////////////////////////////////////////////////////////
-    */
 
     ////////////////////////////////////////////////////////////////////////////////
     // for debug
@@ -709,11 +527,6 @@ class MakePageState extends State<MakePage> {
     double yStart = matrix4.entry(1, 3);
     Offset xyOffset = _tapDownDetails.localPosition;
     dev.log('_onTapDown scale: $scale, xyOffset: $xyOffset, xStart: $xStart, yStart: $yStart');
-    ParentInfo.printParent();
-    //dev.log('_onTapDown wView: ${ParentInfo.wScreen - ParentInfo.xBlank}, '
-    //    'wScreen: ${ParentInfo.wScreen}, xBlank: ${ParentInfo.xBlank}, '
-    //    'hView: ${ParentInfo.hScreen - ParentInfo.yBlank}, '
-    //    'hScreen: ${ParentInfo.hScreen}, yBlank: ${ParentInfo.yBlank}');
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -734,30 +547,26 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // size 상태인 경우 bracket 이 선택되었는지 검사
     //if (makeProvider.parentResize) {
-    if (_makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
-      dev.log('parentSize leftTopOffset: ${ParentInfo.leftTopOffset}, rightTopOffset: ${ParentInfo.rightTopOffset}, '
-          'leftBottomOffset: ${ParentInfo.leftBottomOffset}, rightBottomOffset: ${ParentInfo.rightBottomOffset}');
+    if (makeProvider.makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+      dev.log(
+          'parentSize leftTopOffset: ${parentProvider.leftTopOffset}, rightTopOffset: ${parentProvider.rightTopOffset}, '
+          'leftBottomOffset: ${parentProvider.leftBottomOffset}, rightBottomOffset: ${parentProvider.rightBottomOffset}');
 
-      ParentInfo.xyOffset = xyOffset; // for test
-      MakeParentResizePointEnum makeParentSizeEnum = BracketUtil.findBracketArea(xyOffset);
+      parentProvider.xyOffset = xyOffset; // for test
+      MakeParentResizePointEnum makeParentSizeEnum = BracketUtil.findBracketArea(xyOffset, parentProvider);
       dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
       //if (makeParentSizeEnum != MakeParentSizePointEnum.NONE) {
-      //  ParentInfo.makeParentSizePointEnum = makeParentSizeEnum;
+      //  parentProvider.makeParentSizePointEnum = makeParentSizeEnum;
       //}
-      ParentInfo.makeParentSizePointEnum = makeParentSizeEnum;
+      parentProvider.makeParentSizePointEnum = makeParentSizeEnum;
     } // if (makeProvider.parentResize) {
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // for debug
-    //setState(() {});
     ////////////////////////////////////////////////////////////////////////////////
   }
 
   // drag 이후에는 호출안됨
   void _onTapUp(TapUpDetails tapUpDetails) async {
     //dev.log('_onTapUp TapUpDetails: ${tapUpDetails.localPosition}');
-    ParentInfo.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
+    parentProvider.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
   }
 
   /// 변경되는 값 : scale, xStart, yStart, xyOffset
@@ -766,9 +575,9 @@ class MakePageState extends State<MakePage> {
     //dev.log('_transformationController.value: ${_transformationController.value}');
 
     // for has not been initialized
-    if (_tapDownDetails == null) {
-      return;
-    }
+    //if (_tapDownDetails == null) {
+    //  return;
+    //}
 
     ////////////////////////////////////////////////////////////////////////////////
     // for debug
@@ -783,7 +592,7 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // return 하는 경우
     //if (makeProvider.parentResize) {
-    if (_makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+    if (makeProvider.makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
       dev.log('_onDoubleTap parentSize return');
       return;
     }
@@ -822,18 +631,6 @@ class MakePageState extends State<MakePage> {
   void _onLongPressDelete() {
     dev.log('_onLongPressDelete');
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // toggle 일 경우 return
-    var floatKeyState = _fabGlobalKey.currentState;
-    if (floatKeyState != null) {
-      if (floatKeyState.isOpen) {
-        dev.log('_onLongPressDelete floatKeyState.isOpen and return');
-        floatKeyState.toggle();
-        return;
-      }
-    }
-    ////////////////////////////////////////////////////////////////////////////////
-
     PopupUtil.popupAlertOkCancel(context, 'INFO'.tr(), 'INIT_MAKE'.tr()).then((ret) {
       dev.log('popupAlertOkCancel: $ret');
 
@@ -845,37 +642,15 @@ class MakePageState extends State<MakePage> {
       if (ret == AppConstant.OK) {
         // TODO : 모두 초기화하는 함수를 별도로 작성하고 호출
 
-        ParentInfo.path = '';
+        parentProvider.path = '';
         Navigator.pop(context, 'CANCEL');
-        //setState(() {
-        //  _makePageEnum = MakePageEnum.BLANK;
-        //});
       }
     });
   }
 
   // floatKeyState.toggle() 을 사용하면 자동으로 onTab 이 호출됨
   void _onTabFab() {
-    /*
-    // _onTapDownAll 에서 toggle 처리를 하므로, 아래 코드 사용하지 않음
-    ////////////////////////////////////////////////////////////////////////////////
-    // toggle 일 경우 return
-    var floatKeyState = _fabGlobalKey.currentState;
-    if (floatKeyState != null) {
-      if (floatKeyState.isOpen) {
-        dev.log('_onTabFab open -> close');
-        if (makeProvider.fabOpen) {
-          makeProvider.setFabOpen(false);
-        }
-      } else {
-        dev.log('_onTabFab close -> open');
-        if (!makeProvider.fabOpen) {
-          makeProvider.setFabOpen(true);
-        }
-      }
-    }
-    ////////////////////////////////////////////////////////////////////////////////
-    */
+    dev.log('_onTabFab');
   }
 
   void _fabParent() {
@@ -887,9 +662,7 @@ class MakePageState extends State<MakePage> {
     // 이미 Parent 상태여도 가져오기 실행
     // 취소하면 FB 는 이전 것으로 유지
 
-    setState(() {
-      _makePageEnum = MakePageEnum.PARENT;
-    });
+    makeProvider.setMakePageEnum(MakePageEnum.PARENT);
   }
 
   void _fabBaby() {
@@ -901,14 +674,7 @@ class MakePageState extends State<MakePage> {
     // 이미 Baby 상태여도 가져오기 실행
     // 취소하면 FB 는 이전 것으로 유지
 
-    setState(() {
-      _makePageEnum = MakePageEnum.BABY;
-      //if (makeProvider.parentResize) {
-      //  makeProvider.setParentResize(false);
-      //}
-      //context.read<MakeProvider>().setParentSize(false);
-      //InfoUtil.initParentInfoBracket();
-    });
+    makeProvider.setMakePageEnum(MakePageEnum.BABY);
   }
 
   void _fabCaption() {
@@ -919,14 +685,7 @@ class MakePageState extends State<MakePage> {
     // TODO : caption 추가, 키보드 올리기
     // FB 는 Caption 으로 변경
 
-    setState(() {
-      _makePageEnum = MakePageEnum.CAPTION;
-      //if (makeProvider.parentResize) {
-      //  makeProvider.setParentResize(false);
-      //}
-      //context.read<MakeProvider>().setParentSize(false);
-      //InfoUtil.initParentInfoBracket();
-    });
+    makeProvider.setMakePageEnum(MakePageEnum.CAPTION);
   }
 
   void _fabSound() {
@@ -936,14 +695,7 @@ class MakePageState extends State<MakePage> {
 
     // TODO : Function bar 만 이동
 
-    setState(() {
-      _makePageEnum = MakePageEnum.SOUND;
-      //if (makeProvider.parentResize) {
-      //  makeProvider.setParentResize(false);
-      //}
-      //context.read<MakeProvider>().setParentSize(false);
-      //InfoUtil.initParentInfoBracket();
-    });
+    makeProvider.setMakePageEnum(MakePageEnum.SOUND);
   }
 
   void _fabLink() {
@@ -953,36 +705,10 @@ class MakePageState extends State<MakePage> {
 
     // TODO : Function bar 만 이동
 
-    setState(() {
-      _makePageEnum = MakePageEnum.LINK;
-      //if (makeProvider.parentResize) {
-      //  makeProvider.setParentResize(false);
-      //}
-      //context.read<MakeProvider>().setParentSize(false);
-      //InfoUtil.initParentInfoBracket();
-    });
+    makeProvider.setMakePageEnum(MakePageEnum.LINK);
   }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Event END //
 ////////////////////////////////////////////////////////////////////////////////
-
-/*
-  ////////////////////////////////////////////////////////////////////////////////
-  // callback START //
-  ////////////////////////////////////////////////////////////////////////////////
-  void _callbackParentSizeInitScreen(bool isSize) {
-    dev.log('# MakeScreen _callbackParentSizeInitScreen');
-
-    this.isSize = isSize;
-
-    // restore
-    _transformationController.value = Matrix4.identity();
-
-    setState(() {});
-  }
-  ////////////////////////////////////////////////////////////////////////////////
-  // callback END //
-  ////////////////////////////////////////////////////////////////////////////////
-*/
 }
