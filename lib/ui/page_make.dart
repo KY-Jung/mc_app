@@ -52,6 +52,7 @@ class MakePageState extends State<MakePage> {
 
   // resize
   Offset sumOffset = const Offset(0, 0);
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -310,22 +311,11 @@ class MakePageState extends State<MakePage> {
                         top: signProvider.parentSignOffset!.dy - widgetTouchWh + widgetHandleWh,
                         width: parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2,
                         height: parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2,
-                        child:
-
-                            /*
-                        Transform(
-                          //transform: Matrix4.identity()..setEntry(row, col, v)..rotateX(10),
-                          //transform: Matrix4.identity()..rotateX(math.pi / 3)..rotateY(math.pi / 3)..rotateZ(math.pi / 3),
-                          transform: Matrix4.identity()..rotateX(math.pi / -4)..rotateY(math.pi / -4),
-                          //transform: Matrix4.identity(),
-                          //alignment: Alignment.center,
-                          alignment: FractionalOffset.center,
-                          */
-                            Transform.rotate(
-                          //angle: -45 * math.pi / 180,
+                        child: Transform.rotate(
                           angle: signRadian,
                           child: Container(
-                            color: Colors.green[100],
+                            //color: Colors.green[100],
+                            color: Colors.transparent,
                             child: Stack(
                               children: <Widget>[
                                 Positioned(
@@ -343,15 +333,18 @@ class MakePageState extends State<MakePage> {
                                             decoration: BoxDecoration(
                                                 color: Colors.transparent,
                                                 border: Border.all(color: Colors.white38, width: 2)),
-                                            child: signProvider
-                                                .signFileInfoList[signProvider.parentSignFileInfoIdx].image),
+                                            child: FittedBox(
+                                              fit: BoxFit.fill,
+                                              child: signProvider
+                                                  .signFileInfoList[signProvider.parentSignFileInfoIdx].image,
+                                            )),
                                       ),
                                     ),
                                     childWhenDragging: SizedBox(
                                       width: parentProvider.whSign,
                                       height: parentProvider.whSign,
                                       child: Opacity(
-                                        opacity: 0.4, // size 가 조절되지 않아서 부득이 투명하게 처리함
+                                        opacity: 0.4,
                                         child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
                                       ),
                                     ),
@@ -368,15 +361,17 @@ class MakePageState extends State<MakePage> {
                                             details.offset.dy - parentProvider.hTopBlank);
                                       });
                                     },
-                                    //child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
                                     child: Container(
                                         decoration: BoxDecoration(
                                             color: Colors.transparent,
                                             border: Border.all(color: Colors.white38, width: 2)),
-                                        child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image),
+                                        child: FittedBox(
+                                            fit: BoxFit.fill,
+                                            child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image)),
                                   ),
                                 ),
                                 Positioned(
+                                  // lefttop handle
                                   left: widgetTouchWh - widgetHandleWh * 1.5,
                                   top: widgetTouchWh - widgetHandleWh * 1.5,
                                   width: widgetHandleWh,
@@ -388,8 +383,9 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // righttop handle
                                   left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
-                                  top: widgetHandleWh * 0.5,
+                                  top: widgetTouchWh - widgetHandleWh * 1.5,
                                   width: widgetHandleWh,
                                   height: widgetHandleWh,
                                   child: Container(
@@ -399,6 +395,7 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // leftbottom handle
                                   left: widgetTouchWh - widgetHandleWh * 1.5,
                                   top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
                                   width: widgetHandleWh,
@@ -410,6 +407,7 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // rightbottom handle
                                   left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
                                   top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
                                   width: widgetHandleWh,
@@ -421,42 +419,64 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // lefttop touch
                                   left: 0,
                                   top: 0,
                                   width: widgetTouchWh,
                                   height: widgetTouchWh,
                                   child: GestureDetector(
+                                    onPanStart: (dragUpdateDetails) {
+                                      sumOffset = const Offset(0, 0);
+                                    },
                                     onPanUpdate: (dragUpdateDetails) {
-                                      //dev.log('onPanUpdate lefttop: $dragUpdateDetails');
-                                      //dev.log('onPanUpdate delta: ${dragUpdateDetails.delta}');
-                                      //dev.log('onPanUpdate primaryDelta: ${dragUpdateDetails.primaryDelta}');
-                                      //dev.log('onPanUpdate localPosition: ${dragUpdateDetails.localPosition}');
-                                      //dev.log('onPanUpdate dragUpdateDetails.delta.direction: ${dragUpdateDetails.delta.direction}');
+                                      //dev.log(
+                                      //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
+                                      //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
 
-                                      Offset baseOffset = const Offset(0, 0);
+                                      // 중심점으로 offset 계산
+                                      Offset baseOffset = const Offset(
+                                          0, // 1/2 위치별 수정
+                                          0);
                                       Offset centerOffset = Offset(
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
-                                      Offset newOffset = baseOffset + dragUpdateDetails.localPosition - centerOffset;
-                                      Offset oldOffset = baseOffset +
-                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - centerOffset;
-                                      dev.log('onPanUpdate centerOffset: $centerOffset');
-                                      dev.log('onPanUpdate newOffset: $newOffset');
-                                      dev.log('onPanUpdate oldOffset: $oldOffset');
-                                      dev.log('onPanUpdate signRadian: $signRadian');
-                                      dev.log('onPanUpdate newOffset.direction - oldOffset.direction: ${newOffset.direction - oldOffset.direction}');
-                                      //signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      Offset diffOffset = baseOffset - centerOffset;
+                                      Offset newOffset = diffOffset + dragUpdateDetails.localPosition - sumOffset;
+                                      Offset oldOffset = diffOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) -
+                                          sumOffset;
+                                      //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
+                                      //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
+                                      // 회전
+                                      signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      //dev.log('signRadian: $signRadian');
 
-                                      double oldDistance = math.sqrt(math.pow(centerOffset.dx - oldOffset.dx, 2) + math.pow(centerOffset.dy - oldOffset.dy, 2));
-                                      double newDistance = math.sqrt(math.pow(centerOffset.dx - newOffset.dx, 2) + math.pow(centerOffset.dy - newOffset.dy, 2));
-                                      parentProvider.whSign += newDistance - oldDistance;
+                                      // line distance
+                                      double diffDistance = newOffset.distance - oldOffset.distance;
+                                      // 직사각형인 경우
+                                      double wSquare = parentProvider.whSign;
+                                      double hSquare = parentProvider.whSign;
+                                      //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
+                                      double wDiff = math.sqrt(
+                                              math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) *
+                                          diffDistance;
+                                      double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
+                                      //dev.log('wDiff: $wDiff, hDiff: $hDiff');
 
-                                      //dev.log('onPanUpdate signRadian: $signRadian');
+                                      // 이동한 결과를 저장했다가 보정해 주어야 함
+                                      sumOffset = Offset(sumOffset.dx - wDiff, sumOffset.dy - hDiff); // 2/2 위치별 수정
+
+                                      // resize
+                                      parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
+                                      // center 이동
+                                      signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
+                                          signProvider.parentSignOffset!.dy - hDiff);
+
                                       setState(() {});
                                     },
                                     child: Container(
                                       decoration: const BoxDecoration(
-                                        color: Colors.yellow,
+                                        color: Colors.transparent,
                                         shape: BoxShape.circle,
                                       ),
                                       width: widgetTouchWh,
@@ -465,31 +485,64 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // righttop touch
                                   left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
                                   top: 0,
                                   width: widgetTouchWh,
                                   height: widgetTouchWh,
                                   child: GestureDetector(
+                                    onPanStart: (dragUpdateDetails) {
+                                      sumOffset = const Offset(0, 0);
+                                    },
                                     onPanUpdate: (dragUpdateDetails) {
+                                      //dev.log(
+                                      //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
+                                      //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
+
+                                      // 중심점으로 offset 계산
                                       Offset baseOffset = Offset(
-                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2), 0);
+                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2), // 1/2 위치별 수정
+                                          0);
                                       Offset centerOffset = Offset(
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
-                                      Offset newOffset = baseOffset + dragUpdateDetails.localPosition - centerOffset;
-                                      Offset oldOffset = baseOffset +
-                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - centerOffset;
-                                      //signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      Offset diffOffset = baseOffset - centerOffset;
+                                      Offset newOffset = diffOffset + dragUpdateDetails.localPosition - sumOffset;
+                                      Offset oldOffset = diffOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) -
+                                          sumOffset;
+                                      //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
+                                      //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
+                                      // 회전
+                                      signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      //dev.log('signRadian: $signRadian');
 
-                                      double oldDistance = math.sqrt(math.pow(centerOffset.dx - oldOffset.dx, 2) + math.pow(centerOffset.dy - oldOffset.dy, 2));
-                                      double newDistance = math.sqrt(math.pow(centerOffset.dx - newOffset.dx, 2) + math.pow(centerOffset.dy - newOffset.dy, 2));
-                                      parentProvider.whSign += newDistance - oldDistance;
+                                      // line distance
+                                      double diffDistance = newOffset.distance - oldOffset.distance;
+                                      // 직사각형인 경우
+                                      double wSquare = parentProvider.whSign;
+                                      double hSquare = parentProvider.whSign;
+                                      //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
+                                      double wDiff = math.sqrt(
+                                              math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) *
+                                          diffDistance;
+                                      double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
+                                      //dev.log('wDiff: $wDiff, hDiff: $hDiff');
+
+                                      // 이동한 결과를 저장했다가 보정해 주어야 함
+                                      sumOffset = Offset(sumOffset.dx + wDiff, sumOffset.dy - hDiff); // 2/2 위치별 수정
+
+                                      // resize
+                                      parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
+                                      // center 이동
+                                      signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
+                                          signProvider.parentSignOffset!.dy - hDiff);
 
                                       setState(() {});
                                     },
                                     child: Container(
                                       decoration: const BoxDecoration(
-                                        color: Colors.amber,
+                                        color: Colors.transparent,
                                         shape: BoxShape.circle,
                                       ),
                                       width: widgetTouchWh,
@@ -498,31 +551,64 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // leftbottom touch
                                   left: 0,
                                   top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
                                   width: widgetTouchWh,
                                   height: widgetTouchWh,
                                   child: GestureDetector(
+                                    onPanStart: (dragUpdateDetails) {
+                                      sumOffset = const Offset(0, 0);
+                                    },
                                     onPanUpdate: (dragUpdateDetails) {
+                                      //dev.log(
+                                      //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
+                                      //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
+
+                                      // 중심점으로 offset 계산
                                       Offset baseOffset = Offset(
-                                          0, (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2));
+                                          0, // 1/2 위치별 수정
+                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2));
                                       Offset centerOffset = Offset(
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
-                                      Offset newOffset = baseOffset + dragUpdateDetails.localPosition - centerOffset;
-                                      Offset oldOffset = baseOffset +
-                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - centerOffset;
-                                      //signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      Offset diffOffset = baseOffset - centerOffset;
+                                      Offset newOffset = diffOffset + dragUpdateDetails.localPosition - sumOffset;
+                                      Offset oldOffset = diffOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) -
+                                          sumOffset;
+                                      //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
+                                      //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
+                                      // 회전
+                                      signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      //dev.log('signRadian: $signRadian');
 
-                                      double oldDistance = math.sqrt(math.pow(centerOffset.dx - oldOffset.dx, 2) + math.pow(centerOffset.dy - oldOffset.dy, 2));
-                                      double newDistance = math.sqrt(math.pow(centerOffset.dx - newOffset.dx, 2) + math.pow(centerOffset.dy - newOffset.dy, 2));
-                                      parentProvider.whSign += newDistance - oldDistance;
+                                      // line distance
+                                      double diffDistance = newOffset.distance - oldOffset.distance;
+                                      // 직사각형인 경우
+                                      double wSquare = parentProvider.whSign;
+                                      double hSquare = parentProvider.whSign;
+                                      //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
+                                      double wDiff = math.sqrt(
+                                              math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) *
+                                          diffDistance;
+                                      double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
+                                      //dev.log('wDiff: $wDiff, hDiff: $hDiff');
+
+                                      // 이동한 결과를 저장했다가 보정해 주어야 함
+                                      sumOffset = Offset(sumOffset.dx - wDiff, sumOffset.dy + hDiff); // 2/2 위치별 수정
+
+                                      // resize
+                                      parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
+                                      // center 이동
+                                      signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
+                                          signProvider.parentSignOffset!.dy - hDiff);
 
                                       setState(() {});
                                     },
                                     child: Container(
                                       decoration: const BoxDecoration(
-                                        color: Colors.green,
+                                        color: Colors.transparent,
                                         shape: BoxShape.circle,
                                       ),
                                       width: widgetTouchWh,
@@ -531,6 +617,7 @@ class MakePageState extends State<MakePage> {
                                   ),
                                 ),
                                 Positioned(
+                                  // rightbottom touch
                                   left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
                                   top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
                                   width: widgetTouchWh,
@@ -538,59 +625,57 @@ class MakePageState extends State<MakePage> {
                                   child: GestureDetector(
                                     onPanStart: (dragUpdateDetails) {
                                       sumOffset = const Offset(0, 0);
-                                      dev.log('onPanStart localPosition: ${dragUpdateDetails.localPosition}');
                                     },
                                     onPanUpdate: (dragUpdateDetails) {
-                                      dev.log('------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
-                                      //dev.log('onPanUpdate parentProvider.whSign: ${parentProvider.whSign}');
+                                      //dev.log(
+                                      //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
+                                      //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
 
+                                      // 중심점으로 offset 계산
                                       Offset baseOffset = Offset(
-                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2),
+                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2), // 1/2 위치별 수정
                                           (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2));
                                       Offset centerOffset = Offset(
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
                                           (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
-                                      Offset diffOffset = baseOffset - centerOffset - sumOffset;
-                                      Offset newOffset = diffOffset + dragUpdateDetails.localPosition;
-                                      Offset oldOffset = diffOffset + (dragUpdateDetails.localPosition - dragUpdateDetails.delta);
+                                      Offset diffOffset = baseOffset - centerOffset;
+                                      Offset newOffset = diffOffset + dragUpdateDetails.localPosition - sumOffset;
+                                      Offset oldOffset = diffOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) -
+                                          sumOffset;
                                       //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
                                       //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
                                       // 회전
                                       signRadian = signRadian + (newOffset.direction - oldOffset.direction);
-                                      dev.log('signRadian: $signRadian');
+                                      //dev.log('signRadian: $signRadian');
 
-                                      double oldDistance = oldOffset.distance;
-                                      double newDistance = newOffset.distance;
-                                      double diffDistance = newDistance - oldDistance;
-                                      // CAUTION : 이 값은 대각선이므로 직사각형일 경우 추가로 비율 계산 필요
-                                      // 정사각형인 경우 한변의 길이
-                                      double whDiff = diffDistance / math.sqrt(2);
-                                      //double whDiff = (newOffset - oldOffset).dx;
+                                      // line distance
+                                      double diffDistance = newOffset.distance - oldOffset.distance;
+                                      // 직사각형인 경우
+                                      double wSquare = parentProvider.whSign;
+                                      double hSquare = parentProvider.whSign;
+                                      //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
+                                      double wDiff = math.sqrt(
+                                              math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) *
+                                          diffDistance;
+                                      double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
+                                      //dev.log('wDiff: $wDiff, hDiff: $hDiff');
 
-                                      dev.log('onPanUpdate whDiff: $whDiff');
-
-                                      // right 방향은 좌표를 수정해 주어야 함
-                                      sumOffset = Offset(sumOffset.dx + whDiff, sumOffset.dy + whDiff);
+                                      // 이동한 결과를 저장했다가 보정해 주어야 함
+                                      sumOffset = Offset(sumOffset.dx + wDiff, sumOffset.dy + hDiff); // 2/2 위치별 수정
 
                                       // resize
-                                      parentProvider.whSign = parentProvider.whSign + whDiff * 2;  // 양쪽이므로 *2
-                                      setState(() {
-                                        // center 이동
-                                        signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - whDiff,
-                                            signProvider.parentSignOffset!.dy - whDiff);
-                                      });
-                                    },
-                                    onTapDown: (tapDownDetails) {
-                                      //dev.log('onPanUpdate delta: ${dragUpdateDetails?.delta}');
-                                      //dev.log('onPanUpdate primaryDelta: ${dragUpdateDetails?.primaryDelta}');
-                                      dev.log('onPanUpdate  globalPosition: ${tapDownDetails.globalPosition}, localPosition: ${tapDownDetails?.localPosition}');
-                                      dev.log('onPanUpdate parentProvider.whSign: ${parentProvider.whSign}');
+                                      parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
+                                      // center 이동
+                                      signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
+                                          signProvider.parentSignOffset!.dy - hDiff);
 
+                                      setState(() {});
                                     },
                                     child: Container(
                                       decoration: const BoxDecoration(
-                                        color: Colors.blue,
-                                        //shape: BoxShape.circle,
+                                        color: Colors.transparent,
+                                        shape: BoxShape.circle,
                                       ),
                                       width: widgetTouchWh,
                                       height: widgetTouchWh,

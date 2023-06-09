@@ -50,8 +50,8 @@ class AppConfig {
 
   // parent 의 가로/세로에 비례한 크기 비율
   // (parentProvider.wImage + parentProvider.hImage) * 0.5 * AppConfig.SIGN_WH_RATIO
-  //static const double SIGN_WH_RATIO = 0.1;
-  static const double SIGN_WH_RATIO = 0.2;
+  static const double SIGN_WH_RATIO = 0.1;
+  //static const double SIGN_WH_RATIO = 0.2;
   // 처음 sign 이 놓여질 경우 SIGN_WH_RATIO 에 대한 패딩값 비율
   static const double SIGN_PADDING_FIRST = 0.2;
   ////////////////////////////////////////////////////////////////////////////////

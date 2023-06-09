@@ -251,7 +251,7 @@ class ParentBarState extends State<ParentBar> {
                                       height: whPreSign,
                                       decoration: (signProvider.parentSignFileInfoIdx == index)
                                           ? BoxDecoration(
-                                              color: Colors.grey[200], border: Border.all(color: Colors.black))
+                                              color: Colors.grey[200], border: Border.all(color: Colors.black, width: 2))
                                           : const BoxDecoration(),
                                       child: signProvider.signFileInfoList[index].image,
                                     ),
@@ -497,8 +497,8 @@ class ParentBarState extends State<ParentBar> {
     }
     dev.log('signProvider.parentSignOffset: $signProvider.parentSignOffset');
 
-
-    signProvider.parentSignOffset = Offset(200, 200);
+    // for test
+    //signProvider.parentSignOffset = Offset(200, 200);
 
     signProvider.setParentSignFileInfoIdx(idx, notify: true);
   }
