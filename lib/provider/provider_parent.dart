@@ -28,9 +28,7 @@ class ParentProvider with ChangeNotifier {
 
   ////////////////////////////////////////////////////////////////////////////////
   // 설정되어 있는지 여부를 결정
-  String path = '';
-
-  bool init = false;
+  String? path;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -84,23 +82,21 @@ class ParentProvider with ChangeNotifier {
   // Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
   // blank 구하기
   // bracket offset 초기화
-  Future<void> initParenProvider() async {
-    //dev.log('setParenProvider path: $p');
-    //path = p;
+  Future<void> initParenProvider(String path) async {
+    dev.log('initParenProvider path: $path');
+    this.path = path;
 
-    init = true;
-
-    ui.Image uiImage = await FileUtil.loadUiImageFromPath(path);
+    ui.Image uiImage = await FileUtil.loadUiImageFromPath(this.path!);
 
     /// Parent 이미지 크기
     wImage = uiImage.width;
     hImage = uiImage.height;
     dev.log('wImage: ${uiImage.width}, hImage: ${uiImage.height}');
+    dev.log('wScreen: $wScreen, hScreen: $hScreen');
 
     /// Parent 이미지가 screen 에 맞추어진 ratio 구하기
-    double inScale = InfoUtil.calcFitRatioIn(
+    inScale = InfoUtil.calcFitRatioIn(
         wScreen, hScreen, uiImage.width, uiImage.height);
-    inScale = inScale;
     dev.log('inScale: $inScale');
 
     // blank
@@ -129,8 +125,57 @@ class ParentProvider with ChangeNotifier {
     clearParentBracket();
   }
   void clearParentProvider() {
-    path = '';
-    init = false;
+    path = null;
+  }
+  Future<void> initParenProviderWithPath(String path) async {
+    dev.log('initParenProviderWithPath path: $path');
+    this.path = path;
+
+    ui.Image uiImage = await FileUtil.loadUiImageFromPath(this.path!);
+
+    /// Parent 이미지 크기
+    wImage = uiImage.width;
+    hImage = uiImage.height;
+    dev.log('wImage: ${uiImage.width}, hImage: ${uiImage.height}');
+
+    uiImage.dispose();
+
+    // offset
+    clearParentBracket();
+  }
+  void initParenProviderWithScreen(double w, double h) {
+    dev.log('initParenProviderWithScreen w: $w, h: $h');
+
+    wScreen = w;
+    hScreen = h;
+
+    /// Parent 이미지가 screen 에 맞추어진 ratio 구하기
+    inScale = InfoUtil.calcFitRatioIn(
+        wScreen, hScreen, wImage, hImage);
+    dev.log('inScale: $inScale');
+
+    // blank
+    if (inScale < 1.0) {
+      // 화면보다 큰 이미지인 경우
+      double wReal = wImage * inScale;
+      double hReal = hImage * inScale;
+      dev.log('wReal: $wReal, hReal: $hReal');
+      if ((wScreen - wReal) > (hScreen - hReal)) {
+        xBlank = (wScreen - wReal) / 2;
+        yBlank = 0.0;
+      } else {
+        yBlank = (hScreen - hReal) / 2;
+        xBlank = 0.0;
+      }
+    } else {
+      // 화면보다 작은 이미지인 경우
+      xBlank = (wScreen - wImage) * 0.5;
+      yBlank = (hScreen - hImage) * 0.5;
+    }
+    dev.log('xBlank: $xBlank, yBlank: $yBlank');
+
+    // offset
+    clearParentBracket();
   }
 
   /// bracket offset 초기화

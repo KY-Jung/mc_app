@@ -1,5 +1,5 @@
 
-enum MakePageEnum {
+enum MakeFabEnum {
   //BLANK,    // 코드가 복잡해져서 이제 사용 안함 (2023.05.31, KY.Jung)
   PARENT,
   BABY,

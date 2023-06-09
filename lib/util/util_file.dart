@@ -79,6 +79,14 @@ class FileUtil {
     Directory appDir = await getApplicationDocumentsDirectory();
     dev.log('getApplicationDocumentsDirectory: $appDir');
     Directory directory = Directory('${appDir.path}/$dir/');
+
+    bool fExist = await directory.exists();
+    if (fExist) {
+    } else {
+      directory.createSync(recursive: true);
+      return fileNameList;
+    }
+
     List<FileSystemEntity> fileSystemEntityList = directory.listSync(recursive: true, followLinks: false);
     for (FileSystemEntity fileSystemEntity in fileSystemEntityList) {
       fileNameList.add(fileSystemEntity.path);

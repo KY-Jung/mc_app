@@ -35,13 +35,17 @@ class MakePainter extends CustomPainter {
     // wScreen, hScreen 과 동일
     dev.log('# MakePainter paint START');
 
+    dev.log('wScreen: ${wScreen}, hScreen: ${hScreen}, wImage: ${wImage}, hImage: ${hImage}, '
+        'inScale: ${inScale}, xBlank: ${xBlank}, yBlank: ${yBlank}, xStart: ${xStart}, '
+        'yStart: ${yStart}, scale: ${scale}');
+
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
     // grid
     Paint gridPaint = Paint()
-      ..color = Colors.white30
+      ..color = Colors.white12
       //..color = Colors.red
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 2;

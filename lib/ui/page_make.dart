@@ -39,8 +39,19 @@ class MakePageState extends State<MakePage> {
   // variable
 
   //MakePageEnum _makePageEnum = MakePageEnum.PARENT;
-  //bool first = true;
+  bool first = true;
 
+  late double widgetHandleWh;
+  late double widgetTouchWh;
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // sign
+  double signRadian = 0;
+
+  // resize
+  Offset sumOffset = const Offset(0, 0);
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -126,28 +137,34 @@ class MakePageState extends State<MakePage> {
 
     ////////////////////////////////////////////////////////////////////////////////
     // initState 에서 MediaQuery 를 호출하면 에러 발생
-
-    if (!parentProvider.init) {
+    if (first) {
       dev.log('first start');
-      parentProvider.initParenProvider().then((_) {        // sign 을 위한 설정
-        parentProvider.hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
-        parentProvider.hBottomBlank = AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT;
-        var wScreen = MediaQuery.of(context).size.width;
-        var hScreen = MediaQuery.of(context).size.height - parentProvider.hTopBlank - parentProvider.hBottomBlank;
-        parentProvider.wScreen = wScreen;
-        parentProvider.hScreen = hScreen;
-        parentProvider.whSign = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
 
-        dev.log('MediaQuery.of(context).size: ${MediaQuery.of(context).size}');
-        dev.log('MediaQuery.of(context).padding.top: ${MediaQuery.of(context).padding.top}');
-        dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
-        dev.log('parentProvider.wScreen: ${parentProvider.wScreen}');
-        dev.log('parentProvider.hScreen: ${parentProvider.hScreen}');
-        dev.log('hTopBlank: $parentProvider.hTopBlank');
-        dev.log('hBottomBlank: $parentProvider.hBottomBlank');
-        dev.log('whSign: $parentProvider.whSign');
-      });
+      parentProvider.hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
+      parentProvider.hBottomBlank = AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT;
+      var wScreen = MediaQuery.of(context).size.width;
+      var hScreen = MediaQuery.of(context).size.height - parentProvider.hTopBlank - parentProvider.hBottomBlank;
+      parentProvider.initParenProviderWithScreen(wScreen, hScreen);
+      parentProvider.whSign = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
+
+      dev.log('MediaQuery.of(context).size: ${MediaQuery.of(context).size}');
+      dev.log('MediaQuery.of(context).padding.top: ${MediaQuery.of(context).padding.top}');
+      dev.log('AppBar().preferredSize.height: ${AppBar().preferredSize.height}');
+      dev.log('parentProvider.wScreen: ${parentProvider.wScreen}');
+      dev.log('parentProvider.hScreen: ${parentProvider.hScreen}');
+      dev.log('hTopBlank: ${parentProvider.hTopBlank}');
+      dev.log('hBottomBlank: ${parentProvider.hBottomBlank}');
+      dev.log('whSign: ${parentProvider.whSign}');
+
+      first = false;
     }
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    widgetTouchWh = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.WIDGET_TOUCH_WH;
+    widgetHandleWh = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.WIDGET_HANDLE_WH;
+
+    dev.log('whSign: ${parentProvider.whSign}, widgetTouchWh: $widgetTouchWh, widgetHandleWh: $widgetHandleWh');
     ////////////////////////////////////////////////////////////////////////////////
 
     return Scaffold(
@@ -195,12 +212,12 @@ class MakePageState extends State<MakePage> {
                         // build 이후 InteractiveViewer 의 사이즈 구하기
                         key: _screenGlobalKey,
                         //maxScale: (makeProvider.parentResize)
-                        maxScale: (makeProvider.makePageEnum == MakePageEnum.PARENT &&
+                        maxScale: (makeProvider.makeFabEnum == MakeFabEnum.PARENT &&
                                 parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
                             ? 1.0
                             : AppConfig.MAKE_SCREEN_MAX,
                         //minScale: (makeProvider.parentResize)
-                        minScale: (makeProvider.makePageEnum == MakePageEnum.PARENT &&
+                        minScale: (makeProvider.makeFabEnum == MakeFabEnum.PARENT &&
                                 parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
                             ? 1.0
                             : AppConfig.MAKE_SCREEN_MIN,
@@ -214,7 +231,7 @@ class MakePageState extends State<MakePage> {
                         onInteractionEnd: _onInteractionEnd,
                         onInteractionUpdate: _onInteractionUpdate,
                         //child: Image.asset('assets/images/jeju.jpg'),
-                        child: Image.file(File(parentProvider.path)),
+                        child: Image.file(File(parentProvider.path!)),
                       ),
                     ),
                     IgnorePointer(
@@ -222,7 +239,7 @@ class MakePageState extends State<MakePage> {
                         child: CustomPaint(
                           // size 안 정해도 동작함
                           //painter: (makeProvider.parentResize)
-                          painter: (makeProvider.makePageEnum == MakePageEnum.PARENT &&
+                          painter: (makeProvider.makeFabEnum == MakeFabEnum.PARENT &&
                                   parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
                               ? MakeParentResizePainter(
                                   parentProvider.wScreen,
@@ -254,6 +271,7 @@ class MakePageState extends State<MakePage> {
                       ),
                     ),
                     if (signProvider.parentSignFileInfoIdx != -1)
+                      /*
                       Positioned(
                         left: signProvider.parentSignOffset?.dx,
                         top: signProvider.parentSignOffset?.dy,
@@ -286,12 +304,310 @@ class MakePageState extends State<MakePage> {
                           child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
                         ),
                       ),
+                    */
+                      Positioned(
+                        left: signProvider.parentSignOffset!.dx - widgetTouchWh + widgetHandleWh,
+                        top: signProvider.parentSignOffset!.dy - widgetTouchWh + widgetHandleWh,
+                        width: parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2,
+                        height: parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2,
+                        child:
+
+                            /*
+                        Transform(
+                          //transform: Matrix4.identity()..setEntry(row, col, v)..rotateX(10),
+                          //transform: Matrix4.identity()..rotateX(math.pi / 3)..rotateY(math.pi / 3)..rotateZ(math.pi / 3),
+                          transform: Matrix4.identity()..rotateX(math.pi / -4)..rotateY(math.pi / -4),
+                          //transform: Matrix4.identity(),
+                          //alignment: Alignment.center,
+                          alignment: FractionalOffset.center,
+                          */
+                            Transform.rotate(
+                          //angle: -45 * math.pi / 180,
+                          angle: signRadian,
+                          child: Container(
+                            color: Colors.green[100],
+                            child: Stack(
+                              children: <Widget>[
+                                Positioned(
+                                  left: widgetTouchWh - widgetHandleWh,
+                                  top: widgetTouchWh - widgetHandleWh,
+                                  width: parentProvider.whSign,
+                                  height: parentProvider.whSign,
+                                  child: Draggable(
+                                    feedback: SizedBox(
+                                      width: parentProvider.whSign, // 웬지 drag 중에는 Pogistioned 크기가 적용되지 않음
+                                      height: parentProvider.whSign,
+                                      child: Transform.rotate(
+                                        angle: signRadian,
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                color: Colors.transparent,
+                                                border: Border.all(color: Colors.white38, width: 2)),
+                                            child: signProvider
+                                                .signFileInfoList[signProvider.parentSignFileInfoIdx].image),
+                                      ),
+                                    ),
+                                    childWhenDragging: SizedBox(
+                                      width: parentProvider.whSign,
+                                      height: parentProvider.whSign,
+                                      child: Opacity(
+                                        opacity: 0.4, // size 가 조절되지 않아서 부득이 투명하게 처리함
+                                        child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
+                                      ),
+                                    ),
+                                    onDragEnd: (details) {
+                                      dev.log('onDragEnd offset: ${details.offset}');
+                                      signProvider.parentSignOffset =
+                                          Offset(details.offset.dx, details.offset.dy - parentProvider.hTopBlank);
+                                      dev.log('onDragEnd signOffset: ${signProvider.parentSignOffset}');
+                                      setState(() {});
+
+                                      SharedPreferences.getInstance().then((prefs) {
+                                        prefs.setDouble(AppConstant.PREFS_PARENTSIGNOFFSET_X, details.offset.dx);
+                                        prefs.setDouble(AppConstant.PREFS_PARENTSIGNOFFSET_Y,
+                                            details.offset.dy - parentProvider.hTopBlank);
+                                      });
+                                    },
+                                    //child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
+                                    child: Container(
+                                        decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            border: Border.all(color: Colors.white38, width: 2)),
+                                        child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: widgetTouchWh - widgetHandleWh * 1.5,
+                                  top: widgetTouchWh - widgetHandleWh * 1.5,
+                                  width: widgetHandleWh,
+                                  height: widgetHandleWh,
+                                  child: Container(
+                                    color: Colors.white60,
+                                    width: widgetHandleWh,
+                                    height: widgetHandleWh,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
+                                  top: widgetHandleWh * 0.5,
+                                  width: widgetHandleWh,
+                                  height: widgetHandleWh,
+                                  child: Container(
+                                    color: Colors.white60,
+                                    width: widgetHandleWh,
+                                    height: widgetHandleWh,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: widgetTouchWh - widgetHandleWh * 1.5,
+                                  top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
+                                  width: widgetHandleWh,
+                                  height: widgetHandleWh,
+                                  child: Container(
+                                    color: Colors.white60,
+                                    width: widgetHandleWh,
+                                    height: widgetHandleWh,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
+                                  top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 1.5,
+                                  width: widgetHandleWh,
+                                  height: widgetHandleWh,
+                                  child: Container(
+                                    color: Colors.white60,
+                                    width: widgetHandleWh,
+                                    height: widgetHandleWh,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 0,
+                                  top: 0,
+                                  width: widgetTouchWh,
+                                  height: widgetTouchWh,
+                                  child: GestureDetector(
+                                    onPanUpdate: (dragUpdateDetails) {
+                                      //dev.log('onPanUpdate lefttop: $dragUpdateDetails');
+                                      //dev.log('onPanUpdate delta: ${dragUpdateDetails.delta}');
+                                      //dev.log('onPanUpdate primaryDelta: ${dragUpdateDetails.primaryDelta}');
+                                      //dev.log('onPanUpdate localPosition: ${dragUpdateDetails.localPosition}');
+                                      //dev.log('onPanUpdate dragUpdateDetails.delta.direction: ${dragUpdateDetails.delta.direction}');
+
+                                      Offset baseOffset = const Offset(0, 0);
+                                      Offset centerOffset = Offset(
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
+                                      Offset newOffset = baseOffset + dragUpdateDetails.localPosition - centerOffset;
+                                      Offset oldOffset = baseOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - centerOffset;
+                                      dev.log('onPanUpdate centerOffset: $centerOffset');
+                                      dev.log('onPanUpdate newOffset: $newOffset');
+                                      dev.log('onPanUpdate oldOffset: $oldOffset');
+                                      dev.log('onPanUpdate signRadian: $signRadian');
+                                      dev.log('onPanUpdate newOffset.direction - oldOffset.direction: ${newOffset.direction - oldOffset.direction}');
+                                      //signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+
+                                      double oldDistance = math.sqrt(math.pow(centerOffset.dx - oldOffset.dx, 2) + math.pow(centerOffset.dy - oldOffset.dy, 2));
+                                      double newDistance = math.sqrt(math.pow(centerOffset.dx - newOffset.dx, 2) + math.pow(centerOffset.dy - newOffset.dy, 2));
+                                      parentProvider.whSign += newDistance - oldDistance;
+
+                                      //dev.log('onPanUpdate signRadian: $signRadian');
+                                      setState(() {});
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.yellow,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      width: widgetTouchWh,
+                                      height: widgetTouchWh,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
+                                  top: 0,
+                                  width: widgetTouchWh,
+                                  height: widgetTouchWh,
+                                  child: GestureDetector(
+                                    onPanUpdate: (dragUpdateDetails) {
+                                      Offset baseOffset = Offset(
+                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2), 0);
+                                      Offset centerOffset = Offset(
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
+                                      Offset newOffset = baseOffset + dragUpdateDetails.localPosition - centerOffset;
+                                      Offset oldOffset = baseOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - centerOffset;
+                                      //signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+
+                                      double oldDistance = math.sqrt(math.pow(centerOffset.dx - oldOffset.dx, 2) + math.pow(centerOffset.dy - oldOffset.dy, 2));
+                                      double newDistance = math.sqrt(math.pow(centerOffset.dx - newOffset.dx, 2) + math.pow(centerOffset.dy - newOffset.dy, 2));
+                                      parentProvider.whSign += newDistance - oldDistance;
+
+                                      setState(() {});
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.amber,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      width: widgetTouchWh,
+                                      height: widgetTouchWh,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 0,
+                                  top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
+                                  width: widgetTouchWh,
+                                  height: widgetTouchWh,
+                                  child: GestureDetector(
+                                    onPanUpdate: (dragUpdateDetails) {
+                                      Offset baseOffset = Offset(
+                                          0, (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2));
+                                      Offset centerOffset = Offset(
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
+                                      Offset newOffset = baseOffset + dragUpdateDetails.localPosition - centerOffset;
+                                      Offset oldOffset = baseOffset +
+                                          (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - centerOffset;
+                                      //signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+
+                                      double oldDistance = math.sqrt(math.pow(centerOffset.dx - oldOffset.dx, 2) + math.pow(centerOffset.dy - oldOffset.dy, 2));
+                                      double newDistance = math.sqrt(math.pow(centerOffset.dx - newOffset.dx, 2) + math.pow(centerOffset.dy - newOffset.dy, 2));
+                                      parentProvider.whSign += newDistance - oldDistance;
+
+                                      setState(() {});
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.green,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      width: widgetTouchWh,
+                                      height: widgetTouchWh,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  left: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
+                                  top: parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2,
+                                  width: widgetTouchWh,
+                                  height: widgetTouchWh,
+                                  child: GestureDetector(
+                                    onPanStart: (dragUpdateDetails) {
+                                      sumOffset = const Offset(0, 0);
+                                      dev.log('onPanStart localPosition: ${dragUpdateDetails.localPosition}');
+                                    },
+                                    onPanUpdate: (dragUpdateDetails) {
+                                      dev.log('------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
+                                      //dev.log('onPanUpdate parentProvider.whSign: ${parentProvider.whSign}');
+
+                                      Offset baseOffset = Offset(
+                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2),
+                                          (parentProvider.whSign + widgetTouchWh - widgetHandleWh * 2));
+                                      Offset centerOffset = Offset(
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2,
+                                          (parentProvider.whSign + widgetTouchWh * 2 - widgetHandleWh * 2) / 2);
+                                      Offset diffOffset = baseOffset - centerOffset - sumOffset;
+                                      Offset newOffset = diffOffset + dragUpdateDetails.localPosition;
+                                      Offset oldOffset = diffOffset + (dragUpdateDetails.localPosition - dragUpdateDetails.delta);
+                                      //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
+                                      //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
+                                      // 회전
+                                      signRadian = signRadian + (newOffset.direction - oldOffset.direction);
+                                      dev.log('signRadian: $signRadian');
+
+                                      double oldDistance = oldOffset.distance;
+                                      double newDistance = newOffset.distance;
+                                      double diffDistance = newDistance - oldDistance;
+                                      // CAUTION : 이 값은 대각선이므로 직사각형일 경우 추가로 비율 계산 필요
+                                      // 정사각형인 경우 한변의 길이
+                                      double whDiff = diffDistance / math.sqrt(2);
+                                      //double whDiff = (newOffset - oldOffset).dx;
+
+                                      dev.log('onPanUpdate whDiff: $whDiff');
+
+                                      // right 방향은 좌표를 수정해 주어야 함
+                                      sumOffset = Offset(sumOffset.dx + whDiff, sumOffset.dy + whDiff);
+
+                                      // resize
+                                      parentProvider.whSign = parentProvider.whSign + whDiff * 2;  // 양쪽이므로 *2
+                                      setState(() {
+                                        // center 이동
+                                        signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - whDiff,
+                                            signProvider.parentSignOffset!.dy - whDiff);
+                                      });
+                                    },
+                                    onTapDown: (tapDownDetails) {
+                                      //dev.log('onPanUpdate delta: ${dragUpdateDetails?.delta}');
+                                      //dev.log('onPanUpdate primaryDelta: ${dragUpdateDetails?.primaryDelta}');
+                                      dev.log('onPanUpdate  globalPosition: ${tapDownDetails.globalPosition}, localPosition: ${tapDownDetails?.localPosition}');
+                                      dev.log('onPanUpdate parentProvider.whSign: ${parentProvider.whSign}');
+
+                                    },
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.blue,
+                                        //shape: BoxShape.circle,
+                                      ),
+                                      width: widgetTouchWh,
+                                      height: widgetTouchWh,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
               SizedBox(
                 height: AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT,
-                child: _chooseFunctionBar(makeProvider.makePageEnum),
+                child: _chooseFunctionBar(makeProvider.makeFabEnum),
               ),
             ],
           ),
@@ -375,15 +691,15 @@ class MakePageState extends State<MakePage> {
 
   Widget _chooseFunctionBar(type) {
     switch (type) {
-      case MakePageEnum.PARENT:
+      case MakeFabEnum.PARENT:
         return const ParentBar();
-      case MakePageEnum.BABY:
+      case MakeFabEnum.BABY:
         return const BabyBar();
-      case MakePageEnum.CAPTION:
+      case MakeFabEnum.CAPTION:
         return const CaptionBar();
-      case MakePageEnum.SOUND:
+      case MakeFabEnum.SOUND:
         return const SoundBar();
-      case MakePageEnum.LINK:
+      case MakeFabEnum.LINK:
         return const LinkBar();
       default:
         return const BlankBar();
@@ -443,7 +759,7 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // resize 상태 라면
     //if (makeProvider.parentResize) {
-    if (makeProvider.makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+    if (makeProvider.makeFabEnum == MakeFabEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
       // _onTapDown 이 호출되지 않은 경우, _onTapDown 에서 선택되지 않은 경우
       if (parentProvider.makeParentSizePointEnum == MakeParentResizePointEnum.NONE) {
         return;
@@ -514,6 +830,13 @@ class MakePageState extends State<MakePage> {
     dev.log('_onTapDown _transformationController.value: ${_transformationController.value}');
     parentProvider.printParent();
 
+    // for test
+    dev.log('-45 * math.pi / 180: ${-45 * math.pi / 180}');
+    dev.log('180 * math.pi / 180: ${180 * math.pi / 180}');
+    dev.log('-180 * math.pi / 180: ${-180 * math.pi / 180}');
+    dev.log('360 * math.pi / 180: ${360 * math.pi / 180}');
+    dev.log('-360 * math.pi / 180: ${-360 * math.pi / 180}');
+
     // onDoubleTap 에서 사용
     _tapDownDetails = tapDownDetails;
 
@@ -545,7 +868,7 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // size 상태인 경우 bracket 이 선택되었는지 검사
     //if (makeProvider.parentResize) {
-    if (makeProvider.makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+    if (makeProvider.makeFabEnum == MakeFabEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
       dev.log(
           'parentSize leftTopOffset: ${parentProvider.leftTopOffset}, rightTopOffset: ${parentProvider.rightTopOffset}, '
           'leftBottomOffset: ${parentProvider.leftBottomOffset}, rightBottomOffset: ${parentProvider.rightBottomOffset}');
@@ -590,7 +913,7 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
     // return 하는 경우
     //if (makeProvider.parentResize) {
-    if (makeProvider.makePageEnum == MakePageEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+    if (makeProvider.makeFabEnum == MakeFabEnum.PARENT && parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
       dev.log('_onDoubleTap parentSize return');
       return;
     }
@@ -624,6 +947,13 @@ class MakePageState extends State<MakePage> {
     dev.log('_onTabDelete');
 
     // TODO : 한개씩 지우기
+
+    // for test
+    signProvider.parentSignFileInfoIdx = -1;
+    parentProvider.whSign = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
+    signRadian = 0;
+
+    setState(() {});
   }
 
   void _onLongPressDelete() {
@@ -641,7 +971,7 @@ class MakePageState extends State<MakePage> {
         // TODO : 모두 초기화하는 함수를 별도로 작성하고 호출
 
         //parentProvider.path = '';
-        parentProvider.clearParentProvider();   // path, init 같이 처리
+        parentProvider.clearParentProvider(); // path, init 같이 처리
         Navigator.pop(context, 'CANCEL');
       }
     });
@@ -661,7 +991,7 @@ class MakePageState extends State<MakePage> {
     // 이미 Parent 상태여도 가져오기 실행
     // 취소하면 FB 는 이전 것으로 유지
 
-    makeProvider.setMakePageEnum(MakePageEnum.PARENT);
+    makeProvider.setMakeFabEnum(MakeFabEnum.PARENT);
   }
 
   void _fabBaby() {
@@ -673,7 +1003,7 @@ class MakePageState extends State<MakePage> {
     // 이미 Baby 상태여도 가져오기 실행
     // 취소하면 FB 는 이전 것으로 유지
 
-    makeProvider.setMakePageEnum(MakePageEnum.BABY);
+    makeProvider.setMakeFabEnum(MakeFabEnum.BABY);
   }
 
   void _fabCaption() {
@@ -684,7 +1014,7 @@ class MakePageState extends State<MakePage> {
     // TODO : caption 추가, 키보드 올리기
     // FB 는 Caption 으로 변경
 
-    makeProvider.setMakePageEnum(MakePageEnum.CAPTION);
+    makeProvider.setMakeFabEnum(MakeFabEnum.CAPTION);
   }
 
   void _fabSound() {
@@ -694,7 +1024,7 @@ class MakePageState extends State<MakePage> {
 
     // TODO : Function bar 만 이동
 
-    makeProvider.setMakePageEnum(MakePageEnum.SOUND);
+    makeProvider.setMakeFabEnum(MakeFabEnum.SOUND);
   }
 
   void _fabLink() {
@@ -704,7 +1034,7 @@ class MakePageState extends State<MakePage> {
 
     // TODO : Function bar 만 이동
 
-    makeProvider.setMakePageEnum(MakePageEnum.LINK);
+    makeProvider.setMakeFabEnum(MakeFabEnum.LINK);
   }
 
 ////////////////////////////////////////////////////////////////////////////////

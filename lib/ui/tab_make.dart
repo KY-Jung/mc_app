@@ -9,7 +9,6 @@ import 'package:mc/util/util_popup.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../dto/info_parent.dart';
 import '../dto/info_shapefile.dart';
 import '../dto/info_signfile.dart';
 import '../model/mcuser.dart';
@@ -19,7 +18,6 @@ import '../provider/provider_parent.dart';
 import '../provider/provider_sign.dart';
 import '../util/util_color.dart';
 import '../util/util_file.dart';
-import '../util/util_info.dart';
 
 class MakeTab extends StatefulWidget {
   const MakeTab({super.key});
@@ -80,7 +78,7 @@ class MakeTabState extends State<MakeTab> {
 
                 ////////////////////////////////////////////////////////////////////////////////
                 // 있으면 재사용
-                if (parentProvider.path != '') {
+                if (parentProvider.path != null) {
                   if (!mounted) return;
                   Navigator.push(
                     context,
@@ -115,7 +113,8 @@ class MakeTabState extends State<MakeTab> {
                   // make page 의 initState 에서 하는 것으로 수정
                   //parentProvider.setParenProvider(ret).then((_) => {});
                   // 여기서 하면 팝업이 빨리 사라지지 않는 경우가 있음 (2023.06.02, KY.Jung)
-                  parentProvider.path = ret;
+                  //await parentProvider.initParenProvider(ret);
+                  await parentProvider.initParenProviderWithPath(ret);
 
                   // 페이지 이동
                   if (!mounted) return;

@@ -320,9 +320,12 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar _onPressedSizeInit START');
 
     parentProvider.leftTopOffset = Offset(parentProvider.leftTopOffset.dx + 10, parentProvider.leftTopOffset.dy + 10);
-    parentProvider.rightTopOffset = Offset(parentProvider.rightTopOffset.dx - 10, parentProvider.rightTopOffset.dy + 10);
-    parentProvider.leftBottomOffset = Offset(parentProvider.leftBottomOffset.dx + 10, parentProvider.leftBottomOffset.dy - 10);
-    parentProvider.rightBottomOffset = Offset(parentProvider.rightBottomOffset.dx - 10, parentProvider.rightBottomOffset.dy - 10);
+    parentProvider.rightTopOffset =
+        Offset(parentProvider.rightTopOffset.dx - 10, parentProvider.rightTopOffset.dy + 10);
+    parentProvider.leftBottomOffset =
+        Offset(parentProvider.leftBottomOffset.dx + 10, parentProvider.leftBottomOffset.dy - 10);
+    parentProvider.rightBottomOffset =
+        Offset(parentProvider.rightBottomOffset.dx - 10, parentProvider.rightBottomOffset.dy - 10);
     parentProvider.setParentBarEnum(ParentBarEnum.RESIZE); // for refresh
 
     Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
@@ -340,12 +343,14 @@ class ParentBarState extends State<ParentBar> {
     ////////////////////////////////////////////////////////////////////////////////
     bool leftTop = (parentProvider.leftTopOffset.dx.toInt() == parentProvider.xBlank.toInt() &&
         parentProvider.leftTopOffset.dy.toInt() == parentProvider.yBlank.toInt());
-    bool rightTop = (parentProvider.rightTopOffset.dx.toInt() == (parentProvider.wScreen - parentProvider.xBlank).toInt() &&
-        parentProvider.rightTopOffset.dy.toInt() == parentProvider.yBlank.toInt());
+    bool rightTop =
+        (parentProvider.rightTopOffset.dx.toInt() == (parentProvider.wScreen - parentProvider.xBlank).toInt() &&
+            parentProvider.rightTopOffset.dy.toInt() == parentProvider.yBlank.toInt());
     bool leftBottom = (parentProvider.leftBottomOffset.dx.toInt() == parentProvider.xBlank.toInt() &&
         parentProvider.leftBottomOffset.dy.toInt() == (parentProvider.hScreen - parentProvider.yBlank).toInt());
-    bool rightBottom = (parentProvider.rightBottomOffset.dx.toInt() == (parentProvider.wScreen - parentProvider.xBlank).toInt() &&
-        parentProvider.rightBottomOffset.dy.toInt() == (parentProvider.hScreen - parentProvider.yBlank).toInt());
+    bool rightBottom =
+        (parentProvider.rightBottomOffset.dx.toInt() == (parentProvider.wScreen - parentProvider.xBlank).toInt() &&
+            parentProvider.rightBottomOffset.dy.toInt() == (parentProvider.hScreen - parentProvider.yBlank).toInt());
 
     // 변경된 것이 없으면 return
     if (leftTop && rightTop && leftBottom && rightBottom) {
@@ -376,7 +381,7 @@ class ParentBarState extends State<ParentBar> {
     Rect dstRect = const Offset(0, 0) & Size(srcRect.width, srcRect.height);
 
     // 그리기
-    ui.Image uiImage = await FileUtil.loadUiImageFromPath(parentProvider.path);
+    ui.Image uiImage = await FileUtil.loadUiImageFromPath(parentProvider.path!);
     ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     Canvas canvas = Canvas(pictureRecorder, dstRect);
     canvas.drawImageRect(uiImage, srcRect, dstRect, Paint());
@@ -404,7 +409,6 @@ class ParentBarState extends State<ParentBar> {
         return;
       }
       if (ret == AppConstant.OK) {
-
         ////////////////////////////////////////////////////////////////////////////////
         File newImageFile = await FileUtil.initTempDirAndFile(AppConstant.PARENT_RESIZE_DIR, 'jpg');
         dev.log('newImageFile.path: ${newImageFile.path}');
@@ -415,8 +419,10 @@ class ParentBarState extends State<ParentBar> {
         ////////////////////////////////////////////////////////////////////////////////
         // 화면 갱신
         parentProvider.clearParentProvider();
-        parentProvider.path = newImageFile.path;
-        await parentProvider.initParenProvider();
+        //parentProvider.path = newImageFile.path;
+        //await parentProvider.initParenProvider(newImageFile.path);
+        await parentProvider.initParenProviderWithPath(newImageFile.path);
+        parentProvider.initParenProviderWithScreen(parentProvider.wScreen, parentProvider.hScreen);
         parentProvider.makeBringEnum = MakePageBringEnum.RESIZE;
         ////////////////////////////////////////////////////////////////////////////////
 
@@ -477,15 +483,22 @@ class ParentBarState extends State<ParentBar> {
     // 최초 위치
     // local position
     if (signProvider.parentSignOffset == null) {
-      double xSign = parentProvider.wScreen - parentProvider.xBlank - parentProvider.whSign * 1.1;
+      double xSign = parentProvider.wScreen -
+          parentProvider.xBlank -
+          parentProvider.whSign -
+          parentProvider.whSign * AppConfig.SIGN_PADDING_FIRST;
       double ySign = MediaQuery.of(context).size.height -
           parentProvider.hBottomBlank -
           parentProvider.yBlank -
-          parentProvider.whSign * 1.1 -
+          parentProvider.whSign -
+          parentProvider.whSign * AppConfig.SIGN_PADDING_FIRST -
           parentProvider.hTopBlank;
       signProvider.parentSignOffset = Offset(xSign, ySign);
     }
     dev.log('signProvider.parentSignOffset: $signProvider.parentSignOffset');
+
+
+    signProvider.parentSignOffset = Offset(200, 200);
 
     signProvider.setParentSignFileInfoIdx(idx, notify: true);
   }
