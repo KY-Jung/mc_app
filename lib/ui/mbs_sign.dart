@@ -160,7 +160,7 @@ class SignMbsState extends State<SignMbs> {
               return;
             }
             signProvider.drawSignLinesStart(d.localPosition);
-            setState(() { });
+            setState(() {});
           },
           onPanUpdate: (DragUpdateDetails dragUpdateDetails) {
             if (signProvider.signWidth == 0) {
@@ -175,7 +175,7 @@ class SignMbsState extends State<SignMbs> {
             //dev.log('newSize: newSize');
             signProvider.drawSignLines(dragUpdateDetails.localPosition, newSize);
             //dev.log('onPanUpdate: ${signProvider.lines}');
-            setState(() { });
+            setState(() {});
           },
           child: Stack(
             alignment: Alignment.center,
@@ -224,7 +224,7 @@ class SignMbsState extends State<SignMbs> {
                     if (signProvider.selectedSignFileInfoIdx != -1) {
                       signProvider.selectedSignFileInfoIdx = -1;
                       signProvider.clearSignUiImage();
-                      setState(() { });
+                      setState(() {});
                     }
                   },
                   child: Container(
@@ -356,9 +356,8 @@ class SignMbsState extends State<SignMbs> {
                                       : InkWell(
                                           onTap: () {
                                             dev.log('recent click: ${signProvider.recentSignColorList.elementAt(0)}');
-                                            signProvider
-                                                .signColor = signProvider.recentSignColorList.elementAt(0);
-                                            setState(() { });
+                                            signProvider.signColor = signProvider.recentSignColorList.elementAt(0);
+                                            setState(() {});
                                           },
                                           child: Container(
                                             margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -404,7 +403,7 @@ class SignMbsState extends State<SignMbs> {
                                                   dev.log(
                                                       'default color click idx: $index, color: ${AppColors.DEFAULT_COLOR_LIST[index]}');
                                                   signProvider.signColor = AppColors.DEFAULT_COLOR_LIST[index];
-                                                  setState(() { });
+                                                  setState(() {});
                                                 },
                                                 child: Container(
                                                   width: whPreSign,
@@ -482,7 +481,7 @@ class SignMbsState extends State<SignMbs> {
                                         height: 20,
                                         onPressed: () {
                                           signProvider.signWidth = 0;
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -517,7 +516,7 @@ class SignMbsState extends State<SignMbs> {
                                         onChanged: (newValue) {
                                           signProvider.signWidth = newValue;
                                           dev.log('- Slider onChanged size: $newValue');
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         onChangeEnd: (newValue) {
                                           dev.log('- Slider onChangeEnd: $newValue');
@@ -533,7 +532,7 @@ class SignMbsState extends State<SignMbs> {
                                         height: 20,
                                         onPressed: () {
                                           signProvider.signWidth = AppConfig.SIGN_WIDTH_MAX;
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -586,7 +585,7 @@ class SignMbsState extends State<SignMbs> {
                                         ),
                                         onPressed: () {
                                           signProvider.clearSignLines();
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         child: Text('SIGN_CLEAR'.tr())),
                                   ),
@@ -597,7 +596,7 @@ class SignMbsState extends State<SignMbs> {
                                         ),
                                         onPressed: () {
                                           signProvider.undoSignLines();
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         child: Text('SING_UNDO'.tr())),
                                   ),
@@ -631,7 +630,7 @@ class SignMbsState extends State<SignMbs> {
                                                 'recent click: ${signProvider.recentSignBackgroundColorList.elementAt(0)}');
                                             signProvider.signBackgroundColor =
                                                 signProvider.recentSignBackgroundColorList.elementAt(0);
-                                            setState(() { });
+                                            setState(() {});
                                           },
                                           child: Container(
                                             margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -666,7 +665,7 @@ class SignMbsState extends State<SignMbs> {
                                   InkWell(
                                     onTap: () {
                                       signProvider.signBackgroundColor = null;
-                                      setState(() { });
+                                      setState(() {});
                                     },
                                     child: Container(
                                       width: whPreSign,
@@ -696,8 +695,9 @@ class SignMbsState extends State<SignMbs> {
                                                 onTap: () {
                                                   dev.log(
                                                       'default color click idx: $index, color: ${AppColors.DEFAULT_COLOR_LIST[index]}');
-                                                  signProvider.signBackgroundColor = AppColors.DEFAULT_COLOR_LIST[index];
-                                                  setState(() { });
+                                                  signProvider.signBackgroundColor =
+                                                      AppColors.DEFAULT_COLOR_LIST[index];
+                                                  setState(() {});
                                                 },
                                                 child: Container(
                                                   width: whPreSign,
@@ -774,7 +774,7 @@ class SignMbsState extends State<SignMbs> {
                                         onPressed: () {
                                           if (signProvider.signBackgroundUiImage != null) {
                                             signProvider.clearSignBackgroundUiImage();
-                                            setState(() { });
+                                            setState(() {});
                                           }
                                         },
                                         child: Text('SIGN_CLEAR'.tr())),
@@ -837,7 +837,7 @@ class SignMbsState extends State<SignMbs> {
                                   InkWell(
                                     onTap: () {
                                       signProvider.selectedSignShapeFileInfoIdx = -1;
-                                      setState(() { });
+                                      setState(() {});
                                     },
                                     child: Container(
                                       width: whPreSign,
@@ -922,8 +922,9 @@ class SignMbsState extends State<SignMbs> {
                                           onTap: () {
                                             dev.log(
                                                 'recent click: ${signProvider.recentSignShapeBorderColorList.elementAt(0)}');
-                                            signProvider.signShapeBorderColor = signProvider.recentSignShapeBorderColorList.elementAt(0);
-                                            setState(() { });
+                                            signProvider.signShapeBorderColor =
+                                                signProvider.recentSignShapeBorderColorList.elementAt(0);
+                                            setState(() {});
                                           },
                                           child: Container(
                                             margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -958,7 +959,7 @@ class SignMbsState extends State<SignMbs> {
                                   InkWell(
                                     onTap: () {
                                       signProvider.signShapeBorderColor = null;
-                                      setState(() { });
+                                      setState(() {});
                                     },
                                     child: Container(
                                       width: whPreSign,
@@ -988,8 +989,9 @@ class SignMbsState extends State<SignMbs> {
                                                 onTap: () {
                                                   dev.log(
                                                       'default color click idx: $index, color: ${AppColors.DEFAULT_COLOR_LIST[index]}');
-                                                  signProvider.signShapeBorderColor = AppColors.DEFAULT_COLOR_LIST[index];
-                                                  setState(() { });
+                                                  signProvider.signShapeBorderColor =
+                                                      AppColors.DEFAULT_COLOR_LIST[index];
+                                                  setState(() {});
                                                 },
                                                 child: Container(
                                                   width: whPreSign,
@@ -1030,10 +1032,8 @@ class SignMbsState extends State<SignMbs> {
                                     alignment: Alignment.center,
                                     child: InkWell(
                                       onTap: () {
-                                        _onTapColorPicker(
-                                            signProvider.signShapeBorderColor,
-                                            signProvider.recentSignShapeBorderColorList,
-                                            _callbackSignShapeBorderColor);
+                                        _onTapColorPicker(signProvider.signShapeBorderColor,
+                                            signProvider.recentSignShapeBorderColorList, _callbackSignShapeBorderColor);
                                       },
                                       child: GridView.builder(
                                         itemCount: AppColors.DEFAULT_COLOR_LIST.length, //item 개수
@@ -1069,7 +1069,7 @@ class SignMbsState extends State<SignMbs> {
                                         height: 20,
                                         onPressed: () {
                                           signProvider.signShapeBorderWidth = 0;
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -1101,13 +1101,12 @@ class SignMbsState extends State<SignMbs> {
                                         label:
                                             '${signProvider.signShapeBorderWidth.toInt()} / ${AppConfig.SIGN_WIDTH_MAX.toInt()}',
                                         onChangeStart: (newValue) {
-                                          dev.log(
-                                              '- Slider signProvider.size: ${signProvider.signShapeBorderWidth}');
+                                          dev.log('- Slider signProvider.size: ${signProvider.signShapeBorderWidth}');
                                         },
                                         onChanged: (newValue) {
                                           if (signProvider.signShapeBorderColor != null) {
                                             signProvider.signShapeBorderWidth = newValue;
-                                            setState(() { });
+                                            setState(() {});
                                             dev.log('- Slider onChanged size: $newValue');
                                           }
                                         },
@@ -1125,7 +1124,7 @@ class SignMbsState extends State<SignMbs> {
                                         height: 20,
                                         onPressed: () {
                                           signProvider.signShapeBorderWidth = AppConfig.SIGN_WIDTH_MAX;
-                                          setState(() { });
+                                          setState(() {});
                                         },
                                         color: Colors.lightBlue[100],
                                         textColor: Colors.black,
@@ -1151,8 +1150,8 @@ class SignMbsState extends State<SignMbs> {
                                             dashPattern: const [6, 4],
                                             child: CustomPaint(
                                               size: const Size(80, 30),
-                                              painter: LinePainter(signProvider.signShapeBorderWidth,
-                                                  signProvider.signShapeBorderColor,
+                                              painter: LinePainter(
+                                                  signProvider.signShapeBorderWidth, signProvider.signShapeBorderColor,
                                                   straight: true),
                                             ),
                                           ),
@@ -1184,7 +1183,6 @@ class SignMbsState extends State<SignMbs> {
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
   }
-
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -1219,7 +1217,7 @@ class SignMbsState extends State<SignMbs> {
       signProvider.addRecentSignColor(color, AppConfig.SIGNCOLOR_SAVE_MAX);
     }
     signProvider.signColor = color;
-    setState(() { });
+    setState(() {});
   }
 
   void _callbackSignBackgroundColor(Color? color, {bool recent = false}) {
@@ -1228,7 +1226,7 @@ class SignMbsState extends State<SignMbs> {
       signProvider.addRecentSignBackgroundColor(color, AppConfig.SIGNCOLOR_SAVE_MAX);
     }
     signProvider.signBackgroundColor = color;
-    setState(() { });
+    setState(() {});
   }
 
   void _callbackSignShapeBorderColor(Color? color, {bool recent = false}) {
@@ -1237,7 +1235,7 @@ class SignMbsState extends State<SignMbs> {
       signProvider.addRecentSignShapeBorderColor(color, AppConfig.SIGNCOLOR_SAVE_MAX);
     }
     signProvider.signShapeBorderColor = color;
-    setState(() { });
+    setState(() {});
   }
 
   void _onTapPreSign(int idx) async {
@@ -1252,7 +1250,7 @@ class SignMbsState extends State<SignMbs> {
     signProvider.clearSignUiImage();
     signProvider.signUiImage = signUiImage;
 
-    setState(() { });
+    setState(() {});
   }
 
   void _onTapPreShape(int idx) {
@@ -1263,7 +1261,7 @@ class SignMbsState extends State<SignMbs> {
     }
 
     signProvider.selectedSignShapeFileInfoIdx = idx;
-    setState(() { });
+    setState(() {});
   }
 
   void _onTapShapeList() {
@@ -1362,8 +1360,8 @@ class SignMbsState extends State<SignMbs> {
           // save prefs
           dev.log('save prefs');
 
-          List<String> fileNameList =
-              FileUtil.extractFileNameAndCntFromSignFileInfoList(signProvider.signFileInfoList, AppConstant.PREFS_DELIM2);
+          List<String> fileNameList = FileUtil.extractFileNameAndCntFromSignFileInfoList(
+              signProvider.signFileInfoList, AppConstant.PREFS_DELIM2);
           fileNameStr = fileNameList.join(AppConstant.PREFS_DELIM);
 
           await prefs.setString(AppConstant.PREFS_SIGNFILEINFOLIST, fileNameStr);
@@ -1404,7 +1402,7 @@ class SignMbsState extends State<SignMbs> {
       }
       if (ret == AppConstant.OK) {
         signProvider.clearAll();
-        setState(() { });
+        setState(() {});
       }
     });
   }
@@ -1485,7 +1483,9 @@ class SignMbsState extends State<SignMbs> {
         CustomPaint(painter: makeParentSignPainter),
         whSignBoard,
         whSignBoard,
-        (signProvider.signFileInfoList.length >= AppConfig.SIGN_SAVE_MAX) ? signProvider.signFileInfoList.last.image : null,
+        (signProvider.signFileInfoList.length >= AppConfig.SIGN_SAVE_MAX)
+            ? signProvider.signFileInfoList.last.image
+            : null,
         'SIGN_SAVE_DELETE'.tr(args: [AppConfig.SIGN_SAVE_MAX.toString()])).then((ret) async {
       dev.log('popupImage2OkCancel: $ret');
 
@@ -1523,8 +1523,7 @@ class SignMbsState extends State<SignMbs> {
     });
     ////////////////////////////////////////////////////////////////////////////////
   }
-  ////////////////////////////////////////////////////////////////////////////////
-  // Event Start //
-  ////////////////////////////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////
+// Event Start //
+////////////////////////////////////////////////////////////////////////////////
 }

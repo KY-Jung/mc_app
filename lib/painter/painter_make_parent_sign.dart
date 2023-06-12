@@ -33,7 +33,6 @@ class MakeParentSignPainter extends CustomPainter {
   double signShapeBorderWidth;
 
   bool grid;
-
   ////////////////////////////////////////////////////////////////////////////////
 
   MakeParentSignPainter(
