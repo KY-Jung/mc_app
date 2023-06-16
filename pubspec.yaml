@@ -131,6 +131,7 @@ flutter:
     - assets/images/color_mosaic.svg
     - assets/svg/
     - assets/shape/
+    - assets/svg/close_black_24dp.svg
 
 
 

@@ -483,7 +483,7 @@ class ParentBarState extends State<ParentBar> {
     // 최초 위치
     // local position
     if (signProvider.parentSignOffset == null) {
-      double xSign = parentProvider.wScreen -
+      double xSign = MediaQuery.of(context).size.width -
           parentProvider.xBlank -
           parentProvider.whSign -
           parentProvider.whSign * AppConfig.SIGN_PADDING_FIRST;

@@ -26,6 +26,7 @@ import '../painter/painter_make_parent_resize.dart';
 import '../provider/provider_parent.dart';
 import '../provider/provider_sign.dart';
 import '../util/util_bracket.dart';
+import '../util/util_info.dart';
 import '../util/util_popup.dart';
 
 class MakePage extends StatefulWidget {
@@ -44,7 +45,6 @@ class MakePageState extends State<MakePage> {
 
   late double childHandleWh;
   late double childTouchWh;
-
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -141,6 +141,7 @@ class MakePageState extends State<MakePage> {
     if (first) {
       dev.log('first start');
 
+      // parent 의 나머지 설정
       parentProvider.hTopBlank = MediaQuery.of(context).padding.top + AppBar().preferredSize.height;
       parentProvider.hBottomBlank = AppBar().preferredSize.height * AppConfig.FUNCTIONBAR_HEIGHT;
       var wScreen = MediaQuery.of(context).size.width;
@@ -162,7 +163,7 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    childTouchWh = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.WIDGET_TOUCH_WH;
+    childTouchWh = (parentProvider.wScreen + parentProvider.hScreen) * 0.6 * AppConfig.WIDGET_TOUCH_WH;
     childHandleWh = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.WIDGET_HANDLE_WH;
 
     dev.log('whSign: ${parentProvider.whSign}, widgetTouchWh: $childTouchWh, widgetHandleWh: $childHandleWh');
@@ -172,6 +173,22 @@ class MakePageState extends State<MakePage> {
       appBar: AppBar(
         title: Text('MAKE_NEW'.tr()),
         actions: [
+          Container(
+            alignment: Alignment.center,
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: InkWell(
+              onTap: () {
+
+              },
+              child: Ink(
+                child: const Icon(Icons.delete_forever),
+              ),
+            ),
+          ),
           GestureDetector(
             onTapDown: _onTapDownAll,
             child: Container(
@@ -673,28 +690,52 @@ class MakePageState extends State<MakePage> {
                         ),
                       ),
                       */
-
                     if (signProvider.parentSignFileInfoIdx != -1)
                       DragResizeRotateWidget(
-                          signProvider.parentSignOffset!.dx - childTouchWh + childHandleWh,
-                          signProvider.parentSignOffset!.dy - childTouchWh + childHandleWh,
-                          parentProvider.whSign + childTouchWh * 2 - childHandleWh * 2,
-                          parentProvider.whSign + childTouchWh * 2 - childHandleWh * 2,
-                          signRadian,
-                          signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
-                          Colors.white38,
-                          parentProvider.whSign,
-                          parentProvider.whSign,
-                          childTouchWh,
-                          childHandleWh,
-                          Colors.white60,
-                          sumOffset,
-                          childOnTapDown,
-                          childOnTap,
-                          childOnDragEnd,
-                          touchOnTapDown,
-                          touchOnTap,
-                          touchOnPanUpdate),
+                          left: signProvider.parentSignOffset!.dx - childTouchWh + childHandleWh,
+                          top: signProvider.parentSignOffset!.dy - childTouchWh + childHandleWh,
+                          width: parentProvider.whSign + childTouchWh * 2 - childHandleWh * 2,
+                          height: parentProvider.whSign + childTouchWh * 2 - childHandleWh * 2,
+                          angle: signRadian,
+                          childBackground: Colors.transparent,
+                          childBorderColor: Colors.white38,
+                          wChild: parentProvider.whSign,
+                          hChild: parentProvider.whSign,
+                          whTouch: childTouchWh,
+                          whHandle: childHandleWh,
+                          handleColor: Colors.white60,
+                          sumOffset: sumOffset,
+                          minSize: Size(10, 10),
+                          maxSize: Size(10, 10),
+                          childOnTapDown: childOnTapDown,
+                          childOnTap: childOnTap,
+                          childOnDragUpdate: childOnDragUpdate,
+                          childOnDragEnd: childOnDragEnd,
+                          touchOnTapDown: touchOnTapDown,
+                          touchOnTap: touchOnTap,
+                          touchOnPanUpdate: touchOnPanUpdate,
+                          deleteOnTap: deleteOnTap,
+                          child: signProvider.signFileInfoList[signProvider.parentSignFileInfoIdx].image,
+                      ),
+                    /*
+                    if (signProvider.parentSignFileInfoIdx != -1)
+                      // delete icon
+                      Positioned(
+                        // delete icon
+                        left: signProvider.parentSignOffset!.dx + parentProvider.whSign * 0.5 - childHandleWh * 1.5 * 0.5,
+                        top: signProvider.parentSignOffset!.dy - childHandleWh * 3,
+                        width: childHandleWh * 1.5,
+                        height: childHandleWh * 1.5,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white60,
+                            shape: BoxShape.circle,
+                          ),
+                          width: childHandleWh,
+                          height: childHandleWh,
+                        ),
+                      ),
+                    */
 
                   ],
                 ),
@@ -1045,6 +1086,7 @@ class MakePageState extends State<MakePage> {
     // for test
     signProvider.parentSignFileInfoIdx = -1;
     parentProvider.whSign = (parentProvider.wScreen + parentProvider.hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
+    signProvider.parentSignOffset = null;
     signRadian = 0;
 
     setState(() {});
@@ -1143,11 +1185,84 @@ class MakePageState extends State<MakePage> {
   void childOnTap() {
 
   }
-  void childOnDragEnd(draggableDetails) {
-    dev.log('onDragEnd offset: ${draggableDetails.offset}');
-    signProvider.parentSignOffset =
-        Offset(draggableDetails.offset.dx, draggableDetails.offset.dy - parentProvider.hTopBlank);
-    dev.log('onDragEnd signOffset: ${signProvider.parentSignOffset}');
+  /// WARNING
+  /// globalPostion 과 localPosition 값이 동일한 버그 발견
+  /// widget 의 좌표가 아니라 포인터의 좌표를 반환하는 문제로 인해 사용안함
+  void childOnDragUpdate(dragUpdateDetails) {
+    /*
+    dev.log('# childOnDragUpdate dragUpdateDetails: $dragUpdateDetails');
+
+    Offset globalOffset = dragUpdateDetails.globalPosition;
+    dev.log('childOnDragUpdate globalOffset: $globalOffset');
+    dev.log('childOnDragUpdate localPosition: ${dragUpdateDetails.localPosition}');
+    Rect validRect = parentProvider.calcValidRect();
+    dev.log('childOnDragUpdate validRect: $validRect');
+
+    if (globalOffset.dy < validRect.top) {
+      signProvider.parentSignOffset =
+          Offset(globalOffset.dx, validRect.top);
+      dev.log('childOnDragEnd childOnDragUpdate: ${signProvider.parentSignOffset}');
+      setState(() {});
+      return;
+    }
+    */
+  }
+  void childOnDragEnd(draggableDetails, wChild, hChild, angle) {
+    dev.log('childOnDragEnd offset: ${draggableDetails.offset}');
+
+    // global position
+    Offset dragOffset = draggableDetails.offset;
+    // global position
+    // wScreen/hScreen, htopBlank/hBottomBlank, xBlank/yBlank 까지 계산한 값
+    Rect validRect = parentProvider.calcValidRect();
+    dev.log('childOnDragEnd validRect: $validRect');
+
+    double xNew = dragOffset.dx;
+    double yNew = dragOffset.dy - parentProvider.hTopBlank;
+
+    // 회전한 경우를 감안하여 보정
+    Size rotateSize = InfoUtil.calcRotateSize(wChild, hChild, angle);
+    double wChildDiff = (rotateSize.width - wChild) * 0.5;
+    double hChildDiff = (rotateSize.height - hChild) * 0.5;
+
+    /*
+    // 회전 감안하지 않는 경우
+    if (dragOffset.dy < validRect.top) {
+      dev.log('(dragOffset.dy < validRect.top)');
+      yNew = validRect.top - parentProvider.hTopBlank;
+    }
+    if (dragOffset.dx < validRect.left) {
+      dev.log('(dragOffset.dx < validRect.left)');
+      xNew = validRect.left;
+    }
+    if (dragOffset.dx + wChild > validRect.right) {
+      dev.log('(dragOffset.dx + wChild > validRect.right)');
+      xNew = validRect.right - wChild;
+    }
+    if (dragOffset.dy + hChild > validRect.bottom) {
+      dev.log('(dragOffset.dy + hChild > validRect.bottom)');
+      yNew = validRect.bottom - parentProvider.hTopBlank - hChild;
+    }
+    */
+    if (dragOffset.dy - hChildDiff < validRect.top) {
+      dev.log('(dragOffset.dy - hChildDiff < validRect.top)');
+      yNew = validRect.top - parentProvider.hTopBlank + hChildDiff;
+    }
+    if (dragOffset.dx - wChildDiff < validRect.left) {
+      dev.log('(dragOffset.dx - wChildDiff < validRect.left)');
+      xNew = validRect.left + wChildDiff;
+    }
+    if (dragOffset.dx + wChild + wChildDiff > validRect.right) {
+      dev.log('(dragOffset.dy + parentProvider.wChild > validRect.right)');
+      xNew = validRect.right - wChild - wChildDiff;
+    }
+    if (dragOffset.dy + hChild + hChildDiff > validRect.bottom) {
+      dev.log('(dragOffset.dy + parentProvider.hChild > validRect.bottom)');
+      yNew = validRect.bottom - parentProvider.hTopBlank - hChild - hChildDiff;
+    }
+
+    signProvider.parentSignOffset = Offset(xNew, yNew);
+    dev.log('childOnDragEnd signOffset: ${signProvider.parentSignOffset}');
     setState(() {});
 
     SharedPreferences.getInstance().then((prefs) {
@@ -1167,7 +1282,7 @@ class MakePageState extends State<MakePage> {
     signRadian = angle;
 
     parentProvider.whSign = wChild;
-    //parentProvider.whSign = hChild;
+    parentProvider.whSign = hChild;
 
     signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
         signProvider.parentSignOffset!.dy - hDiff);
@@ -1175,6 +1290,10 @@ class MakePageState extends State<MakePage> {
     this.sumOffset = sumOffset;
 
     setState(() {});
+  }
+
+  void deleteOnTap() {
+
   }
   ////////////////////////////////////////////////////////////////////////////////
   // child callback END

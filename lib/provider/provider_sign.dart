@@ -17,13 +17,15 @@ class SignProvider with ChangeNotifier {
   // ParentBar Sign START
   ////////////////////////////////////////////////////////////////////////////////
   int parentSignFileInfoIdx = -1;   // ParentBar 에서 설정됨
-  Offset? parentSignOffset;         // MakePage 에서 설정됨
   // ParentBar --> MakePage
   void setParentSignFileInfoIdx(int idx, {bool notify = true}) {
     parentSignFileInfoIdx = idx;
 
     if (notify)   notifyListeners();
   }
+
+  // local position
+  Offset? parentSignOffset;         // MakePage 에서 설정됨
   ////////////////////////////////////////////////////////////////////////////////
   // ParentBar Sign END
   ////////////////////////////////////////////////////////////////////////////////

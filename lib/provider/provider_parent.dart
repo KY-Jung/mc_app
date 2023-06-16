@@ -32,33 +32,42 @@ class ParentProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // none, resize 로만 설정
+  // none, resize 여부만 구분
   MakePageBringEnum makeBringEnum = MakePageBringEnum.NONE;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
+  // 전체 크기
   double wScreen = 0;
   double hScreen = 0;
 
+  // 이미지 크기
   int wImage = 0;
   int hImage = 0;
 
-  // Parent 이미지가 screen 에 맞추어진 ratio
+  // status bar + app bar 높이
+  double hTopBlank = 0;
+  // bottom bar 높이
+  double hBottomBlank = 0;
+
+  // Parent 이미지가 screen 에 맞추어진 비율
   double inScale = 0;
 
+  // 빈 공간
   double xBlank = 0;
   double yBlank = 0;
 
+  // 시작점 (확대될 경우 사용)
   double xStart = 0;
   double yStart = 0;
-
+  // 확대했을 경우 비율
   double scale = 0;    // 사용하지 않음
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
   // for sign
-  double hTopBlank = 0;
-  double hBottomBlank = 0;
+
+  // 사인의 가로세로 크기
   double whSign = 0;
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -150,8 +159,7 @@ class ParentProvider with ChangeNotifier {
     hScreen = h;
 
     /// Parent 이미지가 screen 에 맞추어진 ratio 구하기
-    inScale = InfoUtil.calcFitRatioIn(
-        wScreen, hScreen, wImage, hImage);
+    inScale = InfoUtil.calcFitRatioIn(wScreen, hScreen, wImage, hImage);
     dev.log('inScale: $inScale');
 
     // blank
@@ -188,6 +196,25 @@ class ParentProvider with ChangeNotifier {
     rightTopOffset = Offset(wScreen - xBlank, yBlank);
     leftBottomOffset = Offset(xBlank, hScreen - yBlank);
     rightBottomOffset = Offset(wScreen - xBlank, hScreen - yBlank);
+  }
+
+  // globalPosition
+  Rect calcValidRect() {
+    Rect validRect;
+
+    double x;
+    double x2;
+    double y;
+    double y2;
+
+    x = xBlank;
+    x2 = wScreen - xBlank;
+    y = hTopBlank + yBlank;
+    y2 = hTopBlank + hScreen - yBlank;
+
+    validRect = Offset(x, y) & Size(x2 - x, y2 - y);
+
+    return validRect;
   }
   ////////////////////////////////////////////////////////////////////////////////
   // Parent END

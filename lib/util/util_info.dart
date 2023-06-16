@@ -1,5 +1,5 @@
 import 'dart:developer' as dev;
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -144,14 +144,49 @@ class InfoUtil {
   ////////////////////////////////////////////////////////////////////////////////
   // Widget resize/rotate START
   ////////////////////////////////////////////////////////////////////////////////
-  static Size calcResizeRotateSize(double w, double h) {
-    Size retSize = Size(0, 0);
+  static Size calcRotateSize(w, h, angle) {
+    double degree;
+    double degree90;
+    double angle90;
 
+    degree = radianToDegree(angle);
+    int quotientDegree = degree ~/ 90;
+    double remainDegree = degree - quotientDegree * 90;
+    degree90 = 90 - remainDegree.abs();
+    angle90 = degreeToRadian(degree90);
+    //dev.log('angle: $angle, angle90: $angle90');
+    //dev.log('degree: $degree, degree90: $degree90');
+    //dev.log('degree % 90: ${degree % 90}');
 
+    double x_1 = math.sin(angle) * w;
+    double x_2 = math.cos(angle) * w;
+    //dev.log('x_1: $x_1, x_2: $x_2');
+    double y_1 = math.sin(angle90) * h;
+    double y_2 = math.cos(angle90) * h;
+    //dev.log('y_1: $y_1, y_2: $y_2');
 
-    return retSize;
+    x_1 = x_1.abs();
+    x_2 = x_2.abs();
+    y_1 = y_1.abs();
+    y_2 = y_2.abs();
+
+    Size size;
+
+    int quotientAngle = angle ~/ (math.pi * 0.5);
+    if (quotientAngle % 4 == 0 || quotientAngle % 4 == 2) {
+      size = Size(x_1 + y_1, x_2 + y_2);
+    } else {
+      size = Size(x_1 + y_2, x_2 + y_1);
+    }
+
+    return size;
   }
-
+  static double radianToDegree(double radian) {
+    return radian * 180 / math.pi;
+  }
+  static double degreeToRadian(double degree) {
+    return degree * math.pi / 180;
+  }
   ////////////////////////////////////////////////////////////////////////////////
   // Widget resize/rotate END
   ////////////////////////////////////////////////////////////////////////////////
