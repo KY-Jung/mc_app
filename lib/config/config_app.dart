@@ -54,6 +54,8 @@ class AppConfig {
   //static const double SIGN_WH_RATIO = 0.2;
   // 처음 sign 이 놓여질 경우 SIGN_WH_RATIO 에 대한 패딩값 비율
   static const double SIGN_PADDING_FIRST = 0.2;
+  static const double SIGN_WH_MAX = 0.3;    // 최초 크기(SIGN_WH_RATIO)의 3배까지
+  static const double SIGN_WH_MIN = 0.06;    // 최초 크기(SIGN_WH_RATIO)의 0.5배까지
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
