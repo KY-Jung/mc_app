@@ -53,7 +53,7 @@ class MakePageState extends State<MakePage> {
   double signRadian = 0;
 
   // resize
-  Offset sumOffset = const Offset(0, 0);
+  Offset moveSumOffset = const Offset(0, 0);
 
   // 최대 크기를 벗어난 경우에 사용
   Offset overSumOffset = const Offset(0, 0);
@@ -736,7 +736,7 @@ class MakePageState extends State<MakePage> {
                         whTouch: childTouchWh,
                         whHandle: childHandleWh,
                         handleColor: Colors.white60,
-                        sumOffset: sumOffset,
+                        moveSumOffset: moveSumOffset,
                         overSumOffset: overSumOffset,
                         minSize: Size(
                             (parentProvider.wScreen + parentProvider.hScreen) *
@@ -1158,7 +1158,7 @@ class MakePageState extends State<MakePage> {
     parentProvider.whSign = (parentProvider.wScreen + parentProvider.hScreen) *
         0.5 *
         AppConfig.SIGN_WH_RATIO;
-    //signProvider.parentSignOffset = null;
+    signProvider.parentSignOffset = null;
     signRadian = 0;
 
     setState(() {});
@@ -1332,7 +1332,7 @@ class MakePageState extends State<MakePage> {
   void touchOnTap() {}
 
   void touchOnPanUpdate(double angle, double wChild, double hChild,
-      double wDiff, double hDiff, Offset sumOffset, Offset overSumOffset) {
+      double wDiff, double hDiff, Offset moveSumOffset, Offset overSumOffset) {
     signRadian = angle;
 
     parentProvider.whSign = wChild;
@@ -1342,7 +1342,7 @@ class MakePageState extends State<MakePage> {
         signProvider.parentSignOffset!.dx - wDiff,
         signProvider.parentSignOffset!.dy - hDiff);
 
-    this.sumOffset = sumOffset;
+    this.moveSumOffset = moveSumOffset;
     this.overSumOffset = overSumOffset;
 
     setState(() {});
