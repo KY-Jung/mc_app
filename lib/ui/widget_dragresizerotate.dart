@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../util/util_info.dart';
+
 class DragResizeRotateWidget extends StatefulWidget {
   //const DragResizeRotateWidget({super.key});
 
@@ -18,8 +20,10 @@ class DragResizeRotateWidget extends StatefulWidget {
 
   // 본체
   Widget child;
+
   // 배경색
   Color childBackground;
+
   // 본체 테두리
   Color childBorderColor;
 
@@ -35,8 +39,16 @@ class DragResizeRotateWidget extends StatefulWidget {
   Color handleColor;
 
   // 최소/최대 크기
-  Size minSize;
   Size maxSize;
+  Size minSize;
+  double angleSticky;
+
+  // resize 오차 보정
+  Offset sizeSumOffset;
+  // max/min 오차 보정
+  Offset overSumOffset;
+  // angle 오차 보정
+  double angleSum;
 
   // child 의 drag 가 끝난 경우
   dynamic childOnTapDown;
@@ -48,14 +60,8 @@ class DragResizeRotateWidget extends StatefulWidget {
   dynamic touchOnPanUpdate;
   dynamic touchOnPanEnd;
   dynamic deleteOnTap;
-  ////////////////////////////////////////////////////////////////////////////////
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // widget 의 크기가 변경되는 것을 보정하는 값
-  Offset moveSumOffset;
-
-  // 최대 크기를 벗어난 경우에 사용
-  Offset overSumOffset;
+  dynamic notifyAngle;
+  dynamic notifyAlarm;
   ////////////////////////////////////////////////////////////////////////////////
 
   DragResizeRotateWidget({
@@ -72,10 +78,12 @@ class DragResizeRotateWidget extends StatefulWidget {
     required this.whTouch,
     required this.whHandle,
     required this.handleColor,
-    required this.moveSumOffset,
-    required this.overSumOffset,
-    required this.minSize,
     required this.maxSize,
+    required this.minSize,
+    required this.angleSticky,
+    required this.sizeSumOffset,
+    required this.overSumOffset,
+    required this.angleSum,
     this.childOnTapDown,
     this.childOnTap,
     this.childOnDragUpdate,
@@ -85,14 +93,24 @@ class DragResizeRotateWidget extends StatefulWidget {
     this.touchOnPanUpdate,
     this.touchOnPanEnd,
     this.deleteOnTap,
+    this.notifyAngle,
+    this.notifyAlarm,
     required this.child,
   });
 
   @override
   State<DragResizeRotateWidget> createState() => DragResizeRotateWidgetState();
+
+////////////////////////////////////////////////////////////////////////////////
+// TODO : handle/touch hide, max border color 초기화
+////////////////////////////////////////////////////////////////////////////////
 }
 
 class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
+  ////////////////////////////////////////////////////////////////////////////////
+  bool fMaxMin = false;
+  ////////////////////////////////////////////////////////////////////////////////
+
   ////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
@@ -131,7 +149,9 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                       angle: widget.angle,
                       child: Container(
                           decoration: BoxDecoration(
-                              color: widget.childBackground, border: Border.all(color: widget.childBorderColor, width: 2)),
+                              color: widget.childBackground,
+                              border: Border.all(
+                                  color: widget.childBorderColor, width: 2)),
                           child: FittedBox(
                             fit: BoxFit.contain,
                             child: widget.child,
@@ -155,7 +175,8 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                   },
                   onDragEnd: (draggableDetails) {
                     // only global position
-                    widget.childOnDragEnd(draggableDetails, widget.wChild, widget.hChild, widget.angle);
+                    widget.childOnDragEnd(draggableDetails, widget.wChild,
+                        widget.hChild, widget.angle);
                   },
                   child: GestureDetector(
                     onTapDown: (tapDownDetails) {
@@ -168,8 +189,14 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                          color: widget.childBackground, border: Border.all(color: widget.childBorderColor, width: 2)),
-                      child: FittedBox(fit: BoxFit.contain, child: widget.child),
+                          color: widget.childBackground,
+                          border: Border.all(
+                              color: fMaxMin
+                                  ? Colors.deepOrangeAccent
+                                  : widget.childBorderColor,
+                              width: 2)),
+                      child:
+                          FittedBox(fit: BoxFit.contain, child: widget.child),
                     ),
                   ),
                 ),
@@ -222,9 +249,10 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                   height: widget.whHandle,
                 ),
               ),
-
               Positioned(
-                left: widget.whTouch + (widget.wChild - widget.whHandle * 2) * 0.5 - widget.whHandle * 1.5 * 0.5,
+                left: widget.whTouch +
+                    (widget.wChild - widget.whHandle * 2) * 0.5 -
+                    widget.whHandle * 1.5 * 0.5,
                 top: widget.whTouch - widget.whHandle * 1.5 * 2,
                 width: widget.whHandle * 1.5,
                 height: widget.whHandle * 1.5,
@@ -245,7 +273,6 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                   ),
                 ),
               ),
-
               Positioned(
                 // bottomright touch
                 left: widget.wChild + widget.whTouch - widget.whHandle * 2,
@@ -262,55 +289,16 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnTap();
                   },
                   onPanStart: (dragUpdateDetails) {
-                    widget.moveSumOffset = const Offset(0, 0);
+                    // 시작할때 하므로, makepage 에서는 초기화 하지 않음
+                    widget.sizeSumOffset = const Offset(0, 0);
                     widget.overSumOffset = const Offset(0, 0);
+                    widget.angleSum = 0;
+                  },
+                  onPanEnd: (dragEndDetails) {
+                    fMaxMin = false;
+                    widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
-                    /*
-                    //dev.log(
-                    //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
-                    //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
-
-                    // 중심점으로 offset 계산
-                    Offset baseOffset = Offset(
-                        (widget.wChild + widget.whTouch - widget.whHandle * 2), // 1/2 위치별 수정
-                        (widget.hChild + widget.whTouch - widget.whHandle * 2));
-                    Offset centerOffset = Offset((widget.wChild + widget.whTouch * 2 - widget.whHandle * 2) / 2,
-                        (widget.hChild + widget.whTouch * 2 - widget.whHandle * 2) / 2);
-                    Offset diffOffset = baseOffset - centerOffset;
-                    Offset newOffset = diffOffset + dragUpdateDetails.localPosition - widget.moveSumOffset;
-                    Offset oldOffset =
-                        diffOffset + (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - widget.moveSumOffset;
-                    //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
-                    //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
-                    // 회전
-                    widget.angle = widget.angle + (newOffset.direction - oldOffset.direction);
-                    //dev.log('signRadian: ${widget.angle}');
-
-                    // line distance
-                    double diffDistance = newOffset.distance - oldOffset.distance;
-                    // 직사각형인 경우
-                    double wSquare = widget.wChild;
-                    double hSquare = widget.hChild;
-                    //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
-                    double wDiff =
-                        math.sqrt(math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) * diffDistance;
-                    double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
-                    //dev.log('wDiff: $wDiff, hDiff: $hDiff');
-
-                    // 이동한 결과를 저장했다가 보정해 주어야 함
-                    widget.moveSumOffset = Offset(widget.moveSumOffset.dx + wDiff, widget.moveSumOffset.dy + hDiff); // 2/2 위치별 수정
-
-                    // resize
-                    //parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
-                    widget.wChild = widget.wChild + wDiff * 2; // 양쪽이므로 *2
-                    widget.hChild = widget.hChild + hDiff * 2; // 양쪽이므로 *2
-                    // center 이동
-                    //signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
-                    //    signProvider.parentSignOffset!.dy - hDiff);
-
-                    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff, hDiff, widget.moveSumOffset);
-                     */
                     handleOnPanUpdate(dragUpdateDetails, Alignment.bottomRight);
                   },
                   child: Container(
@@ -340,55 +328,16 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnTap();
                   },
                   onPanStart: (dragUpdateDetails) {
-                    widget.moveSumOffset = const Offset(0, 0);
+                    // 시작할때 하므로, makepage 에서는 초기화 하지 않음
+                    widget.sizeSumOffset = const Offset(0, 0);
                     widget.overSumOffset = const Offset(0, 0);
+                    widget.angleSum = 0;
+                  },
+                  onPanEnd: (dragEndDetails) {
+                    fMaxMin = false;
+                    widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
-                    /*
-                    //dev.log(
-                    //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
-                    //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
-
-                    // 중심점으로 offset 계산
-                    Offset baseOffset = Offset(
-                        0, // 1/2 위치별 수정
-                        (widget.hChild + widget.whTouch - widget.whHandle * 2));
-                    Offset centerOffset = Offset((widget.wChild + widget.whTouch * 2 - widget.whHandle * 2) / 2,
-                        (widget.hChild + widget.whTouch * 2 - widget.whHandle * 2) / 2);
-                    Offset diffOffset = baseOffset - centerOffset;
-                    Offset newOffset = diffOffset + dragUpdateDetails.localPosition - widget.moveSumOffset;
-                    Offset oldOffset =
-                        diffOffset + (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - widget.moveSumOffset;
-                    //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
-                    //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
-                    // 회전
-                    widget.angle = widget.angle + (newOffset.direction - oldOffset.direction);
-                    //dev.log('signRadian: $signRadian');
-
-                    // line distance
-                    double diffDistance = newOffset.distance - oldOffset.distance;
-                    // 직사각형인 경우
-                    double wSquare = widget.wChild;
-                    double hSquare = widget.hChild;
-                    //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
-                    double wDiff =
-                        math.sqrt(math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) * diffDistance;
-                    double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
-                    //dev.log('wDiff: $wDiff, hDiff: $hDiff');
-
-                    // 이동한 결과를 저장했다가 보정해 주어야 함
-                    widget.moveSumOffset = Offset(widget.moveSumOffset.dx - wDiff, widget.moveSumOffset.dy + hDiff); // 2/2 위치별 수정
-
-                    // resize
-                    //parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
-                    widget.wChild = widget.wChild + wDiff * 2; // 양쪽이므로 *2
-                    widget.hChild = widget.hChild + hDiff * 2; // 양쪽이므로 *2
-                    // center 이동
-                    //signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
-                    //    signProvider.parentSignOffset!.dy - hDiff);
-
-                    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff, hDiff, widget.moveSumOffset);
-                    */
                     handleOnPanUpdate(dragUpdateDetails, Alignment.bottomLeft);
                   },
                   child: Container(
@@ -418,55 +367,16 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnTap();
                   },
                   onPanStart: (dragUpdateDetails) {
-                    widget.moveSumOffset = const Offset(0, 0);
+                    // 시작할때 하므로, makepage 에서는 초기화 하지 않음
+                    widget.sizeSumOffset = const Offset(0, 0);
                     widget.overSumOffset = const Offset(0, 0);
+                    widget.angleSum = 0;
+                  },
+                  onPanEnd: (dragEndDetails) {
+                    fMaxMin = false;
+                    widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
-                    /*
-                    //dev.log(
-                    //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
-                    //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
-
-                    // 중심점으로 offset 계산
-                    Offset baseOffset = Offset(
-                        (widget.wChild + widget.whTouch - widget.whHandle * 2), // 1/2 위치별 수정
-                        0);
-                    Offset centerOffset = Offset((widget.wChild + widget.whTouch * 2 - widget.whHandle * 2) / 2,
-                        (widget.hChild + widget.whTouch * 2 - widget.whHandle * 2) / 2);
-                    Offset diffOffset = baseOffset - centerOffset;
-                    Offset newOffset = diffOffset + dragUpdateDetails.localPosition - widget.moveSumOffset;
-                    Offset oldOffset =
-                        diffOffset + (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - widget.moveSumOffset;
-                    //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
-                    //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
-                    // 회전
-                    widget.angle = widget.angle + (newOffset.direction - oldOffset.direction);
-                    //dev.log('signRadian: ${widget.angle}');
-
-                    // line distance
-                    double diffDistance = newOffset.distance - oldOffset.distance;
-                    // 직사각형인 경우
-                    double wSquare = widget.wChild;
-                    double hSquare = widget.hChild;
-                    //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
-                    double wDiff =
-                        math.sqrt(math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) * diffDistance;
-                    double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
-                    //dev.log('wDiff: $wDiff, hDiff: $hDiff');
-
-                    // 이동한 결과를 저장했다가 보정해 주어야 함
-                    widget.moveSumOffset = Offset(widget.moveSumOffset.dx + wDiff, widget.moveSumOffset.dy - hDiff); // 2/2 위치별 수정
-
-                    // resize
-                    //parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
-                    widget.wChild = widget.wChild + wDiff * 2; // 양쪽이므로 *2
-                    widget.hChild = widget.hChild + hDiff * 2; // 양쪽이므로 *2
-                    // center 이동
-                    //signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
-                    //    signProvider.parentSignOffset!.dy - hDiff);
-
-                    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff, hDiff, widget.moveSumOffset);
-                    */
                     handleOnPanUpdate(dragUpdateDetails, Alignment.topRight);
                   },
                   child: Container(
@@ -496,12 +406,13 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnTap();
                   },
                   onPanStart: (dragUpdateDetails) {
-                    widget.moveSumOffset = const Offset(0, 0);
+                    // 시작할때 하므로, makepage 에서는 초기화 하지 않음
+                    widget.sizeSumOffset = const Offset(0, 0);
                     widget.overSumOffset = const Offset(0, 0);
+                    widget.angleSum = 0;
                   },
                   onPanEnd: (dragEndDetails) {
-                    //widget.sumOffset = const Offset(0, 0);
-                    //widget.overSumOffset = const Offset(0, 0);
+                    fMaxMin = false;
                     widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
@@ -619,6 +530,9 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
   }
 
   void handleOnPanUpdate(dragUpdateDetails, position) {
+    //dev.log(
+    //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
+    //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
 
     ////////////////////////////////////////////////////////////////////////////////
     double baseOffsetXPosition = 0;
@@ -629,23 +543,23 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
         baseOffsetYPosition = 0;
         break;
       case Alignment.topRight:
-        baseOffsetXPosition = (widget.wChild + widget.whTouch - widget.whHandle * 2);
+        baseOffsetXPosition =
+            (widget.wChild + widget.whTouch - widget.whHandle * 2);
         baseOffsetYPosition = 0;
         break;
       case Alignment.bottomLeft:
         baseOffsetXPosition = 0;
-        baseOffsetYPosition = (widget.hChild + widget.whTouch - widget.whHandle * 2);
+        baseOffsetYPosition =
+            (widget.hChild + widget.whTouch - widget.whHandle * 2);
         break;
       case Alignment.bottomRight:
-        baseOffsetXPosition = (widget.wChild + widget.whTouch - widget.whHandle * 2);
-        baseOffsetYPosition = (widget.hChild + widget.whTouch - widget.whHandle * 2);
+        baseOffsetXPosition =
+            (widget.wChild + widget.whTouch - widget.whHandle * 2);
+        baseOffsetYPosition =
+            (widget.hChild + widget.whTouch - widget.whHandle * 2);
         break;
     }
     ////////////////////////////////////////////////////////////////////////////////
-
-    //dev.log(
-    //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
-    //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
 
     ////////////////////////////////////////////////////////////////////////////////
     // 중심점으로 offset 계산
@@ -653,17 +567,106 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     Offset baseOffset = Offset(
         baseOffsetXPosition, // 1/2 위치별 수정
         baseOffsetYPosition);
-    Offset centerOffset = Offset((widget.wChild + widget.whTouch * 2 - widget.whHandle * 2) / 2,
+    Offset centerOffset = Offset(
+        (widget.wChild + widget.whTouch * 2 - widget.whHandle * 2) / 2,
         (widget.hChild + widget.whTouch * 2 - widget.whHandle * 2) / 2);
     Offset diffOffset = baseOffset - centerOffset;
-    Offset newOffset = diffOffset + dragUpdateDetails.localPosition - widget.moveSumOffset;
-    Offset oldOffset =
-        diffOffset + (dragUpdateDetails.localPosition - dragUpdateDetails.delta) - widget.moveSumOffset;
+    Offset newOffset =
+        diffOffset + dragUpdateDetails.localPosition - widget.sizeSumOffset;
+    Offset oldOffset = diffOffset +
+        (dragUpdateDetails.localPosition - dragUpdateDetails.delta) -
+        widget.sizeSumOffset;
     //dev.log('baseOffset: $baseOffset, centerOffset: $centerOffset, diffOffset: $diffOffset');
     //dev.log('oldOffset: $oldOffset, newOffset: $newOffset');
     // 회전
     widget.angle = widget.angle + (newOffset.direction - oldOffset.direction);
-    //dev.log('signRadian: $signRadian');
+    dev.log('widget.angle: ${widget.angle}');
+    //dev.log('newOffset.direction: ${newOffset.direction}');
+    //dev.log('oldOffset.direction: ${oldOffset.direction}');
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // angle 조정
+
+    //double degree = InfoUtil.radianToDegree(widget.angle);
+    double degreeNew = InfoUtil.radianToDegree2(widget.angle);
+    //dev.log('--- degree: $degree');
+    // double degreeNew = 0;
+    // if (degree < 0) {
+    //   degreeNew = 360 - degree.abs();
+    // } else {
+    //   degreeNew = degree;
+    // }
+    //dev.log('degreeNew: $degreeNew');
+    //dev.log('angleSum: ${widget.angleSum}');
+    degreeNew -= widget.angleSum;
+    widget.angleSum = 0;
+    degreeNew = degreeNew % 360;
+    dev.log('degreeNew: $degreeNew');
+
+    if (degreeNew < widget.angleSticky) {
+      widget.angleSum = 0 - degreeNew;
+      degreeNew = 0;
+      //Vibration.vibrate();
+      dev.log('~~~0 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (360 - widget.angleSticky)) {
+      widget.angleSum = 360 - degreeNew;
+      degreeNew = 0;
+      //Vibration.vibrate();
+      dev.log('~~~360 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (45 - widget.angleSticky) &&
+        degreeNew < (45 + widget.angleSticky)) {
+      widget.angleSum = 45 - degreeNew;
+      degreeNew = 45;
+      //Vibration.vibrate();
+      dev.log('~~~45 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (90 - widget.angleSticky) &&
+        degreeNew < (90 + widget.angleSticky)) {
+      widget.angleSum = 90 - degreeNew;
+      degreeNew = 90;
+      //Vibration.vibrate();
+      dev.log('~~~90 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (135 - widget.angleSticky) &&
+        degreeNew < (135 + widget.angleSticky)) {
+      widget.angleSum = 135 - degreeNew;
+      degreeNew = 135;
+      //Vibration.vibrate();
+      dev.log('~~~135 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (180 - widget.angleSticky) &&
+        degreeNew < (180 + widget.angleSticky)) {
+      widget.angleSum = 180 - degreeNew;
+      degreeNew = 180;
+      //Vibration.vibrate();
+      dev.log('~~~180 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (225 - widget.angleSticky) &&
+        degreeNew < (225 + widget.angleSticky)) {
+      widget.angleSum = 225 - degreeNew;
+      degreeNew = 225;
+      //Vibration.vibrate();
+      dev.log('~~~225 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (270 - widget.angleSticky) &&
+        degreeNew < (270 + widget.angleSticky)) {
+      widget.angleSum = 270 - degreeNew;
+      degreeNew = 270;
+      //Vibration.vibrate();
+      dev.log('~~~270 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    } else if (degreeNew > (315 - widget.angleSticky) &&
+        degreeNew < (315 + widget.angleSticky)) {
+      widget.angleSum = 315 - degreeNew;
+      degreeNew = 315;
+      //Vibration.vibrate();
+      dev.log('~~~315 degreeNew: $degreeNew, angleSum: ${widget.angleSum}');
+    }
+    widget.angle = InfoUtil.degreeToRadian(degreeNew);
+    //double angle4 = InfoUtil.degreeToRadian(degreeNew);
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // angle guide
+    Offset? angleGuideOffset;
+    if (degreeNew % 45 == 0) {
+      angleGuideOffset = Offset(widget.left + widget.width * 0.5, widget.top + widget.height * 0.5);
+    }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -674,8 +677,9 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     double wSquare = widget.wChild;
     double hSquare = widget.hChild;
     //double wDiff = diffDistance / math.sqrt(2);   // 정사각형인 경우
-    double wDiff =
-        math.sqrt(math.pow(wSquare, 2) / (math.pow(wSquare, 2) + math.pow(hSquare, 2))) * diffDistance;
+    double wDiff = math.sqrt(math.pow(wSquare, 2) /
+            (math.pow(wSquare, 2) + math.pow(hSquare, 2))) *
+        diffDistance;
     double hDiff = hSquare / wSquare * wDiff; // 늘리면 양수, 줄이면 음수
     //dev.log('wDiff: $wDiff, hDiff: $hDiff');
     ////////////////////////////////////////////////////////////////////////////////
@@ -684,58 +688,74 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     // 최대/최소
 
     //dev.log('---${DateTime.now()} wDiff: $wDiff, hDiff: $hDiff');
+    //dev.log('widget.wChild: ${widget.wChild}, widget.overSumOffset.dx: ${widget.overSumOffset.dx}');
+    //dev.log('widget.maxSize.width: ${widget.maxSize.width}');
     // 비율을 사용하므로 w/h 하나만 해도 됨
-    if ((widget.wChild + widget.overSumOffset.dx + wDiff * 2) > widget.maxSize.width) {
-      // double diffFit = 0.5 * (widget.maxSize.width - widget.wChild - widget.overSumOffset.dx);
-      // dev.log('max wDiff: $wDiff, diffFit: $diffFit');
-      widget.overSumOffset = Offset(widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy);
+    if ((widget.wChild + widget.overSumOffset.dx + wDiff * 2) >
+        widget.maxSize.width) {
+      //double wFit = 0.5 * (widget.maxSize.width - widget.wChild - widget.overSumOffset.dx);
+      //dev.log('max wDiff: $wDiff, wFit: $wFit');
+      widget.overSumOffset =
+          Offset(widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy);
       wDiff = 0;
-    } else if ((widget.wChild + widget.overSumOffset.dx + wDiff * 2) < widget.minSize.width) {
-      // double diffFit = 0.5 * (widget.minSize.width - widget.wChild - widget.overSumOffset.dx);
-      // dev.log('min wDiff: $wDiff, diffFit: $diffFit');
-      widget.overSumOffset = Offset(widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy);
+      fMaxMin = true;
+    } else if ((widget.wChild + widget.overSumOffset.dx + wDiff * 2) <
+        widget.minSize.width) {
+      // double wFit = 0.5 * (widget.minSize.width - widget.wChild - widget.overSumOffset.dx);
+      // dev.log('min wDiff: $wDiff, wFit: $wFit');
+      widget.overSumOffset =
+          Offset(widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy);
       wDiff = 0;
+      fMaxMin = true;
     } else {
       //dev.log('wDiff minus: ${widget.overSumOffset}');
       wDiff = widget.overSumOffset.dx + wDiff;
       widget.overSumOffset = Offset(0, widget.overSumOffset.dy);
+      fMaxMin = false;
     }
-    if ((widget.hChild + widget.overSumOffset.dy + hDiff * 2) > widget.maxSize.height) {
-      // double diffFit = 0.5 * (widget.maxSize.height - widget.hChild - widget.overSumOffset.dy);
-      // dev.log('max hDiff: $hDiff, diffFit: $diffFit');
-      widget.overSumOffset = Offset(widget.overSumOffset.dx, widget.overSumOffset.dy + hDiff);
+    if ((widget.hChild + widget.overSumOffset.dy + hDiff * 2) >
+        widget.maxSize.height) {
+      //double hFit = 0.5 * (widget.maxSize.height - widget.hChild - widget.overSumOffset.dy);
+      //dev.log('max hDiff: $hDiff, hFit: $hFit');
+      widget.overSumOffset =
+          Offset(widget.overSumOffset.dx, widget.overSumOffset.dy + hDiff);
       hDiff = 0;
-    } else if ((widget.hChild + widget.overSumOffset.dy + hDiff * 2) < widget.minSize.height) {
-      // double diffFit = 0.5 * (widget.minSize.height - widget.hChild - widget.overSumOffset.dy);
-      // dev.log('min hDiff: $hDiff, diffFit: $diffFit');
-      widget.overSumOffset = Offset(widget.overSumOffset.dx, widget.overSumOffset.dy + hDiff);
+      fMaxMin = true;
+    } else if ((widget.hChild + widget.overSumOffset.dy + hDiff * 2) <
+        widget.minSize.height) {
+      // double hFit = 0.5 * (widget.minSize.height - widget.hChild - widget.overSumOffset.dy);
+      // dev.log('min hDiff: $hDiff, hFit: $hFit');
+      widget.overSumOffset =
+          Offset(widget.overSumOffset.dx, widget.overSumOffset.dy + hDiff);
       hDiff = 0;
+      fMaxMin = true;
     } else {
       //dev.log('hDiff minus: ${widget.overSumOffset}');
       hDiff = widget.overSumOffset.dy + hDiff;
       widget.overSumOffset = Offset(widget.overSumOffset.dx, 0);
+      fMaxMin = false;
     }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    double moveSumOffsetXPosition = 0;
-    double moveSumOffsetYPosition = 0;
+    double sizeSumOffsetXPosition = 0;
+    double sizeSumOffsetYPosition = 0;
     switch (position) {
       case Alignment.topLeft:
-        moveSumOffsetXPosition = widget.moveSumOffset.dx - wDiff;
-        moveSumOffsetYPosition = widget.moveSumOffset.dy - hDiff;
+        sizeSumOffsetXPosition = widget.sizeSumOffset.dx - wDiff;
+        sizeSumOffsetYPosition = widget.sizeSumOffset.dy - hDiff;
         break;
       case Alignment.topRight:
-        moveSumOffsetXPosition = widget.moveSumOffset.dx + wDiff;
-        moveSumOffsetYPosition = widget.moveSumOffset.dy - hDiff;
+        sizeSumOffsetXPosition = widget.sizeSumOffset.dx + wDiff;
+        sizeSumOffsetYPosition = widget.sizeSumOffset.dy - hDiff;
         break;
       case Alignment.bottomLeft:
-        moveSumOffsetXPosition = widget.moveSumOffset.dx - wDiff;
-        moveSumOffsetYPosition = widget.moveSumOffset.dy + hDiff;
+        sizeSumOffsetXPosition = widget.sizeSumOffset.dx - wDiff;
+        sizeSumOffsetYPosition = widget.sizeSumOffset.dy + hDiff;
         break;
       case Alignment.bottomRight:
-        moveSumOffsetXPosition = widget.moveSumOffset.dx + wDiff;
-        moveSumOffsetYPosition = widget.moveSumOffset.dy + hDiff;
+        sizeSumOffsetXPosition = widget.sizeSumOffset.dx + wDiff;
+        sizeSumOffsetYPosition = widget.sizeSumOffset.dy + hDiff;
         break;
     }
     ////////////////////////////////////////////////////////////////////////////////
@@ -745,7 +765,8 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
 
     // 크기가 변경되므로, 포인터가 이동한 결과를 저장했다가 보정해 주어야 함
     //widget.moveSumOffset = Offset(widget.moveSumOffset.dx - wDiff, widget.moveSumOffset.dy - hDiff); // 2/2 위치별 수정
-    widget.moveSumOffset = Offset(moveSumOffsetXPosition, moveSumOffsetYPosition); // 2/2 위치별 수정
+    widget.sizeSumOffset =
+        Offset(sizeSumOffsetXPosition, sizeSumOffsetYPosition); // 2/2 위치별 수정
 
     // resize
     //parentProvider.whSign = parentProvider.whSign + wDiff * 2; // 양쪽이므로 *2
@@ -755,31 +776,10 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     //signProvider.parentSignOffset = Offset(signProvider.parentSignOffset!.dx - wDiff,
     //    signProvider.parentSignOffset!.dy - hDiff);
 
-    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff, hDiff, widget.moveSumOffset, widget.overSumOffset);
+    //widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff, hDiff, widget.sizeSumOffset, widget.overSumOffset);
+    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff,
+        hDiff, widget.sizeSumOffset, widget.overSumOffset, widget.angleSum, angleGuideOffset);
     ////////////////////////////////////////////////////////////////////////////////
 
-    /*
-    // for test
-    widget.wChild = 200;
-    widget.hChild = 100;
-    widget.angle = 30 / 180 * math.pi;
-    double xR = widget.wChild * 0.5 * math.cos(widget.angle) + widget.wChild * 0.5 * math.sin(widget.angle);
-    double yR = widget.wChild * 0.5 * math.sin(widget.angle) + widget.wChild * 0.5 * math.cos(widget.angle);
-    dev.log('xR: $xR, yR: $yR');
-    dev.log('widget.wChild: ${widget.wChild}, widget.angle: ${widget.angle}');
-    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, 0.0, 0.0, widget.sumOffset);
-
-
-    double angle_1 = 30 / 180 * math.pi;
-    double x_1 = math.sin(angle_1) * 100;
-    double x_2 = math.cos(angle_1) * 100;
-    dev.log('x_1: $x_1, x_2: $x_2');
-    double angle_2 = 60 / 180 * math.pi;
-    double y_1 = math.sin(angle_2) * 200;
-    double y_2 = math.cos(angle_2) * 200;
-    dev.log('y_1: $y_1, y_2: $y_2');
-    dev.log('------------------------------------');
-    */
   }
-
 }

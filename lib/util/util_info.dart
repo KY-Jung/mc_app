@@ -183,14 +183,183 @@ class InfoUtil {
     return size;
   }
   static double radianToDegree(double radian) {
-    return radian * 180 / math.pi;
+    return (radian * 180) / math.pi;
+  }
+  static double radianToDegree2(double radian) {
+    double degree = (radian * 180) / math.pi;
+    double degreeNew = 0;
+    if (degree < 0) {
+      degreeNew = 360 - degree.abs();
+    } else {
+      degreeNew = degree;
+    }
+
+    return degreeNew;
   }
   static double degreeToRadian(double degree) {
-    return degree * math.pi / 180;
+    return (degree * math.pi) / 180;
+  }
+
+  /*
+  static List<Offset> calcAngleOffsetList(Size size, Offset angleGuideOffset, double angleGuideRadian) {
+    List<Offset> offsetList = [];
+    Offset topOffset;
+    Offset bottomOffset;
+    Offset leftOffset;
+    Offset rightOffset;
+
+    double x;
+    dev.log('angleGuideOffset: $angleGuideOffset, size: $size, angleGuideRadian: $angleGuideRadian');
+
+    // top
+    x = math.tan(angleGuideRadian) * angleGuideOffset.dy;
+    if (angleGuideOffset.dx + x <= size.width) {
+      topOffset = Offset(angleGuideOffset.dx + x, 0);
+    } else {
+      x = ( 1/ math.tan(angleGuideRadian)) * (x - (size.width - angleGuideOffset.dx));
+      topOffset = Offset(size.width, x);
+    }
+
+    // bottom
+    x = math.tan(angleGuideRadian) * (size.height - angleGuideOffset.dy);
+    if (x <= angleGuideOffset.dx) {
+      bottomOffset = Offset((angleGuideOffset.dx - x), size.height);
+    } else {
+      x = (math.tan(angleGuideRadian)) * (x - angleGuideOffset.dx);
+      bottomOffset = Offset(0, size.height - x);
+    }
+
+    // left
+    x = (1 / math.tan(angleGuideRadian)) * (angleGuideOffset.dy);
+    if (x <= angleGuideOffset.dx) {
+      leftOffset = Offset((angleGuideOffset.dx - x), 0);
+    } else {
+      x = (math.tan(angleGuideRadian)) * (x - angleGuideOffset.dx);
+      leftOffset = Offset(0, x);
+    }
+
+    // right
+    x = (1 / math.tan(angleGuideRadian)) * (size.height - angleGuideOffset.dy);
+    if (x <= (size.width - angleGuideOffset.dx)) {
+      rightOffset = Offset((angleGuideOffset.dx + x), size.height);
+    } else {
+      x = (1 / math.tan(angleGuideRadian)) * (x - (size.width - angleGuideOffset.dx));
+      rightOffset = Offset(size.width, x);
+    }
+
+    offsetList.add(topOffset);
+    offsetList.add(bottomOffset);
+    offsetList.add(leftOffset);
+    offsetList.add(rightOffset);
+
+    dev.log('offsetList: $offsetList');
+
+    return offsetList;
+  }
+   */
+  static List<Offset> calcAngleGuideOffsetList(Size size, Offset angleGuideOffset, double angleGuideRadian) {
+    List<Offset> offsetList = [];
+    Offset topOffset;
+    Offset bottomOffset;
+    Offset leftOffset;
+    Offset rightOffset;
+
+    double x;
+    //dev.log('angleGuideOffset: $angleGuideOffset, size: $size, angleGuideRadian: $angleGuideRadian');
+
+    // top
+    if (angleGuideRadian == math.pi * 0.5) {
+      topOffset = Offset(size.width, angleGuideOffset.dy);
+    } else if (angleGuideRadian == math.pi * 1.5) {
+      topOffset = Offset(0, angleGuideOffset.dy);
+    } else {
+      x = math.tan(angleGuideRadian) * angleGuideOffset.dy;
+      if (x <= (size.width - angleGuideOffset.dx)) {
+        topOffset = Offset(angleGuideOffset.dx + x, 0);
+      } else {
+        x = math.tan(math.pi / 2 - angleGuideRadian) * (size.width - angleGuideOffset.dx);
+        topOffset = Offset(size.width, angleGuideOffset.dy - x);
+      }
+    }
+
+    // bottom
+    if (angleGuideRadian == math.pi * 0.5) {
+      bottomOffset = Offset(0, angleGuideOffset.dy);
+    } else if (angleGuideRadian == math.pi * 1.5) {
+      bottomOffset = Offset(size.width, angleGuideOffset.dy);
+    } else {
+      x = math.tan(angleGuideRadian) * (size.height - angleGuideOffset.dy);
+      if (x <= angleGuideOffset.dx) {
+        bottomOffset = Offset((angleGuideOffset.dx - x), size.height);
+      } else {
+        x = math.tan(math.pi / 2 - angleGuideRadian) * angleGuideOffset.dx;
+        bottomOffset = Offset(0, angleGuideOffset.dy + x);
+      }
+    }
+
+    // left
+    if (angleGuideRadian == math.pi * 0.5) {
+      leftOffset = Offset(angleGuideOffset.dx, 0);
+    } else if (angleGuideRadian == math.pi * 1.5) {
+      leftOffset = Offset(angleGuideOffset.dx, size.height);
+    } else {
+      x = math.tan(angleGuideRadian) * angleGuideOffset.dx;
+      if (x <= angleGuideOffset.dy) {
+        leftOffset = Offset(0, angleGuideOffset.dy - x);
+      } else {
+        x = math.tan(math.pi / 2 - angleGuideRadian) * angleGuideOffset.dy;
+        leftOffset = Offset(angleGuideOffset.dx - x, 0);
+      }
+    }
+
+    // right
+    if (angleGuideRadian == math.pi * 0.5) {
+      rightOffset = Offset(angleGuideOffset.dx, size.height);
+    } else if (angleGuideRadian == math.pi * 1.5) {
+      rightOffset = Offset(angleGuideOffset.dx, 0);
+    } else {
+      x = math.tan(angleGuideRadian) * (size.width - angleGuideOffset.dx);
+      if (x <= (size.height - angleGuideOffset.dy)) {
+        rightOffset = Offset(size.width, angleGuideOffset.dy + x);
+      } else {
+        x = math.tan(math.pi / 2 - angleGuideRadian) * (size.height - angleGuideOffset.dy);
+        rightOffset = Offset(angleGuideOffset.dx + x, size.height);
+      }
+    }
+
+    offsetList.add(topOffset);
+    offsetList.add(bottomOffset);
+    offsetList.add(leftOffset);
+    offsetList.add(rightOffset);
+
+    //dev.log('offsetList: $offsetList');
+
+    return offsetList;
+  }
+  static void drawDashedLine(Canvas canvas, Paint paint, Offset p1, Offset p2) {
+    const int dashWidth = 6;
+    const int dashSpace = 6;
+
+    final dX = p2.dx - p1.dx;
+    final dY = p2.dy - p1.dy;
+    final angle = math.atan2(dY, dX);
+    final totalLength = math.sqrt(math.pow(dX, 2) + math.pow(dY, 2));
+
+    double drawnLength = 0.0;
+    final cos = math.cos(angle);
+    final sin = math.sin(angle);
+
+    while (drawnLength < totalLength) {
+      canvas.drawLine(
+          Offset(p1.dx + cos * drawnLength, p1.dy + sin * drawnLength),
+          Offset(p1.dx + cos * (drawnLength + dashWidth),
+              p1.dy + sin * (drawnLength + dashWidth)),
+          paint);
+      drawnLength += dashWidth + dashSpace;
+    }
   }
   ////////////////////////////////////////////////////////////////////////////////
   // Widget resize/rotate END
   ////////////////////////////////////////////////////////////////////////////////
 
 }
-

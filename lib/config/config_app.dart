@@ -66,6 +66,8 @@ class AppConfig {
   //static const double WIDGET_MIN_WH = 0.04;   // TODO : 0.02 검토
   static const double WIDGET_HANDLE_WH = 0.03;    // 화면 크기 대비 고정값
   static const double WIDGET_TOUCH_WH = 0.08;     // 화면 크기 대비 고정값
+
+  static const double WIDGET_ROTATE_STICKY = 6;   // 회전할때 sticky 값 (45도에 대한 오차)
   ////////////////////////////////////////////////////////////////////////////////
 
 }

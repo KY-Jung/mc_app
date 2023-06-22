@@ -35,6 +35,10 @@ android/app/src/main/AndroidManifest.xml
     android:lable 항목 수정
 ```
 ```agsl
++ minSdkVersion 19 로 변경
+android/app/build.gradle
+```
+```agsl
 + FAB 문제점
 ExpandableFab 위치를 우하단에서 옮기지 못함
 sign 을 고려하여 우중간이면 좋겠음 
