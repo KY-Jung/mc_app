@@ -36,7 +36,7 @@ class MakePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // wScreen, hScreen 과 동일
-    dev.log('# MakePainter paint START size: $size');
+    //dev.log('# MakePainter paint START size: $size');
 
     ////////////////////////////////////////////////////////////////////////////////
     // grid

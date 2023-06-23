@@ -15,8 +15,6 @@ import 'package:mc/ui/bar_sound.dart';
 import 'package:mc/ui/widget_dragresizerotate.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_beep/flutter_beep.dart';
-import 'package:vibration/vibration.dart';
 
 import '../config/color_app.dart';
 import '../config/config_app.dart';
@@ -30,6 +28,7 @@ import '../provider/provider_sign.dart';
 import '../util/util_bracket.dart';
 import '../util/util_info.dart';
 import '../util/util_popup.dart';
+import '../util/util_sound.dart';
 
 class MakePage extends StatefulWidget {
   const MakePage({super.key});
@@ -52,6 +51,8 @@ class MakePageState extends State<MakePage> {
 
   ////////////////////////////////////////////////////////////////////////////////
   // sign
+
+  // angle
   double signRadian = 0;
 
   // resize 오차 보정
@@ -63,8 +64,8 @@ class MakePageState extends State<MakePage> {
   // angle 오차 보정
   double angleSum = 0;
 
+  // guide line 중심점
   Offset? angleGuideOffset;
-  double angleGuideRadian = 0;
 
   ////////////////////////////////////////////////////////////////////////////////
 
@@ -328,18 +329,21 @@ class MakePageState extends State<MakePage> {
                     ),
                     if (signProvider.parentSignFileInfoIdx != -1)
                       DragResizeRotateWidget(
-                        left: signProvider.parentSignOffset!.dx -
-                            childTouchWh +
-                            childHandleWh,
-                        top: signProvider.parentSignOffset!.dy -
-                            childTouchWh +
-                            childHandleWh,
-                        width: parentProvider.whSign +
-                            childTouchWh * 2 -
-                            childHandleWh * 2,
-                        height: parentProvider.whSign +
-                            childTouchWh * 2 -
-                            childHandleWh * 2,
+                        rect: Offset(
+                              signProvider.parentSignOffset!.dx -
+                                  childTouchWh +
+                                  childHandleWh,
+                              signProvider.parentSignOffset!.dy -
+                                  childTouchWh +
+                                  childHandleWh,
+                            ) &
+                            Size(
+                                parentProvider.whSign +
+                                    childTouchWh * 2 -
+                                    childHandleWh * 2,
+                                parentProvider.whSign +
+                                    childTouchWh * 2 -
+                                    childHandleWh * 2),
                         angle: signRadian,
                         childBackground: Colors.transparent,
                         childBorderColor: Colors.white38,
@@ -363,6 +367,7 @@ class MakePageState extends State<MakePage> {
                                 0.5 *
                                 AppConfig.SIGN_WH_MIN),
                         angleSticky: AppConfig.WIDGET_ROTATE_STICKY,
+                        dragAcross: true,
                         sizeSumOffset: sizeSumOffset,
                         overSumOffset: overSumOffset,
                         angleSum: angleSum,
@@ -375,7 +380,6 @@ class MakePageState extends State<MakePage> {
                         touchOnPanUpdate: touchOnPanUpdate,
                         touchOnPanEnd: touchOnPanEnd,
                         deleteOnTap: deleteOnTap,
-                        notifyAngle: notifyAngle,
                         notifyAlarm: notifyAlarm,
                         child: signProvider
                             .signFileInfoList[
@@ -713,9 +717,9 @@ class MakePageState extends State<MakePage> {
     //dev.log('_transformationController.value: ${_transformationController.value}');
 
     // for has not been initialized
-    //if (_tapDownDetails == null) {
-    //  return;
-    //}
+    if (_tapDownDetails == null) {
+      return;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // for debug
@@ -870,9 +874,12 @@ class MakePageState extends State<MakePage> {
   ////////////////////////////////////////////////////////////////////////////////
   // child callback START
   ////////////////////////////////////////////////////////////////////////////////
-  void childOnTapDown(tapDownDetails) {}
+  void childOnTapDown(tapDownDetails) {
 
-  void childOnTap() {}
+  }
+  void childOnTap() {
+
+  }
 
   /// WARNING
   /// globalPostion 과 localPosition 값이 동일한 버그 발견
@@ -896,52 +903,92 @@ class MakePageState extends State<MakePage> {
     }
     */
   }
-
-  void childOnDragEnd(draggableDetails, wChild, hChild, angle) {
+  /// 이동 완료 후, 범위를 벗어난 경우 강제로 다시 이동
+  void childOnDragEnd(draggableDetails, wChild, hChild, angle, dragAcross) {
     dev.log('childOnDragEnd offset: ${draggableDetails.offset}');
 
     // global position
     Offset dragOffset = draggableDetails.offset;
-    // global position
-    // wScreen/hScreen, htopBlank/hBottomBlank, xBlank/yBlank 까지 계산한 값
-    Rect validRect = parentProvider.calcValidRect();
-    dev.log('childOnDragEnd validRect: $validRect');
-
     double xNew = dragOffset.dx;
     double yNew = dragOffset.dy - parentProvider.hTopBlank;
 
-    // 회전한 경우를 감안하여 보정
-    Size rotateSize = InfoUtil.calcRotateSize(wChild, hChild, angle);
-    double wChildDiff = (rotateSize.width - wChild) * 0.5;
-    double hChildDiff = (rotateSize.height - hChild) * 0.5;
+    if (dragAcross == false) {
+      // global position
+      // wScreen/hScreen, htopBlank/hBottomBlank, xBlank/yBlank 까지 계산한 값
+      Rect validRect = parentProvider.calcValidRect();
+      dev.log('childOnDragEnd validRect: $validRect');
 
-    if (dragOffset.dy - hChildDiff < validRect.top) {
-      dev.log('(dragOffset.dy - hChildDiff < validRect.top)');
-      yNew = validRect.top - parentProvider.hTopBlank + hChildDiff;
-    }
-    if (dragOffset.dx - wChildDiff < validRect.left) {
-      dev.log('(dragOffset.dx - wChildDiff < validRect.left)');
-      xNew = validRect.left + wChildDiff;
-    }
-    if (dragOffset.dx + wChild + wChildDiff > validRect.right) {
-      dev.log('(dragOffset.dy + parentProvider.wChild > validRect.right)');
-      xNew = validRect.right - wChild - wChildDiff;
-    }
-    if (dragOffset.dy + hChild + hChildDiff > validRect.bottom) {
-      dev.log('(dragOffset.dy + parentProvider.hChild > validRect.bottom)');
-      yNew = validRect.bottom - parentProvider.hTopBlank - hChild - hChildDiff;
+      // 회전한 경우를 감안하여 보정
+      Size rotateSize = InfoUtil.calcRotateSize(wChild, hChild, angle);
+      double wChildDiff = (rotateSize.width - wChild) * 0.5;
+      double hChildDiff = (rotateSize.height - hChild) * 0.5;
+
+      // top
+      if (dragOffset.dy - hChildDiff < validRect.top) {
+        dev.log('(dragOffset.dy - hChildDiff < validRect.top)');
+        yNew = (validRect.top - parentProvider.hTopBlank) + hChildDiff;
+      }
+      // left
+      if (dragOffset.dx - wChildDiff < validRect.left) {
+        dev.log('(dragOffset.dx - wChildDiff < validRect.left)');
+        xNew = validRect.left + wChildDiff;
+      }
+      // right
+      if (dragOffset.dx + wChild + wChildDiff > validRect.right) {
+        dev.log('(dragOffset.dx + wChild + wChildDiff > validRect.right)');
+        xNew = (validRect.right - wChild) - wChildDiff;
+      }
+      // bottom
+      if (dragOffset.dy + hChild + hChildDiff > validRect.bottom) {
+        dev.log('(dragOffset.dy + hChild + hChildDiff > validRect.bottom)');
+        yNew = (validRect.bottom - parentProvider.hTopBlank) - hChild - hChildDiff;
+      }
+    } else {
+      // 완전히 나가는 경우 처리 : 50% 까지만 허용
+
+      // global position
+      // wScreen/hScreen, htopBlank/hBottomBlank, xBlank/yBlank 까지 계산한 값
+      Rect validRect = parentProvider.calcValidRect();
+      dev.log('===childOnDragEnd validRect: $validRect');
+
+      // top
+      if (dragOffset.dy + hChild * 0.5 < validRect.top) {
+        dev.log('(dragOffset.dy + hChild * 0.5 < validRect.top)');
+        yNew = (validRect.top - parentProvider.hTopBlank) - hChild * 0.5;
+      }
+      // left
+      if (dragOffset.dx + wChild * 0.5 < validRect.left) {
+        dev.log('(dragOffset.dx + wChild * 0.5 < validRect.left)');
+        xNew = validRect.left - wChild * 0.5;
+      }
+      // right
+      if (dragOffset.dx + wChild * 0.5 > validRect.right) {
+        dev.log('(dragOffset.dx + wChild * 0.5 > validRect.right)');
+        xNew = validRect.right - wChild * 0.5;
+      }
+      // bottom
+      if (dragOffset.dy + hChild * 0.5 > validRect.bottom) {
+        dev.log('(dragOffset.dy + hChild * 0.5 > validRect.bottom)');
+        yNew = (validRect.bottom - parentProvider.hTopBlank) - hChild * 0.5;
+      }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // 결과 처리
+
+    // 좌표 저장
     signProvider.parentSignOffset = Offset(xNew, yNew);
     dev.log('childOnDragEnd signOffset: ${signProvider.parentSignOffset}');
     setState(() {});
 
+    // prefs 저장
     SharedPreferences.getInstance().then((prefs) {
       prefs.setDouble(
           AppConstant.PREFS_PARENTSIGNOFFSET_X, draggableDetails.offset.dx);
       prefs.setDouble(AppConstant.PREFS_PARENTSIGNOFFSET_Y,
           draggableDetails.offset.dy - parentProvider.hTopBlank);
     });
+    ////////////////////////////////////////////////////////////////////////////////
   }
 
   void touchOnTapDown(tapDownDetails) {}
@@ -959,7 +1006,6 @@ class MakePageState extends State<MakePage> {
       double angleSum,
       angleGuideOffset) async {
     signRadian = angle;
-    //dev.log('signRadian: $signRadian');
 
     parentProvider.whSign = wChild;
     parentProvider.whSign = hChild;
@@ -983,13 +1029,15 @@ class MakePageState extends State<MakePage> {
     setState(() {});
   }
 
-  void deleteOnTap() {}
-
-  /// line 그리기
-  void notifyAngle(double angle, double x, double y) {}
+  void deleteOnTap() {
+    dev.log('# deleteOnTap');
+  }
 
   /// vibration
-  void notifyAlarm() {}
+  void notifyAlarm() {
+    bool fRet = SoundUtil.startAndBlockVibration(300);
+    dev.log('notifyAlarm: $fRet');
+  }
 ////////////////////////////////////////////////////////////////////////////////
 // child callback END
 ////////////////////////////////////////////////////////////////////////////////
