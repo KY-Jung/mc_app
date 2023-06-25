@@ -6,7 +6,7 @@ import '../config/config_app.dart';
 import '../util/util_info.dart';
 
 class MakePainter extends CustomPainter {
-
+  /*
   ////////////////////////////////////////////////////////////////////////////////
   late double wScreen;
   late double hScreen;
@@ -31,6 +31,42 @@ class MakePainter extends CustomPainter {
   MakePainter(this.wScreen, this.hScreen, this.wImage, this.hImage, this.inScale,
       this.xBlank, this.yBlank, this.xStart, this.yStart, this.scale, this.angleGuideOffset,
       this.angleGuideRadian);
+  */
+  ////////////////////////////////////////////////////////////////////////////////
+  double wScreen;
+  double hScreen;
+
+  int wImage;
+  int hImage;
+
+  double inScale;
+
+  double xBlank;
+  double yBlank;
+
+  double xStart;
+  double yStart;
+
+  double scale;
+
+  Offset? angleGuideOffset;
+  double angleGuideRadian;
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  MakePainter(
+      {required this.wScreen,
+      required this.hScreen,
+      required this.wImage,
+      required this.hImage,
+      required this.inScale,
+      required this.xBlank,
+      required this.yBlank,
+      required this.xStart,
+      required this.yStart,
+      required this.scale,
+      required this.angleGuideOffset,
+      required this.angleGuideRadian});
 
   /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
   @override
@@ -69,8 +105,8 @@ class MakePainter extends CustomPainter {
 
     //dev.log('222 angleGuideOffset start: $angleGuideOffset');
     if (angleGuideOffset != null) {
-
-      List<Offset> offsetList = InfoUtil.calcAngleGuideOffsetList(size, angleGuideOffset!, angleGuideRadian);
+      List<Offset> offsetList = InfoUtil.calcAngleGuideOffsetList(
+          size, angleGuideOffset!, angleGuideRadian);
       //dev.log('angleGuideOffset start: $angleGuideOffset');
 
       Paint angleGuidePaint = Paint()
@@ -88,7 +124,6 @@ class MakePainter extends CustomPainter {
       InfoUtil.drawDashedLine(canvas, angleGuidePaint, leftOffset, rightOffset);
     }
     ////////////////////////////////////////////////////////////////////////////////
-
   }
 
   /// 그려야할 정보를 모두 검사해서 틀린 것이 있으면 다시 그리기
@@ -106,5 +141,4 @@ class MakePainter extends CustomPainter {
     return false;
     //return true;
   }
-
 }

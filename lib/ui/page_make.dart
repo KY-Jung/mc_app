@@ -13,6 +13,7 @@ import 'package:mc/ui/bar_link.dart';
 import 'package:mc/ui/bar_parent.dart';
 import 'package:mc/ui/bar_sound.dart';
 import 'package:mc/ui/widget_dragresizerotate.dart';
+import 'package:mc/ui/widget_resizebracket.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,7 +23,7 @@ import '../config/constant_app.dart';
 import '../config/enum_app.dart';
 import '../library/custom_expandable_draggable_widget.dart';
 import '../painter/painter_make.dart';
-import '../painter/painter_make_parent_resize.dart';
+import '../painter/painter_makeparentresize.dart';
 import '../provider/provider_parent.dart';
 import '../provider/provider_sign.dart';
 import '../util/util_bracket.dart';
@@ -43,10 +44,14 @@ class MakePageState extends State<MakePage> {
 
   //MakePageEnum _makePageEnum = MakePageEnum.PARENT;
   bool first = true;
+  //
+  // // build 할때 미리 계산해 두는 것이 편함
+  // late double childHandleWh;
+  // late double childTouchWh;
 
-  late double childHandleWh;
-  late double childTouchWh;
-
+  // guide line 중심점
+  // MakePainter 에서 사용
+  Offset? angleGuideOffset;
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -54,27 +59,24 @@ class MakePageState extends State<MakePage> {
 
   // angle
   double signRadian = 0;
-
   // resize 오차 보정
   Offset sizeSumOffset = const Offset(0, 0);
-
   // max/min 오차 보정
   Offset overSumOffset = const Offset(0, 0);
-
   // angle 오차 보정
   double angleSum = 0;
-
-  // guide line 중심점
-  Offset? angleGuideOffset;
-
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // object
+  // provider
 
   late MakeProvider makeProvider;
   late ParentProvider parentProvider;
   late SignProvider signProvider;
+  ////////////////////////////////////////////////////////////////////////////////
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // object
 
   final TransformationController _transformationController =
       TransformationController(
@@ -88,7 +90,6 @@ class MakePageState extends State<MakePage> {
   /// fab 을 toggle 할때 사용
   late final GlobalObjectKey<CustomExpandableDraggableFabState> _fabGlobalKey =
       GlobalObjectKey<CustomExpandableDraggableFabState>(context);
-
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -166,10 +167,11 @@ class MakePageState extends State<MakePage> {
           parentProvider.hTopBlank -
           parentProvider.hBottomBlank;
       parentProvider.initParenProviderWithScreen(wScreen, hScreen);
-      parentProvider.whSign =
-          (parentProvider.wScreen + parentProvider.hScreen) *
-              0.5 *
-              AppConfig.SIGN_WH_RATIO;
+
+      // parentProvider.whSign =
+      //     (parentProvider.wScreen + parentProvider.hScreen) *
+      //         0.5 *
+      //         AppConfig.SIGN_WH_RATIO;
 
       dev.log('MediaQuery.of(context).size: ${MediaQuery.of(context).size}');
       dev.log(
@@ -187,15 +189,15 @@ class MakePageState extends State<MakePage> {
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
-    childTouchWh = (parentProvider.wScreen + parentProvider.hScreen) *
-        0.6 *
-        AppConfig.WIDGET_TOUCH_WH;
-    childHandleWh = (parentProvider.wScreen + parentProvider.hScreen) *
-        0.5 *
-        AppConfig.WIDGET_HANDLE_WH;
+    // childTouchWh = (parentProvider.wScreen + parentProvider.hScreen) *
+    //     0.6 *
+    //     AppConfig.WIDGET_TOUCH_WH;
+    // childHandleWh = (parentProvider.wScreen + parentProvider.hScreen) *
+    //     0.5 *
+    //     AppConfig.WIDGET_HANDLE_WH;
 
-    dev.log(
-        'whSign: ${parentProvider.whSign}, widgetTouchWh: $childTouchWh, widgetHandleWh: $childHandleWh');
+    // dev.log(
+    //     'whSign: ${parentProvider.whSign}, widgetTouchWh: $childTouchWh, widgetHandleWh: $childHandleWh');
     ////////////////////////////////////////////////////////////////////////////////
 
     return Scaffold(
@@ -283,47 +285,72 @@ class MakePageState extends State<MakePage> {
                     ),
                     if (makeProvider.makeFabEnum == MakeFabEnum.PARENT &&
                         parentProvider.parentBarEnum == ParentBarEnum.RESIZE)
+                      /*
                       IgnorePointer(
                         child: RepaintBoundary(
                           child: CustomPaint(
                             // size 안 정해도 동작함
-                            //painter: (makeProvider.parentResize)
                             painter: MakeParentResizePainter(
-                                parentProvider.wScreen,
-                                parentProvider.hScreen,
-                                parentProvider.wImage,
-                                parentProvider.hImage,
-                                parentProvider.inScale,
-                                parentProvider.xBlank,
-                                parentProvider.yBlank,
-                                parentProvider.xStart,
-                                parentProvider.yStart,
-                                parentProvider.scale,
-                                parentProvider.leftTopOffset,
-                                parentProvider.rightTopOffset,
-                                parentProvider.leftBottomOffset,
-                                parentProvider.rightBottomOffset),
+                                wScreen: parentProvider.wScreen,
+                                hScreen: parentProvider.hScreen,
+                                wImage: parentProvider.wImage,
+                                hImage: parentProvider.hImage,
+                                inScale: parentProvider.inScale,
+                                xBlank: parentProvider.xBlank,
+                                yBlank: parentProvider.yBlank,
+                                xStart: parentProvider.xStart,
+                                yStart: parentProvider.yStart,
+                                scale: parentProvider.scale,
+                                leftTopOffset: parentProvider.leftTopOffset,
+                                rightTopOffset: parentProvider.rightTopOffset,
+                                leftBottomOffset: parentProvider.leftBottomOffset,
+                                rightBottomOffset: parentProvider.rightBottomOffset),
                           ),
                         ),
+                      ),
+                    */
+                      RepaintBoundary(
+                        child: ResizeBracketWidget(
+                            wScreen: parentProvider.wScreen,
+                            hScreen: parentProvider.hScreen,
+                            wImage: parentProvider.wImage,
+                            hImage: parentProvider.hImage,
+                            inScale: parentProvider.inScale,
+                            xBlank: parentProvider.xBlank,
+                            yBlank: parentProvider.yBlank,
+                            xStart: parentProvider.xStart,
+                            yStart: parentProvider.yStart,
+                            scale: parentProvider.scale,
+                            leftTopOffset: Offset(
+                                parentProvider.xBlank, parentProvider.yBlank),
+                            rightTopOffset: Offset(
+                                parentProvider.wScreen - parentProvider.xBlank,
+                                parentProvider.yBlank),
+                            leftBottomOffset: Offset(parentProvider.xBlank,
+                                parentProvider.hScreen - parentProvider.yBlank),
+                            rightBottomOffset: Offset(
+                                parentProvider.wScreen - parentProvider.xBlank,
+                                parentProvider.hScreen - parentProvider.yBlank),
+                            callbackResize: callbackResize),
                       ),
                     IgnorePointer(
                       //child: RepaintBoundary(
                       child: CustomPaint(
                         // size 안 정해도 동작함
-                        //painter: (makeProvider.parentResize)
+                        // grid + angleGuide
                         painter: MakePainter(
-                            parentProvider.wScreen,
-                            parentProvider.hScreen,
-                            parentProvider.wImage,
-                            parentProvider.hImage,
-                            parentProvider.inScale,
-                            parentProvider.xBlank,
-                            parentProvider.yBlank,
-                            parentProvider.xStart,
-                            parentProvider.yStart,
-                            parentProvider.scale,
-                            angleGuideOffset,
-                            signRadian),
+                            wScreen: parentProvider.wScreen,
+                            hScreen: parentProvider.hScreen,
+                            wImage: parentProvider.wImage,
+                            hImage: parentProvider.hImage,
+                            inScale: parentProvider.inScale,
+                            xBlank: parentProvider.xBlank,
+                            yBlank: parentProvider.yBlank,
+                            xStart: parentProvider.xStart,
+                            yStart: parentProvider.yStart,
+                            scale: parentProvider.scale,
+                            angleGuideOffset: angleGuideOffset,
+                            angleGuideRadian: signRadian),
                       ),
                       //),
                     ),
@@ -331,26 +358,26 @@ class MakePageState extends State<MakePage> {
                       DragResizeRotateWidget(
                         rect: Offset(
                               signProvider.parentSignOffset!.dx -
-                                  childTouchWh +
-                                  childHandleWh,
+                                  parentProvider.childTouchWh +
+                                  parentProvider.childHandleWh,
                               signProvider.parentSignOffset!.dy -
-                                  childTouchWh +
-                                  childHandleWh,
+                                  parentProvider.childTouchWh +
+                                  parentProvider.childHandleWh,
                             ) &
                             Size(
                                 parentProvider.whSign +
-                                    childTouchWh * 2 -
-                                    childHandleWh * 2,
+                                    parentProvider.childTouchWh * 2 -
+                                    parentProvider.childHandleWh * 2,
                                 parentProvider.whSign +
-                                    childTouchWh * 2 -
-                                    childHandleWh * 2),
+                                    parentProvider.childTouchWh * 2 -
+                                    parentProvider.childHandleWh * 2),
                         angle: signRadian,
                         childBackground: Colors.transparent,
                         childBorderColor: Colors.white38,
                         wChild: parentProvider.whSign,
                         hChild: parentProvider.whSign,
-                        whTouch: childTouchWh,
-                        whHandle: childHandleWh,
+                        whTouch: parentProvider.childTouchWh,
+                        whHandle: parentProvider.childHandleWh,
                         handleColor: Colors.white60,
                         maxSize: Size(
                             (parentProvider.wScreen + parentProvider.hScreen) *
@@ -386,25 +413,6 @@ class MakePageState extends State<MakePage> {
                                 signProvider.parentSignFileInfoIdx]
                             .image,
                       ),
-                    /*
-                    if (signProvider.parentSignFileInfoIdx != -1)
-                      // delete icon
-                      Positioned(
-                        // delete icon
-                        left: signProvider.parentSignOffset!.dx + parentProvider.whSign * 0.5 - childHandleWh * 1.5 * 0.5,
-                        top: signProvider.parentSignOffset!.dy - childHandleWh * 3,
-                        width: childHandleWh * 1.5,
-                        height: childHandleWh * 1.5,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.white60,
-                            shape: BoxShape.circle,
-                          ),
-                          width: childHandleWh,
-                          height: childHandleWh,
-                        ),
-                      ),
-                    */
                   ],
                 ),
               ),
@@ -524,6 +532,8 @@ class MakePageState extends State<MakePage> {
     dev.log('# MakePage _onTapDownAll');
 
     ////////////////////////////////////////////////////////////////////////////////
+    // fab 가 다른 곳을 클릭했을때 자동으로닫히지 않아서 아래와 같이 처리함
+
     // toggle fab
     //_fabGlobalKey.currentState?.toggle();
     var floatKeyState = _fabGlobalKey.currentState;
@@ -537,7 +547,7 @@ class MakePageState extends State<MakePage> {
   }
 
   /// 변경되는 값 : xStart, yStart, xyOffset
-  void _onInteractionUpdate(ScaleUpdateDetails scaleUpdateDetails) async {
+  void _onInteractionUpdate(ScaleUpdateDetails scaleUpdateDetails) {
     ////////////////////////////////////////////////////////////////////////////////
     // for debug
     Matrix4 matrix4 = _transformationController.value;
@@ -564,6 +574,7 @@ class MakePageState extends State<MakePage> {
     }
     ////////////////////////////////////////////////////////////////////////////////
 
+  /*
     // TODO : 확대된 경우 blank 처리하기
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -579,21 +590,36 @@ class MakePageState extends State<MakePage> {
 
       // blank 검사
       if (!BracketUtil.checkBlankArea(
-          xyOffset, parentProvider.makeParentSizePointEnum, parentProvider)) {
+          xyOffset,
+          parentProvider.makeParentSizePointEnum,
+          parentProvider.wScreen,
+          parentProvider.hScreen,
+          parentProvider.xBlank,
+          parentProvider.yBlank)) {
         dev.log('\n\n### checkBlankArea return\n\n');
         return;
       }
 
       // bracket 간에 침범할 수 없는 영역을 순식간에 넘어갔는지 검사
       if (!BracketUtil.checkBracketCross(
-          xyOffset, parentProvider.makeParentSizePointEnum, parentProvider)) {
+          xyOffset,
+          parentProvider.makeParentSizePointEnum,
+          parentProvider.leftTopOffset,
+          parentProvider.rightTopOffset,
+          parentProvider.leftBottomOffset,
+          parentProvider.rightBottomOffset)) {
         dev.log('\n\n### checkBracketCross return\n\n');
         return;
       }
 
       // shrink 허용치 검사
       Rect bracketRect = BracketUtil.calcBracketRect(
-          xyOffset, parentProvider.makeParentSizePointEnum, parentProvider);
+          xyOffset,
+          parentProvider.makeParentSizePointEnum,
+          parentProvider.leftTopOffset,
+          parentProvider.rightTopOffset,
+          parentProvider.leftBottomOffset,
+          parentProvider.rightBottomOffset);
       dev.log('bracketRect: $bracketRect');
       double minArea = (parentProvider.wScreen - parentProvider.xBlank * 2) *
           (parentProvider.hScreen - parentProvider.yBlank * 2) *
@@ -625,18 +651,30 @@ class MakePageState extends State<MakePage> {
       ////////////////////////////////////////////////////////////////////////////////
 
       // parentProvider 의 Offset 수정 --> paint 에서 사용
-      BracketUtil.updateBracketArea(
-          xyOffset, parentProvider.makeParentSizePointEnum, parentProvider);
+      List<Offset> offsetList = BracketUtil.updateBracketArea(
+          //xyOffset, parentProvider.makeParentSizePointEnum, parentProvider);
+          xyOffset,
+          parentProvider.makeParentSizePointEnum,
+          parentProvider.leftTopOffset,
+          parentProvider.rightTopOffset,
+          parentProvider.leftBottomOffset,
+          parentProvider.rightBottomOffset);
+
+      parentProvider.leftTopOffset = offsetList[0];
+      parentProvider.rightTopOffset = offsetList[1];
+      parentProvider.leftBottomOffset = offsetList[2];
+      parentProvider.rightBottomOffset = offsetList[3];
     } // end if (makeProvider.parentResize) {
     ////////////////////////////////////////////////////////////////////////////////
 
     setState(() {});
+    */
   }
 
   // drag 이후에는 onTapUp 호출안됨
   void _onInteractionEnd(ScaleEndDetails scaleEndDetails) {
     dev.log('_onInteractionEnd Velocity: ${scaleEndDetails.velocity}');
-    parentProvider.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
+    //parentProvider.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
   }
 
   /// 변경되는 값 : xyOffset
@@ -647,13 +685,6 @@ class MakePageState extends State<MakePage> {
     dev.log(
         '_onTapDown _transformationController.value: ${_transformationController.value}');
     parentProvider.printParent();
-
-    // for test
-    dev.log('-45 * math.pi / 180: ${-45 * math.pi / 180}');
-    dev.log('180 * math.pi / 180: ${180 * math.pi / 180}');
-    dev.log('-180 * math.pi / 180: ${-180 * math.pi / 180}');
-    dev.log('360 * math.pi / 180: ${360 * math.pi / 180}');
-    dev.log('-360 * math.pi / 180: ${-360 * math.pi / 180}');
 
     // onDoubleTap 에서 사용
     _tapDownDetails = tapDownDetails;
@@ -684,6 +715,7 @@ class MakePageState extends State<MakePage> {
     }
     ////////////////////////////////////////////////////////////////////////////////
 
+    /*
     ////////////////////////////////////////////////////////////////////////////////
     // size 상태인 경우 bracket 이 선택되었는지 검사
     //if (makeProvider.parentResize) {
@@ -695,7 +727,13 @@ class MakePageState extends State<MakePage> {
 
       parentProvider.xyOffset = xyOffset; // for test
       MakeParentResizePointEnum makeParentSizeEnum =
-          BracketUtil.findBracketArea(xyOffset, parentProvider);
+          BracketUtil.findBracketArea(
+              xyOffset,
+              parentProvider.leftTopOffset,
+              parentProvider.rightTopOffset,
+              parentProvider.leftBottomOffset,
+              parentProvider.rightBottomOffset,
+              (parentProvider.wScreen * AppConfig.SIZE_BRACKET_LENGTH));
       dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
       //if (makeParentSizeEnum != MakeParentSizePointEnum.NONE) {
       //  parentProvider.makeParentSizePointEnum = makeParentSizeEnum;
@@ -703,12 +741,15 @@ class MakePageState extends State<MakePage> {
       parentProvider.makeParentSizePointEnum = makeParentSizeEnum;
     } // if (makeProvider.parentResize) {
     ////////////////////////////////////////////////////////////////////////////////
+    */
   }
 
   // drag 이후에는 호출안됨
-  void _onTapUp(TapUpDetails tapUpDetails) async {
+  void _onTapUp(TapUpDetails tapUpDetails) {
     //dev.log('_onTapUp TapUpDetails: ${tapUpDetails.localPosition}');
+    /*
     parentProvider.makeParentSizePointEnum = MakeParentResizePointEnum.NONE;
+     */
   }
 
   /// 변경되는 값 : scale, xStart, yStart, xyOffset
@@ -722,6 +763,16 @@ class MakePageState extends State<MakePage> {
     }
 
     ////////////////////////////////////////////////////////////////////////////////
+    // return 하는 경우
+    //if (makeProvider.parentResize) {
+    if (makeProvider.makeFabEnum == MakeFabEnum.PARENT &&
+        parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
+      dev.log('_onDoubleTap parentSize return');
+      return;
+    }
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////////
     // for debug
     Matrix4 matrix4 = _transformationController.value;
     double scale = matrix4.entry(0, 0);
@@ -730,16 +781,6 @@ class MakePageState extends State<MakePage> {
     Offset xyOffset = _tapDownDetails.localPosition;
     dev.log(
         '_onDoubleTap scale: $scale, xyOffset: $xyOffset, xStart: $xStart, yStart: $yStart');
-    ////////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // return 하는 경우
-    //if (makeProvider.parentResize) {
-    if (makeProvider.makeFabEnum == MakeFabEnum.PARENT &&
-        parentProvider.parentBarEnum == ParentBarEnum.RESIZE) {
-      dev.log('_onDoubleTap parentSize return');
-      return;
-    }
     ////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -801,7 +842,7 @@ class MakePageState extends State<MakePage> {
         // TODO : 모두 초기화하는 함수를 별도로 작성하고 호출
 
         //parentProvider.path = '';
-        parentProvider.clearParentProvider(); // path, init 같이 처리
+        parentProvider.clearParentPath(); // path, init 같이 처리
         Navigator.pop(context, 'CANCEL');
       }
     });
@@ -874,12 +915,9 @@ class MakePageState extends State<MakePage> {
   ////////////////////////////////////////////////////////////////////////////////
   // child callback START
   ////////////////////////////////////////////////////////////////////////////////
-  void childOnTapDown(tapDownDetails) {
+  void childOnTapDown(tapDownDetails) {}
 
-  }
-  void childOnTap() {
-
-  }
+  void childOnTap() {}
 
   /// WARNING
   /// globalPostion 과 localPosition 값이 동일한 버그 발견
@@ -903,6 +941,7 @@ class MakePageState extends State<MakePage> {
     }
     */
   }
+
   /// 이동 완료 후, 범위를 벗어난 경우 강제로 다시 이동
   void childOnDragEnd(draggableDetails, wChild, hChild, angle, dragAcross) {
     dev.log('childOnDragEnd offset: ${draggableDetails.offset}');
@@ -941,7 +980,8 @@ class MakePageState extends State<MakePage> {
       // bottom
       if (dragOffset.dy + hChild + hChildDiff > validRect.bottom) {
         dev.log('(dragOffset.dy + hChild + hChildDiff > validRect.bottom)');
-        yNew = (validRect.bottom - parentProvider.hTopBlank) - hChild - hChildDiff;
+        yNew =
+            (validRect.bottom - parentProvider.hTopBlank) - hChild - hChildDiff;
       }
     } else {
       // 완전히 나가는 경우 처리 : 50% 까지만 허용
@@ -1037,6 +1077,16 @@ class MakePageState extends State<MakePage> {
   void notifyAlarm() {
     bool fRet = SoundUtil.startAndBlockVibration(300);
     dev.log('notifyAlarm: $fRet');
+  }
+
+  void callbackResize(Offset leftTopOffset, Offset rightTopOffset,
+      Offset leftBottomOffset, Offset rightBottomOffset) {
+    dev.log('# callbackResize');
+
+    parentProvider.leftTopOffset = leftTopOffset;
+    parentProvider.rightTopOffset = rightTopOffset;
+    parentProvider.leftBottomOffset = leftBottomOffset;
+    parentProvider.rightBottomOffset = rightBottomOffset;
   }
 ////////////////////////////////////////////////////////////////////////////////
 // child callback END

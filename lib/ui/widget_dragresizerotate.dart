@@ -17,10 +17,13 @@ class DragResizeRotateWidget extends StatefulWidget {
 
   // 본체
   Widget child;
+
   // 본체 배경색
   Color childBackground;
+
   // 본체 테두리
   Color childBorderColor;
+
   // 본체 크기
   double wChild;
   double hChild;
@@ -35,6 +38,7 @@ class DragResizeRotateWidget extends StatefulWidget {
   // 최소/최대 크기
   Size? maxSize;
   Size? minSize;
+
   // 회전 시 sticky 각도
   // 0 으로 하면 sticky 와 angleGuide 하지 않음
   double angleSticky;
@@ -43,12 +47,13 @@ class DragResizeRotateWidget extends StatefulWidget {
 
   // resize 오차 보정
   Offset sizeSumOffset;
+
   // max/min 오차 보정
   Offset overSumOffset;
+
   // angle 오차 보정
   double angleSum;
 
-  // child 의 drag 가 끝난 경우
   dynamic childOnTapDown;
   dynamic childOnTap;
   dynamic childOnDragUpdate;
@@ -59,6 +64,7 @@ class DragResizeRotateWidget extends StatefulWidget {
   dynamic touchOnPanEnd;
   dynamic deleteOnTap;
   dynamic notifyAlarm;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   DragResizeRotateWidget({
@@ -103,6 +109,7 @@ class DragResizeRotateWidget extends StatefulWidget {
 class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
   ////////////////////////////////////////////////////////////////////////////////
   bool fMaxMin = false;
+
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +130,7 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
       top: widget.rect.top,
       width: widget.rect.width,
       height: widget.rect.height,
-    child: Transform.rotate(
+      child: Transform.rotate(
         angle: widget.angle,
         child: Container(
           //color: Colors.green[100],
@@ -171,7 +178,7 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     // only global position
                     // widget.childOnDragEnd(draggableDetails, widget.wChild,
                     //     widget.hChild, widget.angle);
-                    handleChildOnDragEnd(draggableDetails);
+                    _childOnDragEnd(draggableDetails);
                   },
                   child: GestureDetector(
                     onTapDown: (tapDownDetails) {
@@ -294,7 +301,7 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
-                    handleOnPanUpdate(dragUpdateDetails, Alignment.bottomRight);
+                    _onPanUpdate(dragUpdateDetails, Alignment.bottomRight);
                   },
                   child: Container(
                     decoration: const BoxDecoration(
@@ -333,7 +340,7 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
-                    handleOnPanUpdate(dragUpdateDetails, Alignment.bottomLeft);
+                    _onPanUpdate(dragUpdateDetails, Alignment.bottomLeft);
                   },
                   child: Container(
                     decoration: const BoxDecoration(
@@ -372,7 +379,7 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnPanEnd();
                   },
                   onPanUpdate: (dragUpdateDetails) {
-                    handleOnPanUpdate(dragUpdateDetails, Alignment.topRight);
+                    _onPanUpdate(dragUpdateDetails, Alignment.topRight);
                   },
                   child: Container(
                     decoration: const BoxDecoration(
@@ -503,7 +510,7 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
                     widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff, hDiff, widget.moveSumOffset, widget.overSumOffset);
                     ////////////////////////////////////////////////////////////////////////////////
                     */
-                    handleOnPanUpdate(dragUpdateDetails, Alignment.topLeft);
+                    _onPanUpdate(dragUpdateDetails, Alignment.topLeft);
                   },
                   child: Container(
                     decoration: const BoxDecoration(
@@ -524,14 +531,14 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     ////////////////////////////////////////////////////////////////////////////////
   }
 
-  void handleChildOnDragEnd(draggableDetails) {
+  void _childOnDragEnd(draggableDetails) {
     // only global position
 
-    widget.childOnDragEnd(draggableDetails, widget.wChild,
-        widget.hChild, widget.angle, widget.dragAcross);
+    widget.childOnDragEnd(draggableDetails, widget.wChild, widget.hChild,
+        widget.angle, widget.dragAcross);
   }
 
-  void handleOnPanUpdate(dragUpdateDetails, position) {
+  void _onPanUpdate(dragUpdateDetails, position) {
     //dev.log(
     //    '------${DateTime.now()} globalPosition: ${dragUpdateDetails.globalPosition}, '
     //    'localPosition: ${dragUpdateDetails.localPosition},delta: ${dragUpdateDetails.delta}');
@@ -712,8 +719,8 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     if (widget.maxSize != null) {
       if ((widget.wChild + widget.overSumOffset.dx + wDiff * 2) >
           widget.maxSize!.width) {
-        widget.overSumOffset =
-            Offset(widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy + hDiff);
+        widget.overSumOffset = Offset(
+            widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy + hDiff);
         wDiff = 0;
         hDiff = 0;
         fMaxMin = true;
@@ -722,8 +729,8 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     if (widget.minSize != null) {
       if ((widget.wChild + widget.overSumOffset.dx + wDiff * 2) <
           widget.minSize!.width) {
-        widget.overSumOffset =
-            Offset(widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy + hDiff);
+        widget.overSumOffset = Offset(
+            widget.overSumOffset.dx + wDiff, widget.overSumOffset.dy + hDiff);
         wDiff = 0;
         hDiff = 0;
         fMaxMin = true;
@@ -772,9 +779,16 @@ class DragResizeRotateWidgetState extends State<DragResizeRotateWidget> {
     widget.wChild = widget.wChild + wDiff * 2; // 양쪽이므로 *2
     widget.hChild = widget.hChild + hDiff * 2; // 양쪽이므로 *2
 
-    widget.touchOnPanUpdate(widget.angle, widget.wChild, widget.hChild, wDiff,
-        hDiff, widget.sizeSumOffset, widget.overSumOffset, widget.angleSum, angleGuideOffset);
+    widget.touchOnPanUpdate(
+        widget.angle,
+        widget.wChild,
+        widget.hChild,
+        wDiff,
+        hDiff,
+        widget.sizeSumOffset,
+        widget.overSumOffset,
+        widget.angleSum,
+        angleGuideOffset);
     ////////////////////////////////////////////////////////////////////////////////
-
   }
 }

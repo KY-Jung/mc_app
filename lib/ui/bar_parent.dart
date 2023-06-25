@@ -71,7 +71,7 @@ class ParentBarState extends State<ParentBar> {
     dev.log('# ParentBar dispose START');
     super.dispose();
 
-    parentProvider.clearParentBracket();
+    // parentProvider.clearParentBracket();
 
     _preSignController.dispose();
   }
@@ -319,22 +319,23 @@ class ParentBarState extends State<ParentBar> {
   void _onPressedSizeInit() {
     dev.log('# ParentBar _onPressedSizeInit START');
 
-    parentProvider.leftTopOffset = Offset(parentProvider.leftTopOffset.dx + 10, parentProvider.leftTopOffset.dy + 10);
-    parentProvider.rightTopOffset =
-        Offset(parentProvider.rightTopOffset.dx - 10, parentProvider.rightTopOffset.dy + 10);
-    parentProvider.leftBottomOffset =
-        Offset(parentProvider.leftBottomOffset.dx + 10, parentProvider.leftBottomOffset.dy - 10);
-    parentProvider.rightBottomOffset =
-        Offset(parentProvider.rightBottomOffset.dx - 10, parentProvider.rightBottomOffset.dy - 10);
+    // parentProvider.leftTopOffset = Offset(parentProvider.leftTopOffset.dx + 10, parentProvider.leftTopOffset.dy + 10);
+    // parentProvider.rightTopOffset =
+    //     Offset(parentProvider.rightTopOffset.dx - 10, parentProvider.rightTopOffset.dy + 10);
+    // parentProvider.leftBottomOffset =
+    //     Offset(parentProvider.leftBottomOffset.dx + 10, parentProvider.leftBottomOffset.dy - 10);
+    // parentProvider.rightBottomOffset =
+    //     Offset(parentProvider.rightBottomOffset.dx - 10, parentProvider.rightBottomOffset.dy - 10);
+    // parentProvider.setParentBarEnum(ParentBarEnum.RESIZE); // for refresh
+    //
+    // Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
+    //   dev.log('# ParentBar _onPressedSizeInit Timer');
+    //   //parentProvider.clearParentBracket();
+    //
+    //   // 한번 더 refresh 해야 함
+    //   parentProvider.setParentBarEnum(ParentBarEnum.RESIZE); // for refresh
+    // });
     parentProvider.setParentBarEnum(ParentBarEnum.RESIZE); // for refresh
-
-    Timer(const Duration(milliseconds: AppConfig.SIZE_INIT_INTERVAL), () {
-      dev.log('# ParentBar _onPressedSizeInit Timer');
-      parentProvider.clearParentBracket();
-
-      // 한번 더 refresh 해야 함
-      parentProvider.setParentBarEnum(ParentBarEnum.RESIZE); // for refresh
-    });
   }
 
   void _onPressedSizeSave() async {
@@ -418,7 +419,7 @@ class ParentBarState extends State<ParentBar> {
 
         ////////////////////////////////////////////////////////////////////////////////
         // 화면 갱신
-        parentProvider.clearParentProvider();
+        parentProvider.clearParentPath();
         //parentProvider.path = newImageFile.path;
         //await parentProvider.initParenProvider(newImageFile.path);
         await parentProvider.initParenProviderWithPath(newImageFile.path);
@@ -427,7 +428,9 @@ class ParentBarState extends State<ParentBar> {
         ////////////////////////////////////////////////////////////////////////////////
 
         dev.log('# ParentBar _onPressedSizeSave end');
-        setState(() {});
+        //setState(() {});
+
+        parentProvider.setParentBarEnum(ParentBarEnum.RESIZE); // for refresh
       } else {
         newImage.dispose();
       }

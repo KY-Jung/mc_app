@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../config/config_app.dart';
 import '../config/enum_app.dart';
 import '../ui/bar_parent.dart';
 import '../util/util_file.dart';
@@ -65,7 +66,11 @@ class ParentProvider with ChangeNotifier {
   ////////////////////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////
-  // for sign
+  // for widget
+
+  // handle
+  double childHandleWh = 0;
+  double childTouchWh = 0;
 
   // 사인의 가로세로 크기
   double whSign = 0;
@@ -91,6 +96,7 @@ class ParentProvider with ChangeNotifier {
   // Parent 이미지가 InteractiveViewer 에 맞추어진 ratio 구하기
   // blank 구하기
   // bracket offset 초기화
+  /// 사용안함 (2023.06.25 KY.Jung)
   Future<void> initParenProvider(String path) async {
     dev.log('initParenProvider path: $path');
     this.path = path;
@@ -104,8 +110,7 @@ class ParentProvider with ChangeNotifier {
     dev.log('wScreen: $wScreen, hScreen: $hScreen');
 
     /// Parent 이미지가 screen 에 맞추어진 ratio 구하기
-    inScale = InfoUtil.calcFitRatioIn(
-        wScreen, hScreen, uiImage.width, uiImage.height);
+    inScale = InfoUtil.calcFitRatioIn(wScreen, hScreen, uiImage.width, uiImage.height);
     dev.log('inScale: $inScale');
 
     // blank
@@ -131,9 +136,9 @@ class ParentProvider with ChangeNotifier {
     uiImage.dispose();
 
     // offset
-    clearParentBracket();
+    //clearParentBracket();
   }
-  void clearParentProvider() {
+  void clearParentPath() {
     path = null;
   }
   Future<void> initParenProviderWithPath(String path) async {
@@ -150,7 +155,7 @@ class ParentProvider with ChangeNotifier {
     uiImage.dispose();
 
     // offset
-    clearParentBracket();
+    //clearParentBracket();
   }
   void initParenProviderWithScreen(double w, double h) {
     dev.log('initParenProviderWithScreen w: $w, h: $h');
@@ -182,8 +187,15 @@ class ParentProvider with ChangeNotifier {
     }
     dev.log('xBlank: $xBlank, yBlank: $yBlank');
 
+    // widget
+    childTouchWh = (wScreen + hScreen) * 0.6 * AppConfig.WIDGET_TOUCH_WH;
+    childHandleWh = (wScreen + hScreen) * 0.5 * AppConfig.WIDGET_HANDLE_WH;
+
+    // sign
+    whSign = (wScreen + hScreen) * 0.5 * AppConfig.SIGN_WH_RATIO;
+
     // offset
-    clearParentBracket();
+    //clearParentBracket();
   }
 
   /// bracket offset 초기화

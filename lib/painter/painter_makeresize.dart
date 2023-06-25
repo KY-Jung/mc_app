@@ -3,42 +3,54 @@ import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 
 import '../config/config_app.dart';
-import '../dto/info_parent.dart';
 import '../util/util_info.dart';
 
-class MakeParentResizePainter extends CustomPainter {
+class MakeResizePainter extends CustomPainter {
   ////////////////////////////////////////////////////////////////////////////////
-  late double wScreen;
-  late double hScreen;
+  double wScreen;
+  double hScreen;
 
-  int wImage = 0;
-  int hImage = 0;
+  int wImage;
+  int hImage;
 
-  double inScale = 0;
+  double inScale;
 
-  double xBlank = 0;
-  double yBlank = 0;
+  double xBlank;
+  double yBlank;
 
-  double xStart = 0;
-  double yStart = 0;
+  double xStart;
+  double yStart;
 
-  double scale = 0;
+  double scale;
 
-  Offset leftTopOffset = const Offset(0, 0);
-  Offset rightTopOffset = const Offset(0, 0);
-  Offset leftBottomOffset = const Offset(0, 0);
-  Offset rightBottomOffset = const Offset(0, 0);
+  Offset leftTopOffset;
+  Offset rightTopOffset;
+  Offset leftBottomOffset;
+  Offset rightBottomOffset;
   ////////////////////////////////////////////////////////////////////////////////
 
-  MakeParentResizePainter(this.wScreen, this.hScreen, this.wImage, this.hImage, this.inScale,
-      this.xBlank, this.yBlank, this.xStart, this.yStart, this.scale,
-      this.leftTopOffset, this.rightTopOffset, this.leftBottomOffset, this.rightBottomOffset);
+  MakeResizePainter({
+    required this.wScreen,
+    required this.hScreen,
+    required this.wImage,
+    required this.hImage,
+    required this.inScale,
+    required this.xBlank,
+    required this.yBlank,
+    required this.xStart,
+    required this.yStart,
+    required this.scale,
+    required this.leftTopOffset,
+    required this.rightTopOffset,
+    required this.leftBottomOffset,
+    required this.rightBottomOffset,
+  });
 
   /// InteractiveViewer 가 확대/축소될때는 호출되지 않음
   @override
   void paint(Canvas canvas, Size size) {
     // wScreen, hScreen 과 동일
-    dev.log('# MakeParentResizePainter paint START');
+    dev.log('# MakeResizePainter paint START');
 
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +92,7 @@ class MakeParentResizePainter extends CustomPainter {
 
     if (minArea >= updateArea * 0.9) {
       // 정확히 하면 catch 안됨
-      bracketPaint.color = Colors.yellowAccent;
+      bracketPaint.color = Colors.yellow[200]!;
     }
 
     Offset leftTop = Offset(leftTopOffset.dx + bracketWidth / 2,
@@ -112,9 +124,9 @@ class MakeParentResizePainter extends CustomPainter {
     canvas.drawLine(leftBottom, leftBottomV, bracketPaint);
 
     Offset rightBottomH =
-    Offset(rightBottom.dx - bracketLength, rightBottom.dy);
+        Offset(rightBottom.dx - bracketLength, rightBottom.dy);
     Offset rightBottomV =
-    Offset(rightBottom.dx, rightBottom.dy - bracketLength);
+        Offset(rightBottom.dx, rightBottom.dy - bracketLength);
     canvas.drawLine(rightBottom, rightBottomH, bracketPaint);
     canvas.drawLine(rightBottom, rightBottomV, bracketPaint);
     ////////////////////////////////////////////////////////////////////////////////
@@ -123,50 +135,32 @@ class MakeParentResizePainter extends CustomPainter {
     // unselected
     Paint unselectedPaint = Paint()
       ..color = Colors.black54
-    //..color = Colors.yellow
+      //..color = Colors.yellow
       ..strokeWidth = 1;
     Rect leftRect = Offset(xBlank, yBlank) &
-    Size(leftTopOffset.dx - xBlank, hScreen - yBlank * 2);
+        Size(leftTopOffset.dx - xBlank, hScreen - yBlank * 2);
     //dev.log('# leftRect $leftRect');
     canvas.drawRect(leftRect, unselectedPaint);
     Rect rightRect = Offset(rightTopOffset.dx, yBlank) &
-    Size(wScreen - xBlank * 2 - (rightTopOffset.dx - xBlank),
-        hScreen - yBlank * 2);
+        Size(wScreen - xBlank * 2 - (rightTopOffset.dx - xBlank),
+            hScreen - yBlank * 2);
     //dev.log('# rightRect $rightRect');
     canvas.drawRect(rightRect, unselectedPaint);
     Rect topRect = Offset(leftTopOffset.dx, yBlank) &
-    Size(rightTopOffset.dx - leftTopOffset.dx, leftTopOffset.dy - yBlank);
+        Size(rightTopOffset.dx - leftTopOffset.dx, leftTopOffset.dy - yBlank);
     //dev.log('# topRect $topRect');
     canvas.drawRect(topRect, unselectedPaint);
     Rect bottomRect = Offset(leftBottomOffset.dx, leftBottomOffset.dy) &
-    Size(rightBottomOffset.dx - leftBottomOffset.dx,
-        hScreen - yBlank - rightBottomOffset.dy);
+        Size(rightBottomOffset.dx - leftBottomOffset.dx,
+            hScreen - yBlank - rightBottomOffset.dy);
     //dev.log('# bottomRect $bottomRect');
     canvas.drawRect(bottomRect, unselectedPaint);
     ////////////////////////////////////////////////////////////////////////////////
-
-    /*
-    ////////////////////////////////////////////////////////////////////////////////
-    // for test
-    Paint testPaint = Paint()
-      ..color = Colors.red
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 4;
-    Paint testPaint2 = Paint()
-      ..color = Colors.yellow
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 4;
-    MakeParentSizePointEnum makeParentSizeEnum =
-          BracketUtil.findBracketArea(ParentInfo.xyOffset, canvas: canvas, cornerPaint: testPaint, bracketPaint: testPaint2);
-      dev.log('findBracketArea makeParentSizeEnum: $makeParentSizeEnum');
-    ////////////////////////////////////////////////////////////////////////////////
-    */
-
   }
 
   /// 그려야할 정보를 모두 검사해서 틀린 것이 있으면 다시 그리기
   @override
-  bool shouldRepaint(MakeParentResizePainter oldDelegate) {
+  bool shouldRepaint(MakeResizePainter oldDelegate) {
     // 다시 그려야할 정보 검사
 /*
     if (ParentInfo.leftTopOffset.dx != oldDelegate.leftTopOffset.dx)  return true;
@@ -184,9 +178,8 @@ class MakeParentResizePainter extends CustomPainter {
     if (ParentInfo.scale != oldDelegate.scale)  return true;
 */
 
-    dev.log('# MakeParentResizePainter shouldRepaint return false');
+    dev.log('# MakeResizePainter shouldRepaint return false');
     //return false;
     return true;
   }
-
 }

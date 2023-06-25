@@ -18,7 +18,7 @@ import '../config/color_app.dart';
 import '../config/config_app.dart';
 import '../dto/info_signfile.dart';
 import '../painter/painter_line.dart';
-import '../painter/painter_make_parent_sign.dart';
+import '../painter/painter_makesign.dart';
 import '../provider/provider_sign.dart';
 import '../util/util_color.dart';
 import '../util/util_file.dart';
@@ -190,7 +190,7 @@ class SignMbsState extends State<SignMbs> {
                 child: RepaintBoundary(
                   child: CustomPaint(
                     size: Size(whSignBoard, whSignBoard),
-                    painter: MakeParentSignPainter(
+                    painter: MakeSignPainter(
                       whSignBoard,
                       whSignBoard,
                       signProvider.signLines,
@@ -1459,7 +1459,7 @@ class SignMbsState extends State<SignMbs> {
     Canvas canvas = Canvas(pictureRecorder, dstRect);
 
     // canvas 전달해서 그리기 요청
-    MakeParentSignPainter makeParentSignPainter = MakeParentSignPainter(
+    MakeSignPainter makeSignPainter = MakeSignPainter(
         whSignBoard,
         whSignBoard,
         signProvider.signLines,
@@ -1474,13 +1474,13 @@ class SignMbsState extends State<SignMbs> {
         signProvider.signShapeBorderWidth,
         signProvider.signUiImage,
         grid: false);
-    makeParentSignPainter.paint(canvas, Size(whSignBoard, whSignBoard));
+    makeSignPainter.paint(canvas, Size(whSignBoard, whSignBoard));
 
     PopupUtil.popupImage2OkCancel(
         context,
         'INFO'.tr(),
         'SIGN_SAVE'.tr(),
-        CustomPaint(painter: makeParentSignPainter),
+        CustomPaint(painter: makeSignPainter),
         whSignBoard,
         whSignBoard,
         (signProvider.signFileInfoList.length >= AppConfig.SIGN_SAVE_MAX)

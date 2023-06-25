@@ -9,7 +9,7 @@ import '../dto/info_dot.dart';
 import '../dto/info_shapefile.dart';
 import '../util/util_info.dart';
 
-class MakeParentSignPainter extends CustomPainter {
+class MakeSignPainter extends CustomPainter {
   ////////////////////////////////////////////////////////////////////////////////
   // wh
   double width;
@@ -35,7 +35,7 @@ class MakeParentSignPainter extends CustomPainter {
   bool grid;
   ////////////////////////////////////////////////////////////////////////////////
 
-  MakeParentSignPainter(
+  MakeSignPainter(
       this.width,
       this.height,
       this.signLines,
@@ -51,7 +51,7 @@ class MakeParentSignPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    dev.log('# MakeParentSignPainter paint START');
+    dev.log('# MakeSignPainter paint START');
     dev.log(toString());
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -239,7 +239,7 @@ class MakeParentSignPainter extends CustomPainter {
 
   /// 그려야할 정보를 모두 검사해서 틀린 것이 있으면 다시 그리기
   @override
-  bool shouldRepaint(MakeParentSignPainter oldDelegate) {
+  bool shouldRepaint(MakeSignPainter oldDelegate) {
     // TODO : 체크 안되고 있음...?
     // 다시 그려야할 정보 검사
 
@@ -247,7 +247,7 @@ class MakeParentSignPainter extends CustomPainter {
     if (oldDelegate.signLines.isEmpty && signLines.isEmpty) return true;
     if (oldDelegate.signLines.last.length != signLines.last.length) return true;
 
-    dev.log('# MakeParentSignPainter paint return true');
+    dev.log('# MakeSignPainter paint return true');
     //return false;
     return true;
   }
